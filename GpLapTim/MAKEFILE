@@ -13,7 +13,10 @@ OBJS           =    gplaptim.obj
 
 all:           gplaptim.com
 
-gplaptim.obj:  gplaptim.asm
+gplaptim.ash:  gplaptim.h
+               h2ash gplaptim.h
+
+gplaptim.obj:  gplaptim.asm gplaptim.ash
 
 gplaptim.com:  $(OBJS) makefile
                $(LINK) $(OBJS),gplaptim;

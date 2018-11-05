@@ -1,155 +1,20 @@
-﻿; ---------------------------------------------------------------------------
+﻿include gplaptim.ash
 
-SPLIT_TIME_RECORD struc ; (sizeof=0x25, copyof_19) ; XREF: ...
-st_record_type  db ?                    ; XREF: ...
-st_game_mode    db ?                    ; XREF: ...
-st_car_number   db ?                    ; XREF: ...
-st_lap_number   db ?                    ; XREF: ...
-st_qual_position db ?                   ; XREF: ...
-st_car_position db ?                    ; XREF: ...
-st_split_time   dd ?                    ; XREF: ...
-st_point        db ?                    ; XREF: ...
-st_percentage   dw ?                    ; XREF: ...
-st_driver       db 24 dup(?)            ; XREF: ...
-SPLIT_TIME_RECORD ends
+SURFACE_TYPE_TRACK      EQU     0
+SURFACE_TYPE_CURB_LOW   EQU     1
+SURFACE_TYPE_CURB_HIGH  EQU     2
+SURFACE_TYPE_GRASS      EQU     3
 
-; ---------------------------------------------------------------------------
-
-PIT_OUT_RECORD  struc ; (sizeof=0x21, copyof_17) ; XREF: ...
-po_record_type  db ?                    ; XREF: ...
-po_game_mode    db ?                    ; XREF: ...
-po_car_number   db ?                    ; XREF: ...
-po_lap_number   db ?                    ; XREF: ...
-po_car_position db ?                    ; XREF: ...
-po_out_time     dd ?                    ; XREF: ...
-po_driver       db 24 dup(?)            ; XREF: ...
-PIT_OUT_RECORD  ends
-
-; ---------------------------------------------------------------------------
-
-PIT_IN_RECORD   struc ; (sizeof=0x21, copyof_15) ; XREF: ...
-pi_record_type  db ?                    ; XREF: ...
-pi_game_mode    db ?                    ; XREF: ...
-pi_car_number   db ?                    ; XREF: ...
-pi_lap_number   db ?                    ; XREF: ...
-pi_car_position db ?                    ; XREF: ...
-pi_in_time      dd ?                    ; XREF: ...
-pi_driver       db 24 dup(?)            ; XREF: ...
-PIT_IN_RECORD   ends
-
-; ---------------------------------------------------------------------------
-
-AUTH_RACE_RECORD struc ; (sizeof=0x2C, copyof_9) ; XREF: ...
-rr_record_type  db ?                    ; XREF: ...
-rr_game_mode    db ?
-rr_race_time    dd ?                    ; XREF: ...
-rr_bhp          dw ?
-rr_ai_grip      db ?
-rr_drv_aids     db ?
-rr_skill        db ?
-rr_seconds      db ?
-rr_minutes      db ?
-rr_hours        db ?
-rr_day          db ?
-rr_month        db ?
-rr_year         dw ?
-rr_driver       db 24 dup(?)
-rr_crc          dw ?                    ; XREF: ...
-AUTH_RACE_RECORD ends
-
-; ---------------------------------------------------------------------------
-
-AUTH_RECORD     struc ; (sizeof=0x2C, copyof_7) ; XREF: ...
-ar_record_type  db ?                    ; XREF: ...
-ar_game_mode    db ?                    ; XREF: ...
-ar_lap_time     dd ?                    ; XREF: ...
-ar_bhp          dw ?                    ; XREF: ...
-ar_ai_grip      db ?                    ; XREF: ...
-ar_drv_aids     db ?                    ; XREF: ...
-ar_skill        db ?                    ; XREF: ...
-ar_seconds      db ?                    ; XREF: ...
-ar_minutes      db ?                    ; XREF: ...
-ar_hours        db ?                    ; XREF: ...
-ar_day          db ?                    ; XREF: ...
-ar_month        db ?                    ; XREF: ...
-ar_year         dw ?                    ; XREF: ...
-ar_driver       db 24 dup(?)            ; XREF: ...
-ar_crc          dw ?                    ; XREF: ...
-AUTH_RECORD     ends
-
-; ---------------------------------------------------------------------------
-
-LAP_RECORD      struc ; (sizeof=0x2C, copyof_5) ; XREF: ...
-lr_record_type  db ?                    ; XREF: ...
-lr_game_mode    db ?                    ; XREF: ...
-lr_car_number   db ?                    ; XREF: ...
-lr_lap_number   db ?                    ; XREF: ...
-lr_qual_position db ?                   ; XREF: ...
-lr_car_position db ?                    ; XREF: ...
-lr_lap_time     dd ?                    ; XREF: ...
-lr_best_time    dd ?                    ; XREF: ...
-lr_race_time    dd ?                    ; XREF: ...
-lr_driver       db 24 dup(?)            ; XREF: ...
-lr_crc          dw ?                    ; XREF: ...
-LAP_RECORD      ends
-
-; ---------------------------------------------------------------------------
-
-DATE_RECORD     struc ; (sizeof=0x9, copyof_22) ; XREF: ...
-dr_record_type  db ?                    ; XREF: ...
-dr_year         dw ?                    ; XREF: ...
-dr_month        db ?                    ; XREF: ...
-dr_day          db ?                    ; XREF: ...
-dr_week_day     db ?                    ; XREF: ...
-dr_hours        db ?                    ; XREF: ...
-dr_minutes      db ?                    ; XREF: ...
-dr_seconds      db ?                    ; XREF: ...
-DATE_RECORD     ends
-
-; ---------------------------------------------------------------------------
-
-SETUP_RECORD    struc ; (sizeof=0xD, copyof_23) ; XREF: ...
-sr_record_type  db ?                    ; XREF: ...
-sr_game_mode    db ?                    ; XREF: ...
-sr_front_wing   db ?                    ; XREF: ...
-sr_rear_wing    db ?
-sr_gear1        db ?
-sr_gear2        db ?
-sr_gear3        db ?
-sr_gear4        db ?
-sr_gear5        db ?
-sr_gear6        db ?
-sr_race_tyres   db ?
-sr_brake_bias   db ?
-sr_using_tyres  db ?                    ; XREF: ...
-SETUP_RECORD    ends
-
-; ---------------------------------------------------------------------------
-
-ALL_RECORDS     union ; (sizeof=0x2C, copyof_21) ; XREF: ...
-lr              LAP_RECORD ?
-ar              AUTH_RECORD ?
-arr             AUTH_RACE_RECORD ?
-dr              DATE_RECORD ?
-sr              SETUP_RECORD ?
-pi              PIT_IN_RECORD ?
-po              PIT_OUT_RECORD ?
-st              SPLIT_TIME_RECORD ?
-ALL_RECORDS     ends
-
-; ---------------------------------------------------------------------------
-
-Timestamp       struc ; (sizeof=0x2C, mappedto_32) ; XREF: ...
-secs            db ?                    ; XREF: ...
-mins            db ?                    ; XREF: ...
-hours           db ?                    ; XREF: ...
-total_secs      dd ?                    ; XREF: ...
+Timestamp       struc
+secs            db ?
+mins            db ?
+hours           db ?
+total_secs      dd ?
 field_7         db 37 dup(?)
 Timestamp       ends
 
-; ---------------------------------------------------------------------------
 
-Seg             struc ; (sizeof=0x2E, mappedto_26) ; XREF: ...
+Seg             struc
 wAngleZ         dw ?
 wAngleX         dw ?
 wPosX           dw ?
@@ -190,7 +55,7 @@ Seg             ends
 
 ; ---------------------------------------------------------------------------
 
-Car             struc ; (sizeof=0xC0, mappedto_27)
+Car             struc ;
 wSpeedAngleZ    dw ?                    ; like wAngleZ, but rotates 180 degrees when going backwards
 wAngleOrPosZ?   dw ?
 time_4_lo       dw ?
@@ -199,16 +64,16 @@ wPosZ?          dw ?
 wSegPosX        dw ?
 wSegPosY        dw ?
 field_E         dw ?                    ; ccline related
-wSpeed          dw ?                    ; XREF: ...
-pSeg            dd ?                    ; XREF: ...
+wSpeed          dw ?                   
+pSeg            dd ?                   
 field_16        dw ?
 flags_18        db ?                    ; 80 = unk
 field_19        db ?
 wCarAngleZ      dw ?
-wSegDist        dw ?                    ; XREF: ...
+wSegDist        dw ?                   
 wSegDist_1e     dw ?
 field_20        dw ?
-bCurLap         db ?                    ; XREF: ...
+bCurLap         db ?                   
 flags_23        db ?                    ; 1=CCReverseGear 2=unk 4=SpeedBelowMinus469 8=unk 10=unk (speed rel.) 20=unk 40=unk 80=unk
 bGear           db ?
 bTeamNr?        db ?
@@ -226,8 +91,8 @@ wSpeedZ_hi      dw ?
 field_3C        db ?                    ; 10=retired 20=pit crew ready?
 flagsNonLinearControl db ?              ; 20=nonlinear brake, 40=nonlinear throttle, 80=nonlinear steering
 field_3E        dw ?
-timeLast_lo     dw ?                    ; XREF: ...
-timeLast_hi     dw ?                    ; XREF: ...
+timeLast_lo     dw ?                   
+timeLast_hi     dw ?                   
 weight          dw ?
 grip            dw ?
 field_48        dw ?                    ; some sort of angle
@@ -236,8 +101,8 @@ field_4C        dw ?                    ; used to calculate front wing effect on
 field_4E        dw ?                    ; value is reduced by wing damage
 field_50        dw ?
 field_52        dw ?
-timeAbsLast_lo  dw ?                    ; XREF: ...
-timeAbsLast_hi  dw ?                    ; XREF: ...
+timeAbsLast_lo  dw ?                   
+timeAbsLast_hi  dw ?                   
 field_58        dw ?
 field_5A        dw ?
 field_5C        dw ?
@@ -260,7 +125,7 @@ field_76        dw ?
 field_78        dw ?
 pCar_7A         dw ?
 wSteerRaw       dw ?
-flags_7E        db ?                    ; XREF: ... ; 1=steer rel. 2=gear rel. 4=CC  10=DoSpin  20=unk  40=unk  80=gear rel.  rest=related to trouble
+flags_7E        db ?                    ; 1=steer rel. 2=gear rel. 4=CC  10=DoSpin  20=unk  40=unk  80=gear rel.  rest=related to trouble
 bDigitalControl db ?                    ; 1=throttle 2=brake 4=left 8=right 10=gear change 80=using downshift
 wNumFeetIntoLap? dw ?
 pCar_82         dw ?
@@ -273,125 +138,48 @@ field_8A        dw ?
 wCarHeight      dw ?
 field_8E        dw ?
 field_90        dw ?
-timerPitSeq_lo  dw ?                    ; XREF: ... ; also used for pulling away
-timerPitSeq_hi  dw ?                    ; XREF: ...
+timerPitSeq_lo  dw ?                    ; also used for pulling away
+timerPitSeq_hi  dw ?                   
 flags_96        db ?                    ; 20=no driver in car 40=stop car 80=show cc fuel?
 flags_97        db ?                    ; 2=engine on  4=car on jacks
 wThrottle       dw ?
 flagsDamage     db ?                    ; 80=wing damage 40=rw 20=fw
 bThrottleRaw    db ?
 field_9C        dw ?
-bFrontWingSetup db ?                    ; XREF: ...
-bRearWingSetup  db ?                    ; XREF: ...
+bFrontWingSetup db ?                   
+bRearWingSetup  db ?                   
 field_A0        dw ?
 field_A2        dw ?
 wDrivenDistInSegs?_lo dw ?
 wDrivenDistInSegs?_hi dw ?
-wPower          dw ?                    ; XREF: ...
+wPower          dw ?                   
 bRacePos        db ?                    ; (race pos - 1) * 2
 field_AB        db ?
-bID             db ?                    ; XREF: ...
+bID             db ?                   
 bTeamPitPos     db ?
-timeBest_lo     dw ?                    ; XREF: ...
-timeBest_hi     dw ?                    ; XREF: ...
-field_B2        db ?                    ; XREF: ...
-flags_B3        db ?                    ; XREF: ... ; 4=pitlight?  20=unk
+timeBest_lo     dw ?                   
+timeBest_hi     dw ?                   
+field_B2        db ?                   
+flags_B3        db ?                    ; 4=pitlight?  20=unk
 field_B4        dw ?
 field_B6        dw ?
 field_B8        dw ?
 field_BA        dw ?
 flags_BC        db ?                    ; 1=SpeedAbove1877 80=RevsTooLowToShiftUp
 field_BD        db ?
-wGrip           dw ?                    ; XREF: ...
+wGrip           dw ?                   
 Car             ends
 
-; ---------------------------------------------------------------------------
 
-RecordInfo      struc ; (sizeof=0x5A, mappedto_28)
-track?          dw ?
-driverQual      db 24 dup(?)            ; string(C)
-teamQual        db 13 dup(?)            ; string(C)
-chgQual?        db ?
-timeQual        dd ?                    ; base 10
-dateQual        dw ?                    ; base 10
-driverRace      db 24 dup(?)            ; string(C)
-teamRace        db 13 dup(?)            ; string(C)
-chgRace?        db ?
-timeRace        dd ?                    ; base 10
-dateRace        dw ?                    ; base 10
-RecordInfo      ends
 
-; ---------------------------------------------------------------------------
-
-; enum REC_TYPE, mappedto_25
-REC_TYPE_LAP     = 1
-REC_TYPE_DATE    = 2
-REC_TYPE_AUTH    = 3
-REC_TYPE_SETUP   = 4
-REC_TYPE_PIT_IN  = 5
-REC_TYPE_PIT_OUT  = 6
-REC_TYPE_SPLIT   = 7
-REC_TYPE_AUTH_RACE  = 8
-
-; ---------------------------------------------------------------------------
-
-; enum GAME_MODE, mappedto_29
-GM_PRACTICE      = 0
-GM_FREE_PRACTICE  = 1
-GM_QUALIFYING    = 2
-GM_PRE_RACE_PRACTICE  = 3
-GM_RACE          = 4
-
-; ---------------------------------------------------------------------------
-
-; enum DRV_AID, mappedto_31
-DRV_AID_F1       = 1
-DRV_AID_F2       = 2
-DRV_AID_F3       = 4
-DRV_AID_F4       = 8
-DRV_AID_F5       = 10h
-DRV_AID_F6       = 20h
-DRV_AID_STEERING  = 40h
-DRV_AID_TRACTION  = 80h
-
-; ---------------------------------------------------------------------------
-
-; enum SURFACE_TYPE, mappedto_30
-SURFACE_TYPE_TRACK  = 0
-SURFACE_TYPE_CURB_LOW  = 1
-SURFACE_TYPE_CURB_HIGH  = 2
-SURFACE_TYPE_GRASS  = 3
-
-;
-; +-------------------------------------------------------------------------+
-; |   This file has been generated by The Interactive Disassembler (IDA)    |
-; |           Copyright (c) 2017 Hex-Rays, <support@hex-rays.com>           |
-; |                      License info: 48-3FBD-7F04-2C                      |
-; |                      Jiang Ying, Personal license                       |
-; +-------------------------------------------------------------------------+
-;
-; Input SHA256 : 04D6BF183CECC495B90EDA2E6BDA154ED024E20297E0A32B0489089A8D33227C
-; Input MD5    : 99210382E2E26E910CE0C620840394E2
-; Input CRC32  : 06C22642
-
-; File Name   : GPLAPTIM.COM
-; Format      : MS-DOS COM-file
-; Base Address: 1000h Range: 10100h-11BCAh Loaded length: 1ACAh
-
-                .386
+                .286
                 .model tiny
 
-; ===========================================================================
-
-; Segment type: Pure code
 TSR             segment byte public 'CODE' use16
                 assume cs:TSR
                 org 100h
-                assume es:nothing, ss:nothing, ds:TSR, fs:nothing, gs:nothing
+                assume es:nothing, ss:nothing, ds:TSR
 
-; =============== S U B R O U T I N E =======================================
-
-; Attributes: noreturn thunk
 
                 public start
 start           proc near
@@ -598,8 +386,9 @@ gp_exe_data_bytes1 db    0
                 db    7
 aGplaptimActiva db 0Dh,0Ah
                 db 'GpLapTim activated OK',0Dh,0Ah,'$'
-                align 2
-                db 200 dup(35)          ; stack
+                
+				align 2
+                db 200 dup('#')          ; stack
 stack_top       dw 5A5Ah
 
 ; =============== S U B R O U T I N E =======================================
@@ -3376,7 +3165,6 @@ wrt_msg         proc near
 
 wrt_msg         endp
 
-; ---------------------------------------------------------------------------
                 align 2
 
 ; =============== S U B R O U T I N E =======================================
