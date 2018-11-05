@@ -1,0 +1,21 @@
+##
+## GpLapTim TSR for MPS GP.EXE
+##
+
+ASM            =    tasm
+ASM_FLAGS      =    -Ml -zd -zi
+LINK           =    tlink /k /l /m /s /c /Tdc
+
+OBJS           =    gplaptim.obj
+
+.asm.obj:      
+               $(ASM) $< $(ASM_FLAGS),,;
+
+all:           gplaptim.com
+
+gplaptim.obj:  gplaptim.asm
+
+gplaptim.com:  $(OBJS) makefile
+               $(LINK) $(OBJS),gplaptim;
+
+buildall:      all
