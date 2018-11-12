@@ -1,9 +1,16 @@
-﻿include gplaptim.ash
+include gplaptim.ash
 
-SURFACE_TYPE_TRACK      EQU     0
-SURFACE_TYPE_CURB_LOW   EQU     1
-SURFACE_TYPE_CURB_HIGH  EQU     2
-SURFACE_TYPE_GRASS      EQU     3
+LOCALS __
+
+SURFACE_TYPE_TRACK      equ     0
+SURFACE_TYPE_CURB_LOW   equ     1
+SURFACE_TYPE_CURB_HIGH  equ     2
+SURFACE_TYPE_GRASS      equ     3
+
+GP_VER_UNK              equ     -1
+GP_VER_EUR              equ     0
+GP_VER_USA              equ     1
+GP_VER_ITA              equ     2
 
 Timestamp       struc
 secs            db ?
@@ -166,11 +173,9 @@ field_B6        dw ?
 field_B8        dw ?
 field_BA        dw ?
 flags_BC        db ?                    ; 1=SpeedAbove1877 80=RevsTooLowToShiftUp
-field_BD        db ?
+bNumHotseatSwitchesDone db ?
 wGrip           dw ?                   
 Car             ends
-
-
 
                 .286
                 .model tiny
@@ -178,7 +183,7 @@ Car             ends
 TSR             segment byte public 'CODE' use16
                 assume cs:TSR
                 org 100h
-                assume es:nothing, ss:nothing, ds:TSR
+                assume es:nothing, ss:nothing, ds:nothing
 
 
                 public start
@@ -187,141 +192,128 @@ start           proc near
 
 start           endp
 
+SAVGAM_OFF_EUR  equ     0030h
+SAVGAM_OFF_ITA  equ     -10h
+SAVGAM_OFF_USA  equ     0000h
+
 ; ---------------------------------------------------------------------------
                 align 2
+
+SEG_COUNT       equ 14
+eu_seg_base     dw 0, 0F47h, 19EDh, 1E61h, 2914h, 30CAh, 40C1h, 50BAh, 605Ah, 6BE7h, 7BCEh, 8B6Eh, 8CE6h, 8EAAh, 9151h
+us_seg_base     dw 0, 0F47h, 19EDh, 1E5Eh, 2911h, 30C7h, 40BEh, 50B7h, 6057h, 6BE2h, 7BC4h, 8B64h, 8CDCh, 8EA0h, 9147h
+it_seg_base     dw 0, 0F47h, 19EDh, 1E5Dh, 2910h, 30C6h, 40BDh, 50B6h, 6056h, 6BE3h, 7BC5h, 8B65h, 8CDDh, 8EA1h, 9148h
+eu_to_us        dw 2, 00179h, -24h
+                dw 2, 00C25h, -08h
+                dw 8, 0A04Eh, -09h
+                dw 8, 0A0D2h, -09h
+                dw 8, 0A248h, -09h
+                dw 8, 0A46Ch, -01h
+                dw 8, 0A4A0h, -09h
+                dw 9, 00576h, -4Eh
+                dw 9, 005A6h, -0Ah
+                dw 9, 07932h,  01h
+                dw SEG_COUNT, 0, 0
+eu_to_it        dw 2, 00179h, -2Ch
+                dw 2, 00C25h, -08h
+                dw 9, 00576h, -4Eh
+                dw 9, 005A6h, -0Ah
+                dw 9, 07932h,  01h
+                dw SEG_COUNT, 0, 0
+offset_diffs    dw eu_to_us, eu_to_it
+
 psp_env         dd 2Ch
 old08_handler   dd 0
 old11_handler   dd 0
 old21_handler   dd 0
+
 delay_count     db 0
-gp_code_eur     db 0B0h
-                db    0
-                db 0B4h
-                db  30h
-                db 0CDh
-                db  21h
-                db  0Ah
-                db 0C0h
-                db  75h
-                db    3
-                db 0B8h
-                db    1
-                db    0
-                db  36h
-                db 0A3h
-                db 0C6h
-                db    5
-                db  3Ch
-                db    3
-                db  73h
-                db    9
-                db  36h
-                db 0C6h
-                db    6
-                db  31h
-                db    9
-                db    7
-                db 0E9h
-                db  67h
-                db    1
-                db  0Eh
-                db 0E8h
-                db  62h
-                db 0F7h
-                db  0Eh
-                db 0E8h
-                db 0EDh
-                db 0F8h
-                db  32h
-                db 0C0h
-                db  9Ah
-                db  43h
-                db  19h
-gp_code_ita     db 0B0h
-                db    0
-                db 0B4h
-                db  30h
-                db 0CDh
-                db  21h
-                db  0Ah
-                db 0C0h
-                db  75h
-                db    3
-                db 0B8h
-                db    1
-                db    0
-                db  36h
-                db 0A3h
-                db 0C6h
-                db    5
-                db  3Ch
-                db    3
-                db  73h
-                db    9
-                db  36h
-                db 0C6h
-                db    6
-                db  31h
-                db    9
-                db    7
-                db 0E9h
-                db  67h
-                db    1
-                db  0Eh
-                db 0E8h
-                db  62h
-                db 0F7h
-                db  0Eh
-                db 0E8h
-                db 0EDh
-                db 0F8h
-                db  32h
-                db 0C0h
-                db  9Ah
-                db 0EBh
-                db  18h
-gp_code_usa_or_spa db 0B0h
-                db    0
-                db 0B4h
-                db  30h
-                db 0CDh
-                db  21h
-                db  0Ah
-                db 0C0h
-                db  75h
-                db    3
+
+GP_EUR_RET_ADDR equ     0b74ch
+GP_ITA_RET_ADDR equ     0b74ch
+GP_USA_RET_ADDR equ     0b727h
+MATCH_OFFSET    equ     6
+CONV_BASE_SUB   equ     357h
+CONV_BASE_3     equ     1e5eh - 1f7h + CONV_BASE_SUB
+CONV_BASE_4     equ     2911h - 1f7h + CONV_BASE_SUB
+
+gp_code_eur     db      0B0h, 000h
+                db      0B4h, 030h
+                db      0CDh, 021h
+                db      00Ah, 0C0h
+                db      075h, 003h
+                db      0B8h, 001h, 000h
+                db      036h, 0A3h, 0C6h, 005h
+                db      03Ch, 003h
+                db      073h, 009h
+                db      036h, 0C6h, 006h, 031h, 009h, 007h
+                db      0E9h, 067h, 001h
+                db      00Eh
+                db      0E8h, 062h, 0F7h
+                db      00Eh
+                db      0E8h, 0EDh, 0F8h
+                db      032h, 0C0h
+                db      09Ah, 043h, 019h
+MATCH_BYTES_EUR equ     $ - gp_code_eur
+
+gp_code_ita     db      0B0h, 000h
+                db      0B4h, 030h
+                db      0CDh, 021h
+                db      00Ah, 0C0h
+                db      075h, 003h
+                db      0B8h, 001h, 000h
+                db      036h, 0A3h, 0C6h, 005h
+                db      03Ch, 003h
+                db      073h, 009h
+                db      036h, 0C6h, 006h, 031h, 009h, 007h
+                db      0E9h, 067h, 001h
+                db      00Eh
+                db      0E8h, 062h, 0F7h
+                db      00Eh
+                db      0E8h, 0EDh, 0F8h
+                db      032h, 0C0h
+                db      09Ah, 0ebh, 018h
+MATCH_BYTES_ITA equ     $ - gp_code_ita
+
+gp_code_usa     db      0b0h, 00h, 0b4h, 30h, 0cdh, 21h, 0ah, 0c0h, 75h, 03h
+MATCH_BYTES_USA equ     $ - gp_code_usa
+
 logfile_path    db 78 dup(0)
 logfile_handle  dw 0
 pCar            dd 0
-seg004_stack    dd 0
-game_eur        db 0
-game_usa        db 0
-game_ita        db 0
-game_spa        db 0
+fpInitCarGrip   dd 0
+gp_ver          db GP_VER_UNK
+game_ss         dw 0
+game_sp         dw 0
 game_sg_off     dw 0
 gp_end_of_lap_off dd 0
+hook4_dest      dd 0
+
 log_player_times_only db 0
+
 hook1_start     db 9Ah
-hook1_off       dw 0
-                dw 0
+hook1_off       dw 0, 0
 hook2_start     db 9Ah
-hook2_off       dw 0
-                dw 0
+hook2_off       dw 0, 0
                 db 90h
 hook3_start     db 9Ah
-hook3_off       dw 0
-                dw 0
+hook3_off       dw 0, 0
 hook4_start     db 9Ah
-hook4_off       dw 0
-                dw 0
+hook4_off       dw 0, 0
                 db 90h
+hook4_alt_start db 61h, 7h, 1Fh, 0CBh, 90h
 hook5_start     db 9Ah
-hook5_off       dw 0
-                dw 0
+hook5_off       dw 0, 0
                 db 90h
 hook6_start     db 9Ah
-hook6_off       dw 0
-                dw 0
+hook6_off       dw 0, 0
+hook7_start     db 9Ah
+hook7_off       dw 0, 0
+hook8_start     db 9Ah
+hook8_off       dw 0, 0
+hook9_start     db 9Ah
+hook9_off       dw 0, 0
+
 rec_lap         LAP_RECORD <0>
 rec_auth        AUTH_RECORD <0>
 rec_auth_race   AUTH_RACE_RECORD <0>
@@ -330,18 +322,25 @@ rec_date        DATE_RECORD <0>
 rec_pit_in      PIT_IN_RECORD <0>
 rec_pit_out     PIT_OUT_RECORD <0>
 rec_split       SPLIT_TIME_RECORD <0>
+
 time            Timestamp <0>
 new_time        Timestamp <0>
+
 grass_touched_this_lap db 0
+
 diff_seg002_seg008_seg dw 0
-                dw 0
-some_offset     dw 0
+
+unk1            dw 0
+unk2            dw 0
+
 split1_perc     dw 25
 split2_perc     dw 50
 split3_perc     dw 75
 stop_time       dw 10000
+ccplayer_power  dw 4000h
 trackseg_count  dw 0
 car_trackseg    dw 0
+
 circuit_lap_counts db 81
                 db 71
                 db 61
@@ -374,6 +373,7 @@ circuit_half_lap_counts db 41
                 db 33
                 db 27
                 db 41
+
 gp_exe_data_bytes1 db    0
                 db  1Dh
                 db    0
@@ -384,10 +384,11 @@ gp_exe_data_bytes1 db    0
                 db    7
                 db    0
                 db    7
-aGplaptimActiva db 0Dh,0Ah
+
+hooked_msg      db 0Dh,0Ah
                 db 'GpLapTim activated OK',0Dh,0Ah,'$'
-                
-				align 2
+
+                align 2
                 db 200 dup('#')          ; stack
 stack_top       dw 5A5Ah
 
@@ -399,12 +400,12 @@ new08_hndlr     proc far
                 call    cs:old08_handler
 
                 cmp     cs:delay_count, 0
-                jz      short locret_10487
+                jz      short __end
 
                 dec     cs:delay_count
 
 
-locret_10487:
+__end:
                 iret
 
 new08_hndlr     endp
@@ -415,10 +416,10 @@ new08_hndlr     endp
 
 new11_hndlr     proc far
                 cmp     cx, 0C0DEh
-                jnz     short loc_104AC
+                jnz     short __skip
 
                 cmp     dx, 0DEADh
-                jnz     short loc_104AC
+                jnz     short __skip
 
                 mov     cx, 5A5Ah
                 mov     dx, 3412h
@@ -434,9 +435,7 @@ new11_hndlr     proc far
                 pop     bx
                 iret
 
-; ---------------------------------------------------------------------------
-
-loc_104AC:
+__skip:
                 pushf
                 call    cs:old11_handler
 
@@ -447,222 +446,230 @@ new11_hndlr     endp
 
 ; =============== S U B R O U T I N E =======================================
 
+PUSHED_WORDS equ (8 + 1 + 1 + 1)
 
 new21_hndlr     proc near
                 cmp     ah, 30h         ; Is it DOS Get Version?
-                jz      short push_start
+                jz      __start
+                jmp     __call_old21
 
-                jmp     loc_1056A
-
-; ---------------------------------------------------------------------------
-PUSHA_SIZE equ (8 - 1)
-
-push_start:
+__start:
                 pushf
                 pusha
                 push    ds
                 push    es
 
-push_end:
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 mov     di, sp
-; Get return address
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2)]
-                mov     game_eur, 0
-                mov     game_usa, 0
-                mov     game_ita, 0
-                mov     game_spa, 0
-                cmp     di, 0B74Ch      ; GP_EUR_RET_ADDR (seg008:B74C)
-                jnz     short try_usa
+                
+                mov     cs:game_ss, ss
+                mov     cs:game_sp, sp
 
-                sub     di, 6           ; MATCH_OFFSET
+                ; Get return address
+                les     di, ss:[di + (PUSHED_WORDS * 2)]
+                mov     gp_ver, GP_VER_UNK
+                cmp     di, GP_EUR_RET_ADDR
+                jnz     short __try_usa
+
+                sub     di, MATCH_OFFSET
                 mov     bx, di
                 mov     si, offset gp_code_eur
-                mov     cx, 43          ; MATCH_BYTES_EUR = gp_code_ita - gp_code_eur
+                mov     cx, MATCH_BYTES_EUR
                 cld
                 repe cmpsb
-                jz      short its_eur
+                jz      short __its_eur
 
                 mov     di, bx
                 mov     si, offset gp_code_ita
-                mov     cx, 43          ; MATCH_BYTES_ITA = gp_code_usa - gp_code_ita
+                mov     cx, MATCH_BYTES_ITA
                 cld
                 repe cmpsb
-                jnz     short no_match
+                jnz     short __no_match
 
-
-its_ita:
-                mov     game_ita, 1
-                mov     game_sg_off, -10h ; SAVGAM_OFF_ITA
-                jmp     short got_match
-
-; ---------------------------------------------------------------------------
+__its_ita:
+                mov     gp_ver, GP_VER_ITA
+                mov     game_sg_off, SAVGAM_OFF_ITA
+                jmp     short __got_match
                 nop
 
-
-its_eur:
-                mov     game_eur, 1
-                mov     game_sg_off, 30h ; SAVGAM_OFF_EUR
-                jmp     short got_match
-
-; ---------------------------------------------------------------------------
+__its_eur:
+                mov     gp_ver, GP_VER_EUR
+                mov     game_sg_off, SAVGAM_OFF_EUR
+                jmp     short __got_match
                 nop
 
+__try_usa:
+                cmp     di, GP_USA_RET_ADDR
+                jnz     short __no_match
 
-try_usa:                                ; GP_USA_RET_ADDR
-                cmp     di, 0B727h
-                jnz     short try_spa
-
-                sub     di, 6           ; MATCH_OFFSET
-                mov     si, offset gp_code_usa_or_spa
-                mov     cx, 10          ; MATCH_BYTES_USA_OR_SPA
+                sub     di, MATCH_OFFSET
+                mov     si, offset gp_code_usa
+                mov     cx, MATCH_BYTES_USA
                 cld
                 repe cmpsb
-                jnz     short try_spa
+                jnz     short __no_match
 
-                mov     game_usa, 1
-                mov     game_sg_off, 0
-                jmp     short got_match
+__its_usa:
+                mov     gp_ver, GP_VER_USA
+                mov     game_sg_off, SAVGAM_OFF_USA
 
-; ---------------------------------------------------------------------------
-                nop
-
-
-try_spa:                                ; GP_SPA_RET_ADDR
-                cmp     di, 0B75Bh
-                jnz     short no_match
-
-                sub     di, 6           ; MATCH_OFFSET
-                mov     si, offset gp_code_usa_or_spa
-                mov     cx, 10          ; MATCH_BYTES_USA_OR_SPA
-                cld
-                repe cmpsb
-                jnz     short no_match
-
-                mov     game_spa, 1
-                mov     game_sg_off, 0
-
-
-got_match:
+__got_match:
                 call    announce_hook
-
                 call    hook_gp_exe
-
                 call    log_date_record
 
-
-no_match:
+__no_match:
                 pop     es
                 pop     ds
+                assume ds:nothing
                 popa
                 popf
 
 
-loc_1056A:
+__call_old21:
                 jmp     cs:old21_handler
 
 new21_hndlr     endp
 
 
+
+; =============== S U B R O U T I N E =======================================
+
+; in ax -> eu memory offset
+; in dx -> segnr (0...13)
+; out dx:ax -> translated memory address of actual exe version
+calc_offset     proc near
+                push si
+                push di
+                push bx
+                push cx
+                push ds
+
+                mov cx, cs
+                mov ds, cx
+                assume ds:TSR
+                mov cx, dx
+                mov bx, ax
+                mov si, offset eu_seg_base
+                xor ax, ax
+                mov al, gp_ver
+                mov dx, ((SEG_COUNT + 1) * 2)
+                imul dx
+                add si, ax
+
+                ; set dx to runtime value of seg000
+                mov dx, game_ss
+                sub dx, [si + 4 * 2]
+
+                add si, cx
+                add si, cx
+                add dx, [si]
+
+                xor ax, ax
+                mov al, gp_ver
+                cmp ax, GP_VER_EUR
+                ja __not_eu
+                mov ax, bx
+                jmp __end
+__not_eu:
+                dec ax
+                shl ax, 1
+                mov si, offset offset_diffs
+                add si, ax
+                mov ax, bx
+__loop:
+                mov di, [si]   ; seg nr
+                cmp di, cx
+                ja __end
+                jne __cont
+
+                mov di, [si+2] ; seg offset
+                cmp di, bx
+                ja __end
+
+                mov di, [si+4] ; diff
+                add ax, di
+__cont:
+                add si, 6
+                jmp __loop
+__end:
+                pop ds
+                assume ds:nothing
+                pop cx
+                pop bx
+                pop di
+                pop si
+                retn
+
+calc_offset     endp
+
 ; =============== S U B R O U T I N E =======================================
 
 
 hook_gp_exe     proc near
+                assume ds:TSR
                 mov     si, offset hook1_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                cmp     game_usa, 1
-                jz      short usa
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
+                jz      short __usa1
 
-                cmp     game_ita, 1
-                jz      short ita
+                cmp     gp_ver, GP_VER_ITA
+                jz      short __ita1
 
-                cmp     game_spa, 1
-                jz      short spa
-
-
-eur:                                    ; bcec - 1F77
-                sub     di, 9D75h
+__eur1:
+                sub     di, 9D75h       ; bcec - 1F77
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
-                jmp     short loc_105C6
-
-; ---------------------------------------------------------------------------
+                jmp     short __dohook1
                 nop
 
-
-ita:
+__ita1:
                 sub     di, 9D35h
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
-                jmp     short loc_105C6
-
-; ---------------------------------------------------------------------------
+                jmp     short __dohook1
                 nop
 
-
-spa:
-                sub     di, 9D54h
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_105C6
-
-; ---------------------------------------------------------------------------
-                nop
-
-
-usa:
+__usa1:
                 sub     di, 9D20h
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
-loc_105C6:
+__dohook1:
                 mov     word ptr gp_end_of_lap_off+2, ax
                 mov     word ptr gp_end_of_lap_off, di
                 mov     cx, 5
-
-
-loc_105D0:
+__loop1:
                 lodsb
                 stosb
-                loop    loc_105D0
+                loop    __loop1
+
+; ---------------------------------------------------------------------------
 
                 mov     si, offset hook2_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_1061F
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_10601
-
-                cmp     game_spa, 1
-                jz      short loc_10610
 
                 sub     di, 7BCEh       ; bcec - 411e
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_1062B
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -672,23 +679,7 @@ loc_10601:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_1062B
-
-; ---------------------------------------------------------------------------
-                nop
-
-
-loc_10610:
-                sub     di, 7BADh
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_1062B
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -699,67 +690,41 @@ loc_1061F:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_1062B:
                 mov     cx, 6
-
-
 loc_1062E:
                 lodsb
                 stosb
                 loop    loc_1062E
 
+; ---------------------------------------------------------------------------
+
                 mov     si, offset hook3_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_1067D
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_1065F
-
-                cmp     game_spa, 1
-                jz      short loc_1066E
 
                 sub     di, 79CDh       ; bcec - 431F
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10689
-
-; ---------------------------------------------------------------------------
                 nop
 
-
+                
 loc_1065F:
                 sub     di, 798Dh
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10689
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_1066E:
-                sub     di, 79ACh
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_10689
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_1067D:
                 sub     di, 7978h
@@ -768,41 +733,31 @@ loc_1067D:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_10689:
                 mov     cx, 5
-
-
 loc_1068C:
                 lodsb
                 stosb
                 loop    loc_1068C
 
+; ---------------------------------------------------------------------------
+
                 mov     si, offset hook4_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_106DB
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_106BD
-
-                cmp     game_spa, 1
-                jz      short loc_106CC
 
                 sub     di, 700Ch       ; bcec - 4ce0
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_106E7
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_106BD:
                 sub     di, 6FCCh
@@ -810,25 +765,8 @@ loc_106BD:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_106E7
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_106CC:
-                sub     di, 6FEBh
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_106E7
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_106DB:
                 sub     di, 6FB7h
@@ -837,29 +775,26 @@ loc_106DB:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_106E7:
+                mov     word ptr hook4_dest, di
+                mov     word ptr hook4_dest+2, es
                 mov     cx, 6
-
 
 loc_106EA:
                 lodsb
                 stosb
                 loop    loc_106EA
 
+; ---------------------------------------------------------------------------
+                
                 mov     si, offset hook5_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_10775
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_1072F
-
-                cmp     game_spa, 1
-                jz      short loc_10752
 
                 mov     diff_seg002_seg008_seg, 466Dh ; seg008.start - seg002.start
                 mov     cs:func_lcdinit_off, 14C0h ; LCDInit
@@ -869,12 +804,8 @@ loc_106EA:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10795
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_1072F:
                 mov     diff_seg002_seg008_seg, 466Dh
@@ -885,28 +816,8 @@ loc_1072F:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10795
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_10752:
-                mov     diff_seg002_seg008_seg, 466Ah
-                mov     cs:func_lcdinit_off, 1494h
-                mov     cs:func_renderlaptime_off, 158Ah
-                sub     di, 0A5AEh
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_10795
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_10775:
                 mov     diff_seg002_seg008_seg, 466Ah
@@ -918,72 +829,59 @@ loc_10775:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_10795:
                 push    si
                 push    di
                 push    ds
                 push    es
                 mov     si, di
-                mov     di, 0C27h
+                mov     di, offset hook5_orig_code
                 mov     ax, es
                 mov     ds, ax
-                assume ds:nothing
                 mov     ax, cs
                 mov     es, ax
-                assume es:TSR
                 mov     cx, 6
-
-
 loc_107A9:
                 lodsb
                 stosb
                 loop    loc_107A9
 
+; ---------------------------------------------------------------------------
+
                 pop     es
-                assume es:nothing
                 pop     ds
-                assume ds:TSR
                 pop     di
                 pop     si
                 mov     cx, 6
-
-
 loc_107B4:
                 lodsb
                 stosb
                 loop    loc_107B4
 
+; ---------------------------------------------------------------------------
+
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
                 mov     ax, es
                 sub     ax, diff_seg002_seg008_seg
                 mov     cs:func_lcdinit_seg, ax
                 mov     cs:func_renderlaptime_seg, ax
                 mov     si, offset hook5_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_10817
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_107F9
-
-                cmp     game_spa, 1
-                jz      short loc_10808
 
                 sub     di, 5620h       ; bcec (seg008) - 66cc (seg000)
                 mov     ax, es
                 sub     ax, 6000h       ; 6000 (seg008) - 0000 (seg000)
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10823
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_107F9:
                 sub     di, 55E0h
@@ -991,25 +889,8 @@ loc_107F9:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10823
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_10808:
-                sub     di, 55FFh
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_10823
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_10817:
                 sub     di, 55CBh
@@ -1018,41 +899,31 @@ loc_10817:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_10823:
                 mov     cx, 6
-
-
 loc_10826:
                 lodsb
                 stosb
                 loop    loc_10826
 
+; ---------------------------------------------------------------------------
+
                 mov     si, offset hook6_start
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_10875
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_10857
-
-                cmp     game_spa, 1
-                jz      short loc_10866
 
                 sub     di, 7162h       ; bcec - 4b8a
                 mov     ax, es
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10881
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_10857:
                 sub     di, 7122h
@@ -1060,25 +931,8 @@ loc_10857:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_10881
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_10866:
-                sub     di, 7141h
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_10881
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_10875:
                 sub     di, 710Dh
@@ -1087,29 +941,105 @@ loc_10875:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_10881:
                 mov     cx, 5
-
-
 loc_10884:
                 lodsb
                 stosb
                 loop    loc_10884
 
+; ---------------------------------------------------------------------------
+
+                mov     si, offset hook7_start
+                mov     di, sp
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
+                jz      short __usa7
+
+                cmp     gp_ver, GP_VER_ITA
+                jz      short __ita7
+
+                ; use 7158h to keep the randomization of CCPlayer car power
+                sub     di, 7153h       ; bcec - 4b99
+                mov     ax, es
+                sub     ax, 6000h
+                nop
+                mov     es, ax
+                jmp     short __dohook7
+                nop
+
+__ita7:
+                sub     di, 7113h
+                mov     ax, es
+                sub     ax, 6000h
+                nop
+                mov     es, ax
+                jmp     short __dohook7
+                nop
+
+__usa7:
+                sub     di, 70FEh
+                mov     ax, es
+                sub     ax, 6000h
+                nop
+                mov     es, ax
+
+__dohook7:
+                mov     cx, 5
+__loop7:
+                lodsb
+                stosb
+                loop    __loop7
+
+; ---------------------------------------------------------------------------
+
+                mov     si, offset hook8_start
+                mov     di, sp
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                sub     di, (0BCECh - 04C85h)
+                mov     ax, es
+                sub     ax, 6000h
+                mov     word ptr cs:fpInitCarGrip, di
+                mov     word ptr cs:fpInitCarGrip+2, ax
+
+                mov     di, sp
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                sub     di, (0BCECh - 0D83Ah)
+                mov     es, ax
+
+                mov     cx, 5
+__loop8:
+                lodsb
+                stosb
+                loop    __loop8
+
+; ---------------------------------------------------------------------------
+
+                mov     si, offset hook9_start
+                mov     di, sp
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                sub     di, (0BCECh - 0D8EBh)
+                mov     ax, es
+                sub     ax, 6000h
+                nop
+                mov     es, ax
+
+                mov     cx, 5
+__loop9:
+                lodsb
+                stosb
+                loop    __loop9
+
+; ---------------------------------------------------------------------------
+
                 mov     si, offset func_renderlcdimage_off
                 mov     di, sp
-                les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2 + 2)]
-                assume es:nothing
-                cmp     game_usa, 1
+                les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
+                cmp     gp_ver, GP_VER_USA
                 jz      short loc_108DC
 
-                cmp     game_ita, 1
+                cmp     gp_ver, GP_VER_ITA
                 jz      short loc_108B8
-
-                cmp     game_spa, 1
-                jz      short loc_108CA
 
                 mov     bx, 3830h       ; RenderLCDImage
                 sub     di, 9EC8h       ; bcec - 1e24, just to read out segment
@@ -1117,12 +1047,8 @@ loc_10884:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_108EB
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_108B8:
                 mov     bx, 37FCh
@@ -1131,26 +1057,8 @@ loc_108B8:
                 sub     ax, 6000h
                 nop
                 mov     es, ax
-                assume es:nothing
                 jmp     short loc_108EB
-
-; ---------------------------------------------------------------------------
                 nop
-
-
-loc_108CA:
-                mov     bx, 3804h
-                sub     di, 9EA7h
-                mov     ax, es
-                sub     ax, 6000h
-                nop
-                mov     es, ax
-                assume es:nothing
-                jmp     short loc_108EB
-
-; ---------------------------------------------------------------------------
-                nop
-
 
 loc_108DC:
                 mov     bx, 3804h
@@ -1160,13 +1068,12 @@ loc_108DC:
                 nop
                 mov     es, ax
 
-                assume es:nothing
-
 loc_108EB:
                 mov     [si], bx
                 add     si, 2
                 mov     ax, es:[di]
                 mov     [si], ax
+                assume ds:nothing
                 retn
 
 hook_gp_exe     endp
@@ -1176,7 +1083,8 @@ hook_gp_exe     endp
 
 
 announce_hook   proc near
-                mov     dx, offset aGplaptimActiva ; "\r\nGpLapTim activated OK\r\n$"
+                assume ds:TSR
+                mov     dx, offset hooked_msg ; "\r\nGpLapTim activated OK\r\n$"
                 mov     ah, 9
                 int     21h             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
@@ -1189,6 +1097,7 @@ do_delay:
                 cmp     delay_count, 0
                 jnz     short do_delay
 
+                assume ds:nothing
                 retn
 
 announce_hook   endp
@@ -1204,8 +1113,8 @@ hook2_pit_in    proc far
                 mov     word ptr cs:pCar, si
                 mov     word ptr cs:pCar+2, ds
                 cli
-                mov     word ptr cs:seg004_stack, ss
-                mov     word ptr cs:seg004_stack+2, sp
+                mov     cs:game_ss, ss
+                mov     cs:game_sp, sp
                 mov     ax, cs
                 mov     ss, ax
                 assume ss:TSR
@@ -1216,12 +1125,12 @@ hook2_pit_in    proc far
                 push    ds
                 mov     ax, ds
                 mov     es, ax
-                assume es:TSR
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 cld
-                test    byte ptr es:5Ah, 80h
-                jnz     short end
+                test    byte ptr es:5Ah, 80h ; seg003:byte_1E66A
+                jnz     short __end
 
                 mov     al, log_player_times_only
                 or      al, al
@@ -1231,11 +1140,8 @@ hook2_pit_in    proc far
                 and     al, 80h
                 jnz     short loc_10957
 
-                jmp     short end
-
-; ---------------------------------------------------------------------------
+                jmp     short __end
                 nop
-
 
 loc_10957:
                 mov     al, REC_TYPE_PIT_IN
@@ -1253,8 +1159,6 @@ loc_10957:
                 dec     al
                 mov     rec_pit_in.pi_lap_number, al
                 mov     al, rec_pit_in.pi_car_number
-
-loc_1097C:
                 call    get_car_race_pos
 
                 mov     rec_pit_in.pi_car_position, cl
@@ -1270,16 +1174,15 @@ loc_1097C:
                 mov     dx, offset rec_pit_in
                 call    log_record
 
-
-end:
+__end:
                 pop     ds
+                assume ds:nothing
                 pop     es
-                assume es:nothing
                 popa
                 cli
-                mov     ss, word ptr cs:seg004_stack
+                mov     ss, cs:game_ss
                 assume ss:nothing
-                mov     sp, word ptr cs:seg004_stack+2
+                mov     sp, cs:game_sp
                 sti
                 pop     ax
                 popf
@@ -1298,8 +1201,8 @@ hook3_pit_out   proc far
                 mov     word ptr cs:pCar, si
                 mov     word ptr cs:pCar+2, ds
                 cli
-                mov     word ptr cs:seg004_stack, ss
-                mov     word ptr cs:seg004_stack+2, sp
+                mov     cs:game_ss, ss
+                mov     cs:game_sp, sp
                 mov     ax, cs
                 mov     ss, ax
                 assume ss:TSR
@@ -1310,11 +1213,11 @@ hook3_pit_out   proc far
                 push    ds
                 mov     ax, ds
                 mov     es, ax
-                assume es:TSR
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 cld
-                test    byte ptr es:5Ah, 80h
+                test    byte ptr es:5Ah, 80h ; seg003:byte_1E66A
                 jnz     short loc_10A50
 
                 mov     al, log_player_times_only
@@ -1326,8 +1229,6 @@ hook3_pit_out   proc far
                 jnz     short loc_10A02
 
                 jmp     short loc_10A50
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -1365,13 +1266,13 @@ loc_10A02:
 
 loc_10A50:
                 pop     ds
+                assume ds:nothing
                 pop     es
-                assume es:nothing
                 popa
                 cli
-                mov     ss, word ptr cs:seg004_stack
+                mov     ss, cs:game_ss
                 assume ss:nothing
-                mov     sp, word ptr cs:seg004_stack+2
+                mov     sp, cs:game_sp
                 sti
                 pop     ax
                 popf
@@ -1384,14 +1285,34 @@ hook3_pit_out   endp
 
 
 hook4_player_grip proc far
-                test    [si+Car.bID], 80h
-                jz      short repeat_orig_code
+                push    ds
+                push    es
+                pusha
 
+                ; read bActivePlayerCarID
+                mov     dx, CONV_BASE_3 + 296h
+                mov     ax, 1
+                push    ds
+                push    cs
+                pop     ds
+                call    near ptr read_some_byte_from_gp
+                pop     ds
+                mov     dl, al
+
+                mov     al, [si+Car.bID]
+                test    al, 80h
+                jz      short __repeat_orig_code
+
+                cmp     al, dl
+                jne     __repeat_orig_code
+                
                 mov     [si+Car.wGrip], 4000h
 
-
-repeat_orig_code:                       ; wOppLevel
-                mov     di, [bp+1222h]
+__repeat_orig_code:
+                popa
+                pop     es
+                pop     ds
+                mov     di, [bp+1222h]  ; wOppLevel
                 shl     di, 1
                 retf
 
@@ -1406,12 +1327,100 @@ hook6_randomize_player_car_power proc far
 
 hook6_randomize_player_car_power endp
 
+
+; =============== S U B R O U T I N E =======================================
+
+
+; out cx -> power value
+hook7_randomize_ccplayer_car_power proc far
+                mov cx, cs:ccplayer_power
+                retf
+
+hook7_randomize_ccplayer_car_power endp
+
+
+; =============== S U B R O U T I N E =======================================
+
+
+; set CCPlayer grip to CC grip
+hook8_hotseat_automatic proc far
+                push    ds
+                push    es
+                push    si
+                push    di
+                push    cx
+                push    dx
+
+                push    ds
+                push    es
+                push    si
+
+                push    cs
+                pop     ds
+                assume ds:TSR
+                
+                ; shortcut InitCarGrip right after grip is set (same location as hook4)
+                mov     si, offset hook4_alt_start
+                les     di, hook4_dest
+                mov     cx, 5
+__loop1:
+                lodsb
+                stosb
+                loop    __loop1
+
+                pop     si
+                pop     es
+                pop     ds
+                assume ds:nothing
+                
+                ; call patched InitCarGrip
+                call    [cs:fpInitCarGrip]
+
+                push    cs
+                pop     ds
+                assume ds:TSR
+
+                ; restore original hook4
+                mov     si, offset hook4_start
+                les     di, hook4_dest
+                mov     cx, 5
+__loop2:
+                lodsb
+                stosb
+                loop    __loop2
+
+__repeat_orig_code:
+                pop     dx
+                pop     cx
+                pop     di
+                pop     si
+                pop     es
+                pop     ds
+                assume ds:nothing
+                add     [si+Car.bNumHotseatSwitchesDone], 1
+                retf
+
+hook8_hotseat_automatic endp
+
+
+; =============== S U B R O U T I N E =======================================
+
+
+; set Player grip to 1
+hook9_hotseat_control proc far
+                mov     [si+Car.wGrip], 4000h
+
+__repeat_orig_code:
+                mov     byte ptr [bp+192h], 0ffh
+                retf
+
+hook9_hotseat_control endp
+
+
 ; ---------------------------------------------------------------------------
 
 loc_10A77:
                 jmp     loc_10C24
-
-; ---------------------------------------------------------------------------
 
 hook5_seg:
                 pusha
@@ -1435,18 +1444,18 @@ on_grass:
                 test    byte ptr ss:124Ah, 80h ; session mode race?
                 jnz     short loc_10AB3
 
-                cmp     si, word ptr loc_1097C+1
+                cmp     si, ds:97Dh     ; seg003:pCarCockpit
                 jnz     short loc_10AB3
 
                 mov     ax, 0Eh
-                call    near ptr CallRenderLCDImage
+                call    call_render_lcd_image
 
 
 loc_10AB3:
-                cmp     si, word ptr loc_1097C+1
+                cmp     si, ds:97Dh     ; seg003:pCarCockpit
                 jnz     short loc_10A77
 
-                test    byte ptr ss:124Ah, 80h
+                test    byte ptr ss:124Ah, 80h ; session mode race?
                 jnz     short loc_10A77
 
                 mov     ax, word ptr [si+Car.pSeg]
@@ -1457,14 +1466,9 @@ loc_10AB3:
 loc_10ACB:
                 jmp     loc_10C24
 
-; ---------------------------------------------------------------------------
-
 loc_10ACE:
                 jmp     short loc_10B31
-
-; ---------------------------------------------------------------------------
                 nop
-
 
 loc_10AD1:
                 mov     cs:car_trackseg, ax
@@ -1511,14 +1515,12 @@ loc_10B31:
 
                 jmp     loc_10BE8
 
-; ---------------------------------------------------------------------------
-
 loc_10B3B:
                 mov     word ptr cs:pCar, si
                 mov     word ptr cs:pCar+2, ds
                 cli
-                mov     word ptr cs:seg004_stack, ss
-                mov     word ptr cs:seg004_stack+2, sp
+                mov     cs:game_ss, ss
+                mov     cs:game_sp, sp
                 mov     ax, cs
                 mov     ss, ax
                 assume ss:TSR
@@ -1530,9 +1532,9 @@ loc_10B3B:
                 cld
                 mov     ax, ds
                 mov     es, ax
-                assume es:TSR
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 mov     rec_split.st_point, cl
                 dec     cx
                 add     cx, cx
@@ -1579,24 +1581,23 @@ loc_10B3B:
                 call    log_record
 
                 pop     es
-                assume es:nothing
                 pop     ds
+                assume ds:nothing
                 popa
                 cli
-                mov     ss, word ptr cs:seg004_stack
+                mov     ss, cs:game_ss
                 assume ss:nothing
-                mov     sp, word ptr cs:seg004_stack+2
+                mov     sp, cs:game_sp
                 sti
 
-
-loc_10BE8:                              ; timeCurrent_lo
-                push    word ptr ds:294Fh
+loc_10BE8:
+                push    word ptr ds:294Fh ; timeCurrent_lo
                 pop     word ptr ds:1Ah ; split timer lo
                 push    word ptr ds:2951h ; timeCurrent_hi
                 pop     word ptr ds:1Ch ; split timer hi
                 mov     cx, cs:stop_time
-                add     ds:26, cx
-                adc     word ptr ds:1Ch, 0
+                add     word ptr ds:1Ah, cx ; split timer lo
+                adc     word ptr ds:1Ch, 0 ; split timer hi
                 mov     al, 25
                 mov     cl, 2
 
@@ -1620,33 +1621,36 @@ func_renderlaptime_seg dw 0
 loc_10C24:
                 pop     es
                 pop     ds
+                assume ds:nothing
                 popa
-
-; ---------------------------------------------------------------------------
+hook5_orig_code:
                 db 6 dup(0)
-; ---------------------------------------------------------------------------
                 retf
-
-; ---------------------------------------------------------------------------
-CallRenderLCDImage db 9Ah
-func_renderlcdimage_off dw 0
-func_renderlcdimage_seg dw 0
-; ---------------------------------------------------------------------------
-                retn
 
 
 ; =============== S U B R O U T I N E =======================================
 
 
+call_render_lcd_image proc near
+                db 9Ah
+func_renderlcdimage_off dw 0
+func_renderlcdimage_seg dw 0
+                retn
+
+call_render_lcd_image endp
+
+; =============== S U B R O U T I N E =======================================
+
+
 hook1_end_of_lap proc far
-                test    byte ptr [bp+124Ah], 0FFh
+                test    byte ptr [bp+124Ah], 0FFh ; session mode race?
                 pushf
                 push    ax
                 mov     word ptr cs:pCar, si
                 mov     word ptr cs:pCar+2, ds
                 cli
-                mov     word ptr cs:seg004_stack, ss
-                mov     word ptr cs:seg004_stack+2, sp
+                mov     cs:game_ss, ss
+                mov     cs:game_sp, sp
                 mov     ax, cs
                 mov     ss, ax
                 assume ss:TSR
@@ -1657,20 +1661,17 @@ hook1_end_of_lap proc far
                 push    ds
                 mov     ax, ds
                 mov     es, ax
-                assume es:TSR
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 cld
-                test    byte ptr es:5Ah, 80h
+                test    byte ptr es:5Ah, 80h ; seg003:byte_1E66A
                 jz      short loc_10C6F
 
                 jmp     loc_110DC
 
-; ---------------------------------------------------------------------------
-
 loc_10C6F:
                 les     si, pCar
-                assume es:nothing
                 test    es:[si+Car.bID], 80h
                 jz      short loc_10C93
 
@@ -1698,8 +1699,6 @@ loc_10C93:
                 jnz     short loc_10CAA
 
                 jmp     loc_11074
-
-; ---------------------------------------------------------------------------
 
 loc_10CAA:
                 mov     al, 1
@@ -1738,9 +1737,9 @@ loc_10CAA:
                 sub     al, 1
                 shl     ax, 2
                 mov     di, ax
-                add     di, 1982h
+                add     di, 1982h       ; arCarIDRaceTimes
                 push    es
-                mov     es, word ptr seg004_stack
+                mov     es, game_ss
                 mov     ax, es:[di]
                 mov     word ptr rec_lap.lr_race_time, ax
                 mov     ax, es:[di+2]
@@ -1754,7 +1753,6 @@ loc_10CAA:
                 mov     cx, 42
                 call    calc_crc
 
-; ---------------------------------------------------------------------------
                 mov     rec_lap.lr_crc, ax
                 mov     cx, 44
                 les     si, pCar
@@ -1765,23 +1763,17 @@ loc_10CAA:
                 jnz     short loc_10D52
 
                 jmp     short loc_10D55
-
-; ---------------------------------------------------------------------------
                 nop
 
 
 loc_10D52:
                 jmp     loc_1106E
 
-; ---------------------------------------------------------------------------
-
 loc_10D55:
                 test    word ptr rec_lap.lr_lap_time+2, 0C000h
                 jz      short laptime_valid
 
                 jmp     loc_1101C
-
-; ---------------------------------------------------------------------------
 
 laptime_valid:
                 call    get_tracknr_in_high_nibble
@@ -1819,8 +1811,6 @@ laptime_valid:
                 jnz     short loc_10DAF
 
                 jmp     short loc_10DB5
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -1828,12 +1818,10 @@ loc_10DAF:
                 mov     cx, size ALL_RECORDS
                 jmp     loc_1106E
 
-; ---------------------------------------------------------------------------
-
 loc_10DB5:
                 mov     al, rec_lap.lr_record_type
                 and     al, 0F0h
-                or      al, 3
+                or      al, REC_TYPE_AUTH
                 mov     rec_auth.ar_record_type, al
                 mov     ax, word ptr rec_lap.lr_best_time
                 mov     word ptr rec_auth.ar_lap_time, ax
@@ -1841,14 +1829,20 @@ loc_10DB5:
                 mov     word ptr rec_auth.ar_lap_time+2, ax
                 mov     al, rec_lap.lr_game_mode
                 mov     rec_auth.ar_game_mode, al
-                les     bx, gp_end_of_lap_off
-                add     bx, 2C11h       ; 4b88: player car power
-                mov     ax, es:[bx]
+
+;                les     bx, gp_end_of_lap_off
+;                add     bx, 2C11h       ; 4b88: player car power
+;                mov     ax, es:[bx]
+                les     si, pCar
+                mov     ax, es:[si+Car.wPower]
+                
                 sub     ax, 632
                 xor     dx, dx
                 mov     cx, 22
                 div     cx
                 mov     rec_auth.ar_bhp, ax
+
+                ; todo: log si+Car.wGrip too?
                 les     bx, gp_end_of_lap_off
                 add     bx, 2D63h       ; 4cda: player car grip
                 xor     dx, dx
@@ -1857,47 +1851,46 @@ loc_10DB5:
                 jb      short loc_10DFE
 
                 sub     ax, 4000h
-
-
 loc_10DFE:
                 mov     cx, 100
                 div     cx
                 add     ax, 1
                 mov     rec_auth.ar_ai_grip, al
-                mov     dx, 2B93h
+
+                mov     dx, 2B93h   ; CONV_BASE_4 + 1222h / 10h
                 mov     ax, 2
                 call    read_some_byte_from_gp
-
                 mov     rec_auth.ar_skill, al
                 mov     rec_auth.ar_drv_aids, 0
-                mov     dx, 2B82h
+
+                mov     dx, 2B82h   ; CONV_BASE_4 + 111dh / 10h
                 mov     ax, 0Dh
                 call    read_some_byte_from_gp
-
                 and     al, 80h
                 or      rec_auth.ar_drv_aids, al
-                mov     dx, 2B93h
+
+                mov     dx, 2B93h   ; CONV_BASE_4 + 1220h / 10h
                 mov     ax, 0
                 call    read_some_byte_from_gp
-
                 and     al, 3Fh
                 or      rec_auth.ar_drv_aids, al
                 xor     bh, bh
                 mov     bl, rec_auth.ar_skill
-                mov     dx, 1FD0h
+
+                mov     dx, 1FD0h   ; CONV_BASE_3 + 126h / 10h
                 mov     ax, 6
                 add     ax, bx
                 call    read_some_byte_from_gp
-
                 or      al, 0C0h
                 and     rec_auth.ar_drv_aids, al
-                mov     dx, 2B82h
+
+                mov     dx, 2B82h   ; CONV_BASE_4 + 111ch / 10h
                 mov     ax, 0Ch
                 call    read_some_byte_from_gp
-
                 and     al, 80h
                 shr     al, 1
                 or      rec_auth.ar_drv_aids, al
+                
                 mov     ah, 2Ah
                 int     21h             ; DOS - GET CURRENT DATE
                                         ; Return: DL = day, DH = month, CX = year
@@ -2010,8 +2003,6 @@ loc_10F27:
 
                 or      rec_auth.ar_seconds, 4
                 jmp     short loc_10F3F
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -2049,7 +2040,7 @@ loc_10F63:
                 mov     cx, 10
                 mov     si, offset gp_exe_data_bytes1
                 les     di, pCar
-                mov     di, 8CCh
+                mov     di, 8CCh    ; data in seg003 to be authenticated
                 cld
                 repe cmpsb
                 jz      short loc_10F7D
@@ -2064,7 +2055,6 @@ loc_10F7D:
                 mov     cx, 42
                 call    calc_crc
 
-; ---------------------------------------------------------------------------
                 mov     rec_auth.ar_crc, ax
                 call    get_tracknr_in_high_nibble
 
@@ -2095,8 +2085,6 @@ loc_10F7D:
                 mov     cx, 88
                 jmp     loc_1106E
 
-; ---------------------------------------------------------------------------
-
 loc_10FC9:
                 push    ds
                 pop     es
@@ -2123,7 +2111,6 @@ loc_10FD4:
                 mov     cx, AUTH_RACE_RECORD.rr_crc
                 call    calc_crc
 
-; ---------------------------------------------------------------------------
                 mov     rec_auth_race.rr_crc, ax
                 mov     ax, word ptr rec_lap.lr_best_time
                 mov     dx, word ptr rec_lap.lr_best_time+2
@@ -2133,12 +2120,9 @@ loc_10FD4:
                 mov     cx, AUTH_RACE_RECORD.rr_crc
                 call    calc_crc
 
-; ---------------------------------------------------------------------------
                 mov     rec_auth.ar_crc, ax
                 mov     cx, 132
                 jmp     short loc_1106E
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -2157,16 +2141,13 @@ loc_1101C:
                 sub     al, 1
                 mov     dx, 10
                 mul     dx
-                mov     dx, 2B99h       ; osCarSetups (seg004:1286)
+                mov     dx, 2B99h   ; CONV_BASE_4 + 1286h / 10h       ; osCarSetups
                 add     ax, 6
                 mov     di, offset rec_setup.sr_front_wing
                 mov     cx, 10
-
-
 loc_11049:
                 push    ax
                 call    read_some_byte_from_gp
-
                 mov     [di], al
                 pop     ax
                 inc     ax
@@ -2192,6 +2173,7 @@ loc_1106E:
 
 loc_11074:
                 les     si, pCar
+                assume es:nothing
                 test    es:[si+Car.bID], 80h
                 jz      short loc_110DC
 
@@ -2209,17 +2191,19 @@ loc_11074:
 
                 mov     grass_touched_this_lap, 0
                 pop     ds
+                assume ds:nothing
                 pop     es
+                assume es:nothing
                 popa
                 cli
-                mov     ss, word ptr cs:seg004_stack
+                mov     ss, cs:game_ss
                 assume ss:nothing
-                mov     sp, word ptr cs:seg004_stack+2
+                mov     sp, cs:game_sp
                 sti
-                test    byte ptr ss:124Ah, 80h
+                test    byte ptr ss:124Ah, 80h ; session mode race?
                 jnz     short loc_110EB
 
-                cmp     si, word ptr loc_1097C+1
+                cmp     si, ds:97Dh     ; seg003:pCarCockpit
                 jnz     short loc_110EB
 
                 mov     ax, 3
@@ -2228,25 +2212,22 @@ loc_11074:
 
                 mov     ax, 0Fh
 
-
 loc_110D6:
-                call    near ptr CallRenderLCDImage
+                call    near ptr call_render_lcd_image
 
                 jmp     short loc_110EB
-
-; ---------------------------------------------------------------------------
                 nop
-
-
 loc_110DC:
                 pop     ds
+                assume ds:nothing
                 pop     es
+                assume es:nothing
                 popa
                 cli
-                mov     ss, word ptr cs:seg004_stack
-                mov     sp, word ptr cs:seg004_stack+2
+                mov     ss, cs:game_ss
+                assume ss:nothing
+                mov     sp, cs:game_sp
                 sti
-
 
 loc_110EB:
                 pop     ax
@@ -2264,8 +2245,6 @@ maybe_init_auth_flags proc near
                 jnz     short locret_110FA
 
                 mov     rec_auth.ar_seconds, 80h
-
-
 locret_110FA:
                 retn
 
@@ -2304,6 +2283,7 @@ calc_total_secs endp
 
 get_car_id      proc near
                 les     si, pCar
+                assume es:nothing
                 mov     al, es:[si+Car.bID]
                 and     al, not 40h
                 mov     ah, es:[si+Car.flags_7E] ; 1=steer rel. 2=gear rel. 4=CC  10=DoSpin  20=unk  40=unk  80=gear rel.  rest=related to trouble
@@ -2319,57 +2299,38 @@ get_car_id      endp
 
 
 get_game_mode   proc near
-                mov     dx, 2B95h       ; session mode
+                mov     dx, 2B95h   ; CONV_BASE_4 + 124ah / 10h       ; session mode
                 mov     ax, 0Ah
                 call    read_some_byte_from_gp
-
                 test    al, 1
                 jz      short loc_11155
 
                 mov     ah, GM_FREE_PRACTICE
                 jmp     short locret_11172
-
-; ---------------------------------------------------------------------------
                 nop
-
-
 loc_11155:
                 test    al, 40h
                 jz      short loc_1115E
 
                 mov     ah, GM_QUALIFYING
                 jmp     short locret_11172
-
-; ---------------------------------------------------------------------------
                 nop
-
-
 loc_1115E:
                 test    al, 2
                 jz      short loc_11167
 
                 mov     ah, GM_PRE_RACE_PRACTICE
                 jmp     short locret_11172
-
-; ---------------------------------------------------------------------------
                 nop
-
-
 loc_11167:
                 test    al, 80h
                 jz      short loc_11170
 
                 mov     ah, GM_RACE
                 jmp     short locret_11172
-
-; ---------------------------------------------------------------------------
                 nop
-
-
 loc_11170:
                 mov     ah, 0
-
-
 locret_11172:
                 retn
 
@@ -2382,7 +2343,8 @@ get_game_mode   endp
 get_car_race_pos proc near
                 push    es
                 and     al, 3Fh
-                mov     es, word ptr seg004_stack
+                mov     es, game_ss
+                assume es:nothing
                 mov     di, 1940h       ; abRacePosCarIDTable
                 mov     cl, 1
 
@@ -2403,6 +2365,7 @@ loc_1117F:
 
 loc_11193:
                 pop     es
+                assume es:nothing
                 retn
 
 get_car_race_pos endp
@@ -2414,7 +2377,8 @@ get_car_race_pos endp
 get_car_fastlap_pos proc near
                 push    es
                 and     al, 3Fh
-                mov     es, word ptr seg004_stack
+                mov     es, game_ss
+                assume es:nothing
                 mov     di, 17D8h       ; abFastLapPosCarIDTable
                 mov     cl, 1
 
@@ -2435,6 +2399,7 @@ loc_111A1:
 
 loc_111B5:
                 pop     es
+                assume es:nothing
                 retn
 
 get_car_fastlap_pos endp
@@ -2444,18 +2409,19 @@ get_car_fastlap_pos endp
 
 
 get_driver_name proc near
+                assume ds:TSR
                 and     al, 3Fh
                 xor     ah, ah
                 sub     al, 1
-                mov     dx, 18h
+                mov     dx, 24
                 mul     dx
                 mov     si, ax
                 add     si, 1A4Ah       ; osDriverNames
                 push    ds
                 push    ds
                 pop     es
-                assume es:TSR
-                mov     ds, word ptr cs:seg004_stack
+                mov     ds, cs:game_ss
+                assume ds:nothing
                 mov     cx, 24
 
 
@@ -2465,6 +2431,7 @@ loc_111D3:
                 loop    loc_111D3
 
                 pop     ds
+                assume ds:nothing
                 retn
 
 get_driver_name endp
@@ -2474,10 +2441,9 @@ get_driver_name endp
 
 
 get_tracknr_in_high_nibble proc near
-                mov     dx, 2B94h
+                mov     dx, 2B94h   ; CONV_BASE_4 + 1236h / 10h
                 mov     ax, 6
                 call    read_some_byte_from_gp
-
                 shl     al, 4
                 and     al, 0F0h
                 retn
@@ -2489,15 +2455,16 @@ get_tracknr_in_high_nibble endp
 
 
 read_some_byte_from_gp proc near
-                les     bx, gp_end_of_lap_off
+                les     bx, gp_end_of_lap_off ; seg000:1F77
                 assume es:nothing
                 add     bx, game_sg_off
                 add     bx, ax
                 sub     bx, 7
                 mov     ax, es
-                add     ax, dx
-                sbb     ax, offset some_offset
+                add     ax, dx   ; e.g. 2b95a -> seg004:124a
+                sbb     ax, 357h ; not offset unk2
                 mov     es, ax
+                assume es:nothing
                 mov     al, es:[bx]
                 retn
 
@@ -2508,6 +2475,7 @@ read_some_byte_from_gp endp
 
 
 log_date_record proc near
+                assume ds:TSR
                 mov     rec_date.dr_record_type, REC_TYPE_DATE
                 mov     ah, 2Ah
                 int     21h             ; DOS - GET CURRENT DATE
@@ -2530,6 +2498,7 @@ log_date_record proc near
                 mov     dx, offset rec_date
                 call    log_record
 
+                assume ds:nothing
                 retn
 
 log_date_record endp
@@ -2542,6 +2511,7 @@ record_size     dw 0
 
 
 log_record      proc near
+                assume ds:TSR
                 mov     record_off, dx
                 mov     record_size, cx
                 mov     dx, offset logfile_path
@@ -2598,6 +2568,7 @@ loc_1127C:
 
 
 locret_11284:
+                assume ds:nothing
                 retn
 
 log_record      endp
@@ -2678,6 +2649,7 @@ crc_func        db 0EAh
 
 
 xor_crc_code    proc near
+                assume ds:TSR
                 push    ax
                 push    cx
                 push    si
@@ -2709,6 +2681,7 @@ loc_112C6:
                 pop     si
                 pop     cx
                 pop     ax
+                assume ds:nothing
                 retn
 
 xor_crc_code    endp
@@ -2720,6 +2693,7 @@ xor_crc_code    endp
 adjust_laptime_with_segdist proc near
                 push    ds
                 mov     ds, word ptr cs:pCar+2
+                assume ds:nothing
                 les     di, [si+Car.pSeg]
                 push    ax
                 push    dx
@@ -2728,16 +2702,16 @@ adjust_laptime_with_segdist proc near
                 mov     cx, 0
                 mov     bx, 1000
                 mul     bx
-                mov     bx, word ptr gp_code_ita+20h ; 62f7
+                mov     bx, ds:160h ; seg003:word_1E770
                 shr     bx, 3
                 test    [si+Car.wSpeed], 0FFFFh
                 js      short loc_11318
 
                 jz      short loc_11318
 
-                mov     byte ptr ss:0C0h, 0
+                mov     byte ptr ss:0C0h, 0 ; seg004:byte_29200
                 div     [si+Car.wSpeed]
-                test    byte ptr ss:0C0h, 0FFh
+                test    byte ptr ss:0C0h, 0FFh ; seg004:byte_29200
                 jnz     short loc_11318
 
                 mov     dx, 0
@@ -2758,11 +2732,15 @@ loc_1131C:
                 sub     ax, bx
                 sbb     dx, cx
                 pop     ds
+                assume ds:nothing
                 retn
 
 adjust_laptime_with_segdist endp
 
 ; ---------------------------------------------------------------------------
+; ----------- END OF TSR, everything below does not stay resident -----------
+; ---------------------------------------------------------------------------
+
 load_msg        db 'Installed OK',0Dh,0Ah,'$'
 already_msg     db 'Already installed !',0Dh,0Ah,'$'
 parse_msg       db 'Failed to determine absolute pathname.',7,0Dh,0Ah,'$'
@@ -2782,11 +2760,11 @@ tsrs_cs         dw 0
 ; Attributes: noreturn
 
 install         proc near
-                cli
+
         ;**
         ;** Switch to our stack.
         ;**
-
+                cli
                 mov     ax, cs
                 mov     ss, ax
                 assume ss:TSR
@@ -2811,6 +2789,7 @@ install         proc near
         ;**
                 mov     ax, cs
                 mov     ds, ax
+                assume ds:TSR
                 call    parse
 
                 or      al, al
@@ -2819,7 +2798,6 @@ install         proc near
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
         ;**
         ;** Check to see if we are already installed
         ;** Note: BX is currently loaded TSR's CS:
@@ -2838,8 +2816,6 @@ parse_ok:
                 jnz     short not_installed
 
                 jmp     short installed
-
-; ---------------------------------------------------------------------------
                 nop
 
 
@@ -2852,6 +2828,7 @@ not_installed:
 nothing_to_unload:
                 push    cs
                 pop     ds
+                assume ds:TSR
                 mov     dx, offset no_unload_msg ; "Can't unload as GPLAPTIM isn't loaded!"...
                 mov     ah, 9
                 int     21h             ; DOS - PRINT STRING
@@ -2860,7 +2837,6 @@ nothing_to_unload:
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
 
 installed:
                 mov     al, unload_flag
@@ -2874,6 +2850,7 @@ installed:
         ;**
                 push    cs
                 pop     ds
+                assume ds:TSR
                 mov     dx, offset cant_unload_msg ; "Unable to unload as another TSR was loa"...
                 mov     ah, 9
                 int     21h             ; DOS - PRINT STRING
@@ -2882,7 +2859,6 @@ installed:
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
         ;**
         ;** Already installed !
         ;**
@@ -2896,7 +2872,6 @@ no_unload:
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
         ;**
         ;** Convert current filename to fully qualified name.
         ;**
@@ -2904,7 +2879,6 @@ no_unload:
 not_installed1:
                 mov     ax, ds
                 mov     es, ax
-                assume es:TSR
                 mov     si, filename_offset
                 mov     di, offset logfile_path
                 mov     ah, 60h
@@ -2922,7 +2896,6 @@ not_installed1:
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
         ;**
         ;** Install our vectors
         ;**
@@ -2937,29 +2910,42 @@ name_q_ok:
                 mov     time.secs, al
                 mov     time.mins, al
                 mov     time.hours, al
+
                 mov     bx, offset hook1_off
-                mov     word ptr [bx], offset hook1_end_of_lap
                 mov     ax, cs
+                mov     word ptr [bx], offset hook1_end_of_lap
                 mov     [bx+2], ax
+
                 mov     bx, offset hook2_off
                 mov     word ptr [bx], offset hook2_pit_in
-                mov     ax, cs
                 mov     [bx+2], ax
+
                 mov     bx, offset hook3_off
                 mov     word ptr [bx], offset hook3_pit_out
-                mov     ax, cs
                 mov     [bx+2], ax
+
                 mov     bx, offset hook4_off
                 mov     word ptr [bx], offset hook4_player_grip
-                mov     ax, cs
                 mov     [bx+2], ax
+
                 mov     bx, offset hook5_off
                 mov     word ptr [bx], offset hook5_seg
-                mov     ax, cs
                 mov     [bx+2], ax
+
                 mov     bx, offset hook6_off
                 mov     word ptr [bx], offset hook6_randomize_player_car_power
-                mov     ax, cs
+                mov     [bx+2], ax
+
+                mov     bx, offset hook7_off
+                mov     word ptr [bx], offset hook7_randomize_ccplayer_car_power
+                mov     [bx+2], ax
+
+                mov     bx, offset hook8_off
+                mov     word ptr [bx], offset hook8_hotseat_automatic
+                mov     [bx+2], ax
+
+                mov     bx, offset hook9_off
+                mov     word ptr [bx], offset hook9_hotseat_control
                 mov     [bx+2], ax
 
         ;**
@@ -2974,7 +2960,6 @@ name_q_ok:
         ;*** Free environment memory
         ;***
                 les     bx, psp_env
-                assume es:nothing
                 mov     ax, es:[bx]
                 mov     es, ax
                 mov     ah, 49h
@@ -2993,7 +2978,6 @@ name_q_ok:
                 int     21h             ; DOS - DOS 2+ - TERMINATE BUT STAY RESIDENT
                                         ; AL = exit code, DX = program size, in paragraphs
 
-; ---------------------------------------------------------------------------
         ;***
         ;*** Not reached
         ;***
@@ -3094,8 +3078,6 @@ tsr_unload      proc near
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-; ---------------------------------------------------------------------------
-
 cant_unload:
                 retn
 
@@ -3180,7 +3162,7 @@ len             = word ptr -2
                 sub     sp, 2
                 push    si
                 push    di
-                push    (offset title_msg+4) ; "GpLapTim V6.1 4th Apr 1996 - Grand Prix"...
+                push    (offset title_msg+4) ; "GpLapTim V7.0 7th Nov 2018 - Grand Prix"...
                 call    display_msg
 
                 add     sp, 2
@@ -3190,8 +3172,6 @@ len             = word ptr -2
                 cbw
                 mov     [bp+len], ax
                 jmp     short loc_1161D
-
-; ---------------------------------------------------------------------------
 
 loc_115F2:
                 les     bx, cmd_line
@@ -3226,15 +3206,11 @@ loc_1161D:
 
                 jmp     loc_117A8
 
-; ---------------------------------------------------------------------------
-
 loc_11625:
                 or      cx, cx
                 jnz     short loc_1162C
 
                 jmp     loc_11791
-
-; ---------------------------------------------------------------------------
 
 loc_1162C:
                 les     bx, cmd_line
@@ -3243,8 +3219,6 @@ loc_1162C:
 
                 mov     log_player_times_only, 1
                 jmp     loc_1178D
-
-; ---------------------------------------------------------------------------
 
 loc_1163E:
                 les     bx, cmd_line
@@ -3263,8 +3237,6 @@ loc_1163E:
 
                 jmp     loc_1178D
 
-; ---------------------------------------------------------------------------
-
 loc_11662:
                 push    offset aGplaptimMissin ; "GpLapTim: missing log filename.\n"
                 call    display_msg
@@ -3275,8 +3247,6 @@ loc_11662:
                 xor     ax, ax
                 jmp     loc_117B9
 
-; ---------------------------------------------------------------------------
-
 loc_11673:
                 les     bx, cmd_line
                 cmp     byte ptr es:[bx], 'u'
@@ -3284,8 +3254,6 @@ loc_11673:
 
                 mov     unload_flag, 1
                 jmp     loc_1178D
-
-; ---------------------------------------------------------------------------
 
 loc_11685:
                 les     bx, cmd_line
@@ -3308,8 +3276,6 @@ loc_11685:
 
                 jmp     loc_1178D
 
-; ---------------------------------------------------------------------------
-
 loc_116B2:
                 push    offset aGplaptimInvali ; "GpLapTim: Invalid 1st split percentage "...
                 call    display_msg
@@ -3317,8 +3283,6 @@ loc_116B2:
                 add     sp, 2
                 xor     ax, ax
                 jmp     loc_117B9
-
-; ---------------------------------------------------------------------------
 
 loc_116C0:
                 les     bx, cmd_line
@@ -3341,8 +3305,6 @@ loc_116C0:
 
                 jmp     loc_1178D
 
-; ---------------------------------------------------------------------------
-
 loc_116ED:
                 push    offset aGplaptimInvali_0 ; "GpLapTim: Invalid 2nd split percentage "...
                 call    display_msg
@@ -3350,8 +3312,6 @@ loc_116ED:
                 add     sp, 2
                 xor     ax, ax
                 jmp     loc_117B9
-
-; ---------------------------------------------------------------------------
 
 loc_116FB:
                 les     bx, cmd_line
@@ -3370,8 +3330,9 @@ loc_116FB:
                 jl      short loc_11725
 
                 cmp     split3_perc, 99
-                jle     short loc_1178D
-
+                jg     short loc_11725
+                
+                jmp     loc_1178D
 
 loc_11725:
                 push    offset aGplaptimInvali_1 ; "GpLapTim: Invalid 3rd split percentage "...
@@ -3380,8 +3341,6 @@ loc_11725:
                 add     sp, 2
                 xor     ax, ax
                 jmp     loc_117B9
-
-; ---------------------------------------------------------------------------
 
 loc_11733:
                 les     bx, cmd_line
@@ -3406,12 +3365,10 @@ loc_11733:
 loc_1175D:
                 push    offset aGplaptimSStopT ; "GpLapTim: -s Stop time must be between "...
                 call    display_msg
-
                 add     sp, 2
+
                 xor     ax, ax
                 jmp     short loc_117B9
-
-; ---------------------------------------------------------------------------
 
 loc_1176A:
                 mov     ax, 1000
@@ -3419,9 +3376,26 @@ loc_1176A:
                 mov     stop_time, ax
                 jmp     short loc_1178D
 
-; ---------------------------------------------------------------------------
-
 loc_11776:
+                les     bx, cmd_line
+                cmp     byte ptr es:[bx], 'w'
+                jnz     short __end_w
+
+                mov     ax, word ptr cmd_line
+                inc     ax
+                push    word ptr cmd_line+2
+                push    ax
+                call    atoi
+                add     sp, 4
+
+                mov     cx, 22
+                mul     cx
+                add     ax, 632
+                mov     ccplayer_power, ax
+                
+                jmp     short loc_1178D
+
+__end_w:
                 les     bx, cmd_line
                 cmp     byte ptr es:[bx], '?'
                 jz      short loc_11786
@@ -3436,13 +3410,9 @@ loc_11786:
                 xor     ax, ax
                 jmp     short loc_117B9
 
-; ---------------------------------------------------------------------------
-
 loc_1178D:
                 xor     cx, cx
                 jmp     short loc_117A4
-
-; ---------------------------------------------------------------------------
 
 loc_11791:
                 les     bx, cmd_line
@@ -3468,8 +3438,6 @@ loc_117A8:
                 jz      short loc_117B6
 
                 jmp     loc_11625
-
-; ---------------------------------------------------------------------------
 
 loc_117B6:
                 mov     ax, 1
@@ -3514,8 +3482,6 @@ arg_0           = word ptr  4
                 push    si
                 push    di
                 jmp     short loc_117F0
-
-; ---------------------------------------------------------------------------
 
 loc_117D2:
                 mov     bx, [bp+arg_0]
@@ -3614,8 +3580,6 @@ loc_1182A:
 
                 jmp     short loc_11865
 
-; ---------------------------------------------------------------------------
-
 loc_11844:
                 cmp     ax, '-'
                 jnz     short loc_11865
@@ -3623,13 +3587,9 @@ loc_11844:
                 inc     [bp+f]
                 jmp     short loc_11862
 
-; ---------------------------------------------------------------------------
-
 loc_1184E:
                 inc     word ptr [bp+p]
                 jmp     short loc_1182A
-
-; ---------------------------------------------------------------------------
 
 loc_11853:
                 imul    cx, 10
@@ -3661,8 +3621,6 @@ loc_11874:
                 neg     ax
                 jmp     short loc_11882
 
-; ---------------------------------------------------------------------------
-
 loc_11880:
                 mov     ax, cx
 
@@ -3676,8 +3634,10 @@ loc_11882:
 atoi            endp
 
 ; ---------------------------------------------------------------------------
-title_msg       db '@(#)GpLapTim V6.1 4th Apr 1996 - Grand Prix/World Circuit Lap Time Logger.',0Ah
+title_msg       db '@(#)GpLapTim V7.0 12th Nov 2018 - Grand Prix/World Circuit Lap Time Logger.',0Ah
                 db 'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.'
+                db 0Ah
+                db 'Copyright (c) Rene Smit 2018 - All Rights Reserved.'
                 db 0Ah
                 db 0Ah,0
 aGplaptimMissin db 'GpLapTim: missing log filename.',0Ah,0
@@ -3695,6 +3655,8 @@ aUsageGplaptimH db 0Ah
                 db '       -cN       3rd split time percentage (default 75%).',0Ah
                 db 0Ah
                 db '       -sN       Stop (freeze) delay in seconds (default 10s).',0Ah
+                db 0Ah
+                db '       -wN       Set BHP for CC player during hotseat (default 716).',0Ah
                 db 0Ah
                 db '       -h,-?     This help message.',0Ah
                 db '       -u        Unload TSR.',0Ah,0
