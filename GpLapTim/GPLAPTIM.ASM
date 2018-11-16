@@ -101,7 +101,7 @@ field_3E        dw ?
 timeLast_lo     dw ?                   
 timeLast_hi     dw ?                   
 weight          dw ?
-grip            dw ?
+tyreWear        dw ?                    ; of current set, starts at a certain value depending on tyre type
 field_48        dw ?                    ; some sort of angle
 field_4A        dw ?
 field_4C        dw ?                    ; used to calculate front wing effect on field_4E
@@ -141,7 +141,7 @@ bDrvAids        db ?
 field_86        dw ?
 field_88        db ?
 flagsAnalogControl db ?                 ; 4=unk, 8=analog throttle, 10=analog steering, 20=analog brake
-field_8A        dw ?
+wSegPosX_8A     dw ?                    ; related to pit? 20 in box, 18 in pitlane, 0 on track
 wCarHeight      dw ?
 field_8E        dw ?
 field_90        dw ?
@@ -166,7 +166,7 @@ bID             db ?
 bTeamPitPos     db ?
 timeBest_lo     dw ?                   
 timeBest_hi     dw ?                   
-field_B2        db ?                   
+bTyreType       db ?                    ; 0=A 1=B 2=C 3=D 4=Q 5=W
 flags_B3        db ?                    ; 4=pitlight?  20=unk
 field_B4        dw ?
 field_B6        dw ?
@@ -180,7 +180,7 @@ Car             ends
                 .286
                 .model tiny
 
-TSR             segment byte public 'CODE' use16
+TSR             segment para public 'CODE' use16
                 assume cs:TSR
                 org 100h
                 assume es:nothing, ss:nothing, ds:nothing
@@ -391,6 +391,7 @@ hooked_msg      db 0Dh,0Ah
                 align 2
                 db 200 dup('#')          ; stack
 stack_top       dw 5A5Ah
+
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -620,7 +621,7 @@ hook_gp_exe     proc near
                 jz      short __ita1
 
 __eur1:
-                sub     di, 9D75h       ; bcec - 1F77
+                sub     di, (0BCECh - 1F77h)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -664,7 +665,7 @@ __loop1:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_10601
 
-                sub     di, 7BCEh       ; bcec - 411e
+                sub     di, (0BCECh - 411Eh)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -708,7 +709,7 @@ loc_1062E:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_1065F
 
-                sub     di, 79CDh       ; bcec - 431F
+                sub     di, (0BCECh - 431Fh)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -751,7 +752,7 @@ loc_1068C:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_106BD
 
-                sub     di, 700Ch       ; bcec - 4ce0
+                sub     di, (0BCECh - 4CE0h)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -796,10 +797,10 @@ loc_106EA:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_1072F
 
-                mov     diff_seg002_seg008_seg, 466Dh ; seg008.start - seg002.start
+                mov     diff_seg002_seg008_seg, (605AH - 19EDH) ; seg008.start - seg002.start    
                 mov     cs:func_lcdinit_off, 14C0h ; LCDInit
                 mov     cs:func_renderlaptime_off, 15B6h ; RenderLCDLapTime
-                sub     di, 0A5CFh      ; bcec - 171d
+                sub     di, (0BCECh - 171Dh)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -875,9 +876,9 @@ loc_107B4:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_107F9
 
-                sub     di, 5620h       ; bcec (seg008) - 66cc (seg000)
+                sub     di, (0BCECh - 66CCh)
                 mov     ax, es
-                sub     ax, 6000h       ; 6000 (seg008) - 0000 (seg000)
+                sub     ax, 6000h
                 nop
                 mov     es, ax
                 jmp     short loc_10823
@@ -917,7 +918,7 @@ loc_10826:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_10857
 
-                sub     di, 7162h       ; bcec - 4b8a
+                sub     di, (0BCECh - 4B8Ah)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -959,8 +960,8 @@ loc_10884:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short __ita7
 
-                ; use 7158h to keep the randomization of CCPlayer car power
-                sub     di, 7153h       ; bcec - 4b99
+                ; use 4B94h to keep the randomization of CCPlayer car power
+                sub     di, (0BCECh - 4B99h)
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -1042,7 +1043,7 @@ __loop9:
                 jz      short loc_108B8
 
                 mov     bx, 3830h       ; RenderLCDImage
-                sub     di, 9EC8h       ; bcec - 1e24, just to read out segment
+                sub     di, (0BCECh - 1E24h)    ; just to read out segment
                 mov     ax, es
                 sub     ax, 6000h
                 nop
@@ -1084,7 +1085,7 @@ hook_gp_exe     endp
 
 announce_hook   proc near
                 assume ds:TSR
-                mov     dx, offset hooked_msg ; "\r\nGpLapTim activated OK\r\n$"
+                mov     dx, offset hooked_msg
                 mov     ah, 9
                 int     21h             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
@@ -1295,8 +1296,10 @@ hook4_player_grip proc far
                 push    ds
                 push    cs
                 pop     ds
+                assume ds:TSR
                 call    near ptr read_some_byte_from_gp
                 pop     ds
+                assume ds:nothing
                 mov     dl, al
 
                 mov     al, [si+Car.bID]
@@ -1831,7 +1834,7 @@ loc_10DB5:
                 mov     rec_auth.ar_game_mode, al
 
 ;                les     bx, gp_end_of_lap_off
-;                add     bx, 2C11h       ; 4b88: player car power
+;                add     bx, (4B88h - 1F77h)  ; player car power
 ;                mov     ax, es:[bx]
                 les     si, pCar
                 mov     ax, es:[si+Car.wPower]
@@ -1842,9 +1845,8 @@ loc_10DB5:
                 div     cx
                 mov     rec_auth.ar_bhp, ax
 
-                ; todo: log si+Car.wGrip too?
                 les     bx, gp_end_of_lap_off
-                add     bx, 2D63h       ; 4cda: player car grip
+                add     bx, (4CDAh - 1F77h)  ; player car grip
                 xor     dx, dx
                 mov     ax, es:[bx]
                 cmp     ax, 4000h
@@ -1857,19 +1859,19 @@ loc_10DFE:
                 add     ax, 1
                 mov     rec_auth.ar_ai_grip, al
 
-                mov     dx, 2B93h   ; CONV_BASE_4 + 1222h / 10h
+                mov     dx, CONV_BASE_4 + 122h
                 mov     ax, 2
                 call    read_some_byte_from_gp
                 mov     rec_auth.ar_skill, al
                 mov     rec_auth.ar_drv_aids, 0
 
-                mov     dx, 2B82h   ; CONV_BASE_4 + 111dh / 10h
+                mov     dx, CONV_BASE_4 + 111h
                 mov     ax, 0Dh
                 call    read_some_byte_from_gp
                 and     al, 80h
                 or      rec_auth.ar_drv_aids, al
 
-                mov     dx, 2B93h   ; CONV_BASE_4 + 1220h / 10h
+                mov     dx, CONV_BASE_4 + 122h
                 mov     ax, 0
                 call    read_some_byte_from_gp
                 and     al, 3Fh
@@ -1877,14 +1879,14 @@ loc_10DFE:
                 xor     bh, bh
                 mov     bl, rec_auth.ar_skill
 
-                mov     dx, 1FD0h   ; CONV_BASE_3 + 126h / 10h
+                mov     dx, CONV_BASE_3 + 12h
                 mov     ax, 6
                 add     ax, bx
                 call    read_some_byte_from_gp
                 or      al, 0C0h
                 and     rec_auth.ar_drv_aids, al
 
-                mov     dx, 2B82h   ; CONV_BASE_4 + 111ch / 10h
+                mov     dx, CONV_BASE_4 + 111h
                 mov     ax, 0Ch
                 call    read_some_byte_from_gp
                 and     al, 80h
@@ -1937,7 +1939,7 @@ loc_10EA6:
 
 
 loc_10EAE:
-                cmp     es:[si+Car.field_B2], 5
+                cmp     es:[si+Car.bTyreType], 5
                 jle     short loc_10EBE
 
                 call    maybe_init_auth_flags
@@ -1963,7 +1965,7 @@ loc_10EBE:
 new_day:
                 jnz     short loc_10EEA
 
-                add     word ptr time.total_secs, 5180h ; add 1 day (24*60*60 secs)
+                add     word ptr time.total_secs, 5180h ; add 1 day (15180h = 86400 = 24*60*60 secs)
                 adc     word ptr time.total_secs+2, 1
 
 
@@ -2141,7 +2143,7 @@ loc_1101C:
                 sub     al, 1
                 mov     dx, 10
                 mul     dx
-                mov     dx, 2B99h   ; CONV_BASE_4 + 1286h / 10h       ; osCarSetups
+                mov     dx, CONV_BASE_4 + 128h       ; osCarSetups
                 add     ax, 6
                 mov     di, offset rec_setup.sr_front_wing
                 mov     cx, 10
@@ -2156,7 +2158,7 @@ loc_11049:
 
                 les     si, pCar
                 assume es:nothing
-                mov     al, es:[si+Car.field_B2]
+                mov     al, es:[si+Car.bTyreType]
                 and     al, 7
                 mov     rec_setup.sr_using_tyres, al
                 mov     cx, size ALL_RECORDS
@@ -2299,7 +2301,7 @@ get_car_id      endp
 
 
 get_game_mode   proc near
-                mov     dx, 2B95h   ; CONV_BASE_4 + 124ah / 10h       ; session mode
+                mov     dx, CONV_BASE_4 + 124h       ; session mode
                 mov     ax, 0Ah
                 call    read_some_byte_from_gp
                 test    al, 1
@@ -2441,7 +2443,7 @@ get_driver_name endp
 
 
 get_tracknr_in_high_nibble proc near
-                mov     dx, 2B94h   ; CONV_BASE_4 + 1236h / 10h
+                mov     dx, CONV_BASE_4 + 123h
                 mov     ax, 6
                 call    read_some_byte_from_gp
                 shl     al, 4
@@ -3162,7 +3164,7 @@ len             = word ptr -2
                 sub     sp, 2
                 push    si
                 push    di
-                push    (offset title_msg+4) ; "GpLapTim V7.0 7th Nov 2018 - Grand Prix"...
+                push    (offset title_msg+4)
                 call    display_msg
 
                 add     sp, 2
