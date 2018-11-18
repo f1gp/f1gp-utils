@@ -1,0 +1,46 @@
+##
+## Test Support Tool TSR for MPS GP.EXE
+##
+
+CC             =    bcc
+CC_FLAGS       =    -v -c -y -O2 -1 -u- -w
+ASM            =    tasm
+ASM_FLAGS      =    -Ml -zd -zi
+LINK           =    tlink /l /m /s /c /Tde
+
+##                                    Code class/segment  Data class/group/segment    BSS class/group/segment
+CC_RESIDENT    =    $(CC) $(CC_FLAGS) -zACODE -zCTSR_CODE -zTDATA -zSTSR -zRTSR_DATA  -zBDATA -zGTSR -zDTSR_DATA 
+CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR  -zRTSR_TMP  -zBTMP  -zGTSR  -zDTSR_TMP  
+
+##
+## Note: endres.obj *must* be last!
+##
+OBJS           =    gptest.obj install.obj int08.obj int11.obj \
+                    parse.obj \
+                    endres.obj
+
+.asm.obj:      
+               $(ASM) $< $(ASM_FLAGS),,;
+
+all:           gptest.exe
+
+gptest.ash:    gptest.h
+               h2ash gptest.h
+
+gptest.obj:    gptest.asm segments.inc gptest.inc gptest.ash
+
+install.obj:   install.asm segments.inc gptest.inc
+
+int08.obj:     int08.asm segments.inc gptest.inc
+
+int11.obj:     int11.asm segments.inc gptest.inc
+
+parse.obj:     parse.c gptest.h version.i
+               $(CC_TRANSIENT) parse.c 
+
+endres.obj:    endres.asm segments.inc
+
+gptest.exe:    $(OBJS) makefile
+               $(LINK) $(OBJS),gptest;
+
+buildall:      all
