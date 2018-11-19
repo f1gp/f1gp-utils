@@ -164,6 +164,8 @@ gp_ver          db      GP_VER_UNK
 
 hooked_msg      db      CR, LF, "GpTest activated OK", CR, LF, '$'
 
+tyre_compound_chars db 'A', 'B', 'C', 'D', 'Q', 'W'
+
 TSR_DATA        ends
 
 ;****************************************************************************
@@ -450,6 +452,34 @@ TSR_CODE        ends
 
 
 ;*****************************************************************************
+;** Purpose:    Render a character at a specific location.
+;**
+;** Returns:    Nothing.
+;**
+;** Notes  :    BL = character to render
+;**             column pixel offset = (AL & 7Fh) * 7 + (CL & 7)
+;**             row                 = (AL & 80h) ? bottom row : top row
+;**
+;**             e.g. bottom left -> AL = 128, CL = 0
+;**             number of columns = 88 (7 pixels each)
+
+TSR_CODE        segment
+
+render_char proc near
+                call    cs:[gp_lcd_init]
+                
+                mov     al, bl
+                call    cs:[gp_render_char]
+
+                ret
+
+render_char endp
+
+
+TSR_CODE        ends
+
+
+;*****************************************************************************
 ;** Purpose:    Render a word in hex.
 ;**
 ;** Returns:    Nothing.
@@ -583,15 +613,29 @@ hook_frame:
         les     di, cs:gp_sel_car_ptr
         mov     ax, es:[di]
         or      ax, ax
-        jz      __end
+        jz      __skip_grip
        
         mov     si, ax
         mov     bx, es:[si+46h] ; tyreGrip
         mov     cl, 0
         mov     al, 128
         call    render_hex_word
-        
-__end:
+ __skip_grip:
+;-------------------------------------------------------------------------
+
+        xor     ax, ax
+        mov     al, es:[si+0b2h]
+        cmp     al, 5
+        ja      __skip_compound
+        mov     bx, offset TSR:tyre_compound_chars
+        add     bx, ax
+        mov     bl, cs:[bx]
+        mov     cl, 0
+        mov     al, 128 + 35
+        call    render_char
+__skip_compound:
+;-------------------------------------------------------------------------
+
         pop es
         popa
 
