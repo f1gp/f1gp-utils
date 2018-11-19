@@ -30,11 +30,6 @@ DELAY_TIME      equ     (500 / TICK_TIME_MS)    ; Time to display hook msg
 
 DOS             equ     21h                     ; Dos interrupt call
 
-RED             equ     0030h
-GREEN           equ     0040h
-BLUE            equ     0050h
-YELLOW          equ     0060h
-
 GP_VER_UNK      equ     -1
 GP_VER_EUR      equ     0
 GP_VER_USA      equ     1
@@ -72,6 +67,10 @@ err_notify      db      0
 
 game_ds         dw      ?
 game_ss         dw      ?
+
+gp_lcd_init     dd      ?
+gp_render_char  dd      ?
+gp_sel_car_ptr  dd   ?
 
 q_filename      db      ?
                 db      64 + 13 dup(?)
@@ -283,11 +282,64 @@ hook_gp_exe proc near
         push    2
         push    0C45h
         call    calc_offset_esdi
-        mov     cx, (hook_random_seed_end - hook_random_seed_start)
+        mov     cx, HOOK_RANDOM_SEED_LENGTH
 __loop1:
         lodsb
         stosb
         loop    __loop1
+
+;-------------------------------------------------------
+        mov     si, OFFSET TSR:hook_frame_start
+        mov     bx, OFFSET TSR:hook_frame_orig
+        push    2
+        push    02127h
+        call    calc_offset_esdi
+        mov     cx, HOOK_FRAME_LENGTH
+__loop2:
+        mov     dl, es:[di]
+        mov     [bx], dl
+        inc     bx
+        lodsb
+        stosb
+        loop    __loop2
+        
+;-------------------------------------------------------
+        push    2
+        push    14C0h
+        call    calc_offset_esdi
+        mov     WORD PTR (gp_lcd_init), di
+        mov     WORD PTR (gp_lcd_init+2), es
+
+        push    2
+        push    38C9h
+        call    calc_offset_esdi
+        mov     WORD PTR (gp_render_char), di
+        mov     WORD PTR (gp_render_char+2), es
+
+        push    3
+        push    97Fh
+        call    calc_offset_esdi
+        mov     WORD PTR (gp_sel_car_ptr), di
+        mov     WORD PTR (gp_sel_car_ptr+2), es
+
+;-------------------------------------------------------
+        ; skip language menu
+        push    9
+        push    534h
+        call    calc_offset_esdi
+        mov     word ptr es:[di], 0 ; English
+        mov     word ptr es:[di+2], 9090h
+        mov     byte ptr es:[di+4], 90h
+
+        ; skip startup menu
+        push    9
+        push    433h
+        call    calc_offset_esdi
+        mov     word ptr es:[di], 1 ; Main menu
+        mov     word ptr es:[di+2], 9090h
+        mov     byte ptr es:[di+4], 90h
+        
+;-------------------------------------------------------
 
         ret
 
@@ -398,6 +450,65 @@ TSR_CODE        ends
 
 
 ;*****************************************************************************
+;** Purpose:    Render a word in hex.
+;**
+;** Returns:    Nothing.
+;**
+;** Notes  :    BX = word value to render
+;**             column pixel offset = (AL & 7Fh) * 7 + (CL & 7)
+;**             row                 = (AL & 80h) ? bottom row : top row
+;**
+;**             e.g. bottom left -> AL = 128, CL = 0
+;**             number of columns = 88 (7 pixels each)
+
+TSR_CODE        segment
+
+render_hex_word proc near
+                push    dx
+                mov     dx, bx
+
+                call    cs:[gp_lcd_init]
+                
+                mov     al, dh
+                shr     al, 4
+                call    render_nibble
+
+                mov     al, dh
+                and     al, 0fh
+                call    render_nibble
+
+                mov     al, dl
+                shr     al, 4
+                call    render_nibble
+
+                mov     al, dl
+                and     al, 0fh
+                call    render_nibble
+
+                pop     dx
+                ret
+
+render_hex_word endp
+
+
+render_nibble   proc near
+                cmp     al, 10
+                jb      __num
+                add     al, 'A' - 10
+                jmp     __render
+__num:
+                add     al, '0'
+__render:
+                call    cs:[gp_render_char]
+                ret
+
+render_nibble   endp
+
+
+TSR_CODE        ends
+
+
+;*****************************************************************************
 ;** Purpose:    Show user that we've hooked in OK.
 ;**
 ;** Returns:    Nothing.
@@ -433,7 +544,7 @@ TSR_DATA        segment
 hook_random_seed_start: db     09ah
 hook_random_seed_off    dw     ?
 hook_random_seed_seg    dw     ?
-hook_random_seed_end:
+HOOK_RANDOM_SEED_LENGTH equ    $ - hook_random_seed_start
 
 TSR_DATA        ends
 
@@ -444,6 +555,49 @@ hook_random_seed proc far
         retf
 
 hook_random_seed endp
+
+TSR_CODE        ends
+
+
+;*****************************************************************************
+;** Purpose: Normally speed display, now custom value display.
+
+TSR_DATA        segment
+
+hook_frame_start:         db     09ah
+hook_frame_off            dw     ?
+hook_frame_seg            dw     ?
+HOOK_FRAME_LENGTH         equ    $ - hook_frame_start
+
+TSR_DATA        ends
+
+TSR_CODE        segment
+
+        public  hook_frame
+hook_frame:
+        public  hook_frame_orig
+        
+        pusha
+        push es
+        
+        les     di, cs:gp_sel_car_ptr
+        mov     ax, es:[di]
+        or      ax, ax
+        jz      __end
+       
+        mov     si, ax
+        mov     bx, es:[si+46h] ; tyreGrip
+        mov     cl, 0
+        mov     al, 128
+        call    render_hex_word
+        
+__end:
+        pop es
+        popa
+
+hook_frame_orig:
+        db      HOOK_FRAME_LENGTH dup(0)
+        retf
 
 TSR_CODE        ends
 

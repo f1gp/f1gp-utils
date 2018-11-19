@@ -46,6 +46,7 @@ STACK_SIZE      equ     128
 ;**
 
         extrn   hook_random_seed
+        extrn   hook_frame
 
         extrn   new08_hndlr
         extrn   new11_hndlr
@@ -383,6 +384,11 @@ install_hooks proc near
 
         mov     bx, OFFSET cs:hook_random_seed_off
         mov     WORD PTR [bx], OFFSET cs:hook_random_seed
+        mov     ax, cs
+        mov     [bx+2], ax
+        
+        mov     bx, OFFSET cs:hook_frame_off
+        mov     WORD PTR [bx], OFFSET cs:hook_frame
         mov     ax, cs
         mov     [bx+2], ax
         
