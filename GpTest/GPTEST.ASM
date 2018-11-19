@@ -68,9 +68,12 @@ err_notify      db      0
 game_ds         dw      ?
 game_ss         dw      ?
 
+car_base_weight dw      ?
+
+gp_hex2bcd      dd      ?
 gp_lcd_init     dd      ?
 gp_render_char  dd      ?
-gp_sel_car_ptr  dd   ?
+gp_sel_car_ptr  dd      ?
 
 q_filename      db      ?
                 db      64 + 13 dup(?)
@@ -164,7 +167,7 @@ gp_ver          db      GP_VER_UNK
 
 hooked_msg      db      CR, LF, "GpTest activated OK", CR, LF, '$'
 
-tyre_compound_chars db 'A', 'B', 'C', 'D', 'Q', 'W'
+tyre_compound_chars db 'A', 'B', 'C', 'D', 'Q', 'W', '?'
 
 TSR_DATA        ends
 
@@ -306,6 +309,18 @@ __loop2:
         loop    __loop2
         
 ;-------------------------------------------------------
+        push    3
+        push    2A6Fh
+        call    calc_offset_esdi
+        mov     ax, es:[di]
+        mov     WORD PTR car_base_weight, ax
+
+        push    0
+        push    0E17h
+        call    calc_offset_esdi
+        mov     WORD PTR (gp_hex2bcd), di
+        mov     WORD PTR (gp_hex2bcd+2), es
+        
         push    2
         push    14C0h
         call    calc_offset_esdi
@@ -521,6 +536,21 @@ render_hex_word proc near
 render_hex_word endp
 
 
+render_dec_word proc near
+                push    dx
+                push    ax
+                xor     dx, dx
+                mov     ax, bx
+                call    cs:[gp_hex2bcd]
+                mov     bx, ax
+                pop     ax
+                pop     dx
+                call    render_hex_word
+                ret
+                
+render_dec_word endp
+
+
 render_nibble   proc near
                 cmp     al, 10
                 jb      __num
@@ -613,29 +643,54 @@ hook_frame:
         les     di, cs:gp_sel_car_ptr
         mov     ax, es:[di]
         or      ax, ax
-        jz      __skip_grip
-       
+        jz      __end
         mov     si, ax
-        mov     bx, es:[si+46h] ; tyreGrip
+;-------------------------------------------------------------------------
+       
+        mov     bl, 'L'
+        mov     cl, 0
+        mov     al, 0
+        call    render_char
+        mov     bl, '='
+        mov     cl, 0
+        mov     al, 1
+        call    render_char
+        mov     bx, es:[si+44h] ; weight
+        sub     bx, cs:car_base_weight
+        mov     cl, 0
+        mov     al, 2
+        call    render_dec_word
+;-------------------------------------------------------------------------
+
+        mov     bl, 'G'
         mov     cl, 0
         mov     al, 128
+        call    render_char
+        mov     bl, '='
+        mov     cl, 0
+        mov     al, 128 + 1
+        call    render_char
+        mov     bx, es:[si+46h] ; tyreGrip
+        mov     cl, 0
+        mov     al, 128 + 2
         call    render_hex_word
- __skip_grip:
 ;-------------------------------------------------------------------------
 
         xor     ax, ax
-        mov     al, es:[si+0b2h]
-        cmp     al, 5
-        ja      __skip_compound
-        mov     bx, offset TSR:tyre_compound_chars
+        mov     al, es:[si+0b2h] ; tyre compound
+        cmp     al, 6
+        jb      __compound_ok
+        mov     al, 6
+__compound_ok:
+        mov     bx, OFFSET TSR:tyre_compound_chars
         add     bx, ax
         mov     bl, cs:[bx]
         mov     cl, 0
         mov     al, 128 + 35
         call    render_char
-__skip_compound:
 ;-------------------------------------------------------------------------
 
+__end:
         pop es
         popa
 
