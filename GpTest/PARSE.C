@@ -57,7 +57,7 @@ parse(
 ) {
      register int   i;
      int            option_next;
-     /*int            n;*/
+     int            n;
 
      display_msg(&title_msg[WHAT_OFFSET]);
 
@@ -85,6 +85,16 @@ parse(
                          return FALSE;
                     }
                }
+               else if (*cmd_line == 'l') {
+                    n = atoi(&cmd_line[1]);
+                    if (n >= 1 && n <= 26) {
+                         limit_cars_race = n;
+                    }
+                    else {
+                         display_msg("GpPerf: -l value should be between 1 and 26 cars.\n");
+                         return FALSE;
+                    }
+               }
                else if (*cmd_line == 'u') {
                     unload_flag = TRUE;
                     return TRUE;
@@ -107,8 +117,9 @@ void
 Usage(
      void
 ) {
-     display_msg(   "Usage: GpTest [-h?] [-u] [-f(filename)]\n"
+     display_msg(   "Usage: GpTest [-lN] [-h?] [-u] [-f(filename)]\n"
                     "       -f(name)  Specify log filename's location.\n"
+                    "       -l(N)     Limit race to N cars.\n"
                     "       -h,-?     This help message.\n"
                     "       -u        Unload TSR.\n"
                );

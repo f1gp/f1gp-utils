@@ -16,7 +16,7 @@ BELL            equ     07h                     ; Bell Code
 MAGIC_CX_IN     equ     0c0deh 
 MAGIC_DX_IN     equ     0dea0h
 MAGIC_CX_OUT    equ     05a5ah
-MAGIC_DX_OUT    equ     03612h
+MAGIC_DX_OUT    equ     03654h
 
 
 ;*****************************************************************************
@@ -44,3 +44,4 @@ MAGIC_DX_OUT    equ     03612h
      global    psp_env_off:word
 
      global    hook_random_seed_off:word
+     global    hook_frame_off:word

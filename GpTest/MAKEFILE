@@ -26,6 +26,10 @@ all:           gptest.exe
 
 gptest.ash:    gptest.h
                h2ash gptest.h
+               if exist gptest.tmp del gptest.tmp
+               ren gptest.ash gptest.tmp
+               sed -e /GLOBAL/d gptest.tmp > gptest.ash
+               if exist gptest.tmp del gptest.tmp
 
 gptest.obj:    gptest.asm segments.inc gptest.inc gptest.ash
 

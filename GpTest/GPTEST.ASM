@@ -62,6 +62,8 @@ old21_off       dw      ?
 old21_seg       dw      ?
 
 delay_count     db      0
+                public limit_cars_race
+limit_cars_race db      26
 
 err_notify      db      0
 
@@ -344,18 +346,44 @@ __loop2:
         push    9
         push    534h
         call    calc_offset_esdi
-        mov     word ptr es:[di], 0 ; English
-        mov     word ptr es:[di+2], 9090h
-        mov     byte ptr es:[di+4], 90h
+        mov     WORD PTR es:[di], 0 ; English
+        mov     WORD PTR es:[di+2], 9090h
+        mov     BYTE PTR es:[di+4], 90h
 
         ; skip startup menu
         push    9
         push    433h
         call    calc_offset_esdi
-        mov     word ptr es:[di], 1 ; Main menu
-        mov     word ptr es:[di+2], 9090h
-        mov     byte ptr es:[di+4], 90h
+        mov     WORD PTR es:[di], 1 ; Main menu
+        mov     WORD PTR es:[di+2], 9090h
+        mov     BYTE PTR es:[di+4], 90h
         
+        ; limit race to n cars
+        xor     dx, dx
+        mov     dl, limit_cars_race
+        cmp     dl, 0
+        jz      __end_limit
+        cmp     dl, 25
+        ja      __end_limit
+        push    0
+        push    0ECB9h
+        call    calc_offset_esdi
+        mov     BYTE PTR es:[di], 24h
+        push    0
+        push    5856h
+        call    calc_offset_esdi
+        mov     ax, WORD PTR es:[di]
+        push    dx
+        mov     ax, dx
+        mov     dx, 0C0h
+        mul     dx
+        sub     ax, 180h
+        add     WORD PTR es:[di], ax ; first car offset
+        pop     dx
+        mov     ax, 26
+        sub     ax, dx
+        mov     WORD PTR es:[di+3], ax ; #cars to be removed
+__end_limit:
 ;-------------------------------------------------------
 
         ret
@@ -536,6 +564,26 @@ render_hex_word proc near
 render_hex_word endp
 
 
+render_hex_byte proc near
+                push    dx
+                mov     dl, bl
+
+                call    cs:[gp_lcd_init]
+
+                mov     al, dl
+                shr     al, 4
+                call    render_nibble
+
+                mov     al, dl
+                and     al, 0fh
+                call    render_nibble
+
+                pop     dx
+                ret
+
+render_hex_byte endp
+
+
 render_dec_word proc near
                 push    dx
                 push    ax
@@ -549,6 +597,22 @@ render_dec_word proc near
                 ret
                 
 render_dec_word endp
+
+
+render_dec_byte proc near
+                push    dx
+                push    ax
+                xor     dx, dx
+                xor     ax, ax
+                mov     al, bl
+                call    cs:[gp_hex2bcd]
+                mov     bx, ax
+                pop     ax
+                pop     dx
+                call    render_hex_byte
+                ret
+                
+render_dec_byte endp
 
 
 render_nibble   proc near
@@ -643,10 +707,12 @@ hook_frame:
         les     di, cs:gp_sel_car_ptr
         mov     ax, es:[di]
         or      ax, ax
-        jz      __end
+        jnz     __start
+        jmp      __end
+        
+__start:
         mov     si, ax
 ;-------------------------------------------------------------------------
-       
         mov     bl, 'L'
         mov     cl, 0
         mov     al, 0
@@ -689,6 +755,38 @@ __compound_ok:
         mov     al, 128 + 35
         call    render_char
 ;-------------------------------------------------------------------------
+        mov     bl, 'F'
+        mov     cl, 0
+        mov     al, 7
+        call    render_char
+        mov     bl, 'W'
+        mov     cl, 0
+        mov     al, 8
+        call    render_char
+        mov     bl, '='
+        mov     cl, 0
+        mov     al, 9
+        call    render_char
+        mov     bl, es:[si+9eh] ; front wing
+        mov     cl, 0
+        mov     al, 10
+        call    render_dec_byte
+        mov     bl, 'R'
+        mov     cl, 0
+        mov     al, 128 + 7
+        call    render_char
+        mov     bl, 'W'
+        mov     cl, 0
+        mov     al, 128 + 8
+        call    render_char
+        mov     bl, '='
+        mov     cl, 0
+        mov     al, 128 + 9
+        call    render_char
+        mov     bl, es:[si+9fh] ; rear wing
+        mov     cl, 0
+        mov     al, 128 + 10
+        call    render_dec_byte
 
 __end:
         pop es
