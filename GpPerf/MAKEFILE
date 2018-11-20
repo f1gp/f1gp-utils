@@ -27,10 +27,10 @@ all:           gpperf.exe showperf.exe
 
 gpperf.ash:    gpperf.h
                h2ash gpperf.h
-               if exist gpperf.$$$ del gpperf.$$$
-               ren gpperf.ash gpperf.$$$
-               sed -e /GLOBAL/d gpperf.$$$ > gpperf.ash
-               if exist gpperf.$$$ del gpperf.$$$
+               if exist gpperf.tmp del gpperf.tmp
+               ren gpperf.ash gpperf.tmp
+               sed -e /GLOBAL/d gpperf.tmp > gpperf.ash
+               if exist gpperf.tmp del gpperf.tmp
 
 gpperf.obj:    gpperf.asm segments.inc gpperf.inc gpperf.ash
 
