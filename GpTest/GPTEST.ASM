@@ -282,35 +282,33 @@ TSR_CODE        segment
 
         public  hook_gp_exe
 hook_gp_exe proc near
-
         mov     cs:err_notify, 0
 
+        call    disable_randomization
+        call    init_hook_frame
+        call    patch_menu
+        call    init_race_car_limit
+        ret
+
+hook_gp_exe endp
+
+;-------------------------------------------------------
+disable_randomization proc near
         mov     si, OFFSET TSR:hook_random_seed_start
         push    2
         push    0C45h
         call    calc_offset_esdi
         mov     cx, HOOK_RANDOM_SEED_LENGTH
-__loop1:
+__loop:
         lodsb
         stosb
-        loop    __loop1
+        loop    __loop
+
+        ret
+disable_randomization endp
 
 ;-------------------------------------------------------
-        mov     si, OFFSET TSR:hook_frame_start
-        mov     bx, OFFSET TSR:hook_frame_orig
-        push    2
-        push    02127h
-        call    calc_offset_esdi
-        mov     cx, HOOK_FRAME_LENGTH
-__loop2:
-        mov     dl, es:[di]
-        mov     [bx], dl
-        inc     bx
-        lodsb
-        stosb
-        loop    __loop2
-        
-;-------------------------------------------------------
+init_hook_frame proc near
         push    3
         push    2A6Fh
         call    calc_offset_esdi
@@ -322,7 +320,7 @@ __loop2:
         call    calc_offset_esdi
         mov     WORD PTR (gp_hex2bcd), di
         mov     WORD PTR (gp_hex2bcd+2), es
-        
+
         push    2
         push    14C0h
         call    calc_offset_esdi
@@ -341,7 +339,25 @@ __loop2:
         mov     WORD PTR (gp_sel_car_ptr), di
         mov     WORD PTR (gp_sel_car_ptr+2), es
 
+        mov     si, OFFSET TSR:hook_frame_start
+        mov     bx, OFFSET TSR:hook_frame_orig
+        push    2
+        push    2127h
+        call    calc_offset_esdi
+        mov     cx, HOOK_FRAME_LENGTH
+__loop:
+        mov     dl, es:[di]
+        mov     [bx], dl    ; copy original code to hook_frame_orig
+        inc     bx
+        lodsb
+        stosb
+        loop    __loop
+
+        ret
+init_hook_frame endp
+
 ;-------------------------------------------------------
+patch_menu proc near
         ; skip language menu
         push    9
         push    534h
@@ -357,14 +373,17 @@ __loop2:
         mov     WORD PTR es:[di], 1 ; Main menu
         mov     WORD PTR es:[di+2], 9090h
         mov     BYTE PTR es:[di+4], 90h
-        
-        ; limit race to n cars
+        ret
+patch_menu endp
+
+;-------------------------------------------------------
+init_race_car_limit proc near
         xor     dx, dx
         mov     dl, limit_cars_race
         cmp     dl, 0
-        jz      __end_limit
+        jz      __end
         cmp     dl, 25
-        ja      __end_limit
+        ja      __end
         push    0
         push    0ECB9h
         call    calc_offset_esdi
@@ -383,12 +402,10 @@ __loop2:
         mov     ax, 26
         sub     ax, dx
         mov     WORD PTR es:[di+3], ax ; #cars to be removed
-__end_limit:
-;-------------------------------------------------------
-
+__end:
         ret
+init_race_car_limit endp
 
-hook_gp_exe endp
 
 TSR_CODE        ends
 
@@ -510,7 +527,7 @@ TSR_CODE        segment
 
 render_char proc near
                 call    cs:[gp_lcd_init]
-                
+
                 mov     al, bl
                 call    cs:[gp_render_char]
 
@@ -541,7 +558,7 @@ render_hex_word proc near
                 mov     dx, bx
 
                 call    cs:[gp_lcd_init]
-                
+
                 mov     al, dh
                 shr     al, 4
                 call    render_nibble
@@ -595,7 +612,7 @@ render_dec_word proc near
                 pop     dx
                 call    render_hex_word
                 ret
-                
+
 render_dec_word endp
 
 
@@ -611,7 +628,7 @@ render_dec_byte proc near
                 pop     dx
                 call    render_hex_byte
                 ret
-                
+
 render_dec_byte endp
 
 
@@ -700,48 +717,45 @@ TSR_CODE        segment
         public  hook_frame
 hook_frame:
         public  hook_frame_orig
-        
+
         pusha
         push es
-        
+
         les     di, cs:gp_sel_car_ptr
         mov     ax, es:[di]
         or      ax, ax
         jnz     __start
         jmp      __end
-        
+
 __start:
-        mov     si, ax
-;-------------------------------------------------------------------------
+        mov     si, ax  ; es:si points to selected car
+
+        ; render fuel load
         mov     bl, 'L'
         mov     cl, 0
         mov     al, 0
         call    render_char
-        mov     bl, '='
-        mov     cl, 0
-        mov     al, 1
-        call    render_char
+        mov     al, '='
+        call    cs:[gp_render_char]
         mov     bx, es:[si+44h] ; weight
         sub     bx, cs:car_base_weight
         mov     cl, 0
         mov     al, 2
         call    render_dec_word
-;-------------------------------------------------------------------------
 
+        ; render actual tyre grip
         mov     bl, 'G'
         mov     cl, 0
         mov     al, 128
         call    render_char
-        mov     bl, '='
-        mov     cl, 0
-        mov     al, 128 + 1
-        call    render_char
+        mov     al, '='
+        call    cs:[gp_render_char]
         mov     bx, es:[si+46h] ; tyreGrip
         mov     cl, 0
         mov     al, 128 + 2
         call    render_hex_word
-;-------------------------------------------------------------------------
 
+        ; render actual tyre compound
         xor     ax, ax
         mov     al, es:[si+0b2h] ; tyre compound
         cmp     al, 6
@@ -754,35 +768,30 @@ __compound_ok:
         mov     cl, 0
         mov     al, 128 + 35
         call    render_char
-;-------------------------------------------------------------------------
+
+        ; render actual front wing
         mov     bl, 'F'
         mov     cl, 0
         mov     al, 7
         call    render_char
-        mov     bl, 'W'
-        mov     cl, 0
-        mov     al, 8
-        call    render_char
-        mov     bl, '='
-        mov     cl, 0
-        mov     al, 9
-        call    render_char
+        mov     al, 'W'
+        call    cs:[gp_render_char]
+        mov     al, '='
+        call    cs:[gp_render_char]
         mov     bl, es:[si+9eh] ; front wing
         mov     cl, 0
         mov     al, 10
         call    render_dec_byte
+
+        ; render actual rear wing
         mov     bl, 'R'
         mov     cl, 0
         mov     al, 128 + 7
         call    render_char
-        mov     bl, 'W'
-        mov     cl, 0
-        mov     al, 128 + 8
-        call    render_char
-        mov     bl, '='
-        mov     cl, 0
-        mov     al, 128 + 9
-        call    render_char
+        mov     al, 'W'
+        call    cs:[gp_render_char]
+        mov     al, '='
+        call    cs:[gp_render_char]
         mov     bl, es:[si+9fh] ; rear wing
         mov     cl, 0
         mov     al, 128 + 10
