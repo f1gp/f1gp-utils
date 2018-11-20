@@ -71,16 +71,16 @@ wPosZ?          dw ?
 wSegPosX        dw ?
 wSegPosY        dw ?
 field_E         dw ?                    ; ccline related
-wSpeed          dw ?                   
-pSeg            dd ?                   
+wSpeed          dw ?
+pSeg            dd ?
 field_16        dw ?
 flags_18        db ?                    ; 80 = unk
 field_19        db ?
 wCarAngleZ      dw ?
-wSegDist        dw ?                   
+wSegDist        dw ?
 wSegDist_1e     dw ?
 field_20        dw ?
-bCurLap         db ?                   
+bCurLap         db ?
 flags_23        db ?                    ; 1=CCReverseGear 2=unk 4=SpeedBelowMinus469 8=unk 10=unk (speed rel.) 20=unk 40=unk 80=unk
 bGear           db ?
 bTeamNr?        db ?
@@ -98,18 +98,18 @@ wSpeedZ_hi      dw ?
 field_3C        db ?                    ; 10=retired 20=pit crew ready?
 flagsNonLinearControl db ?              ; 20=nonlinear brake, 40=nonlinear throttle, 80=nonlinear steering
 field_3E        dw ?
-timeLast_lo     dw ?                   
-timeLast_hi     dw ?                   
+timeLast_lo     dw ?
+timeLast_hi     dw ?
 weight          dw ?
-tyreWear        dw ?                    ; of current set, starts at a certain value depending on tyre type
+tyreGrip        dw ?                    ; of current set, starts at a certain value depending on tyre type
 field_48        dw ?                    ; some sort of angle
 field_4A        dw ?
 field_4C        dw ?                    ; used to calculate front wing effect on field_4E
 field_4E        dw ?                    ; value is reduced by wing damage
 field_50        dw ?
 field_52        dw ?
-timeAbsLast_lo  dw ?                   
-timeAbsLast_hi  dw ?                   
+timeAbsLast_lo  dw ?
+timeAbsLast_hi  dw ?
 field_58        dw ?
 field_5A        dw ?
 field_5C        dw ?
@@ -146,26 +146,25 @@ wCarHeight      dw ?
 field_8E        dw ?
 field_90        dw ?
 timerPitSeq_lo  dw ?                    ; also used for pulling away
-timerPitSeq_hi  dw ?                   
+timerPitSeq_hi  dw ?
 flags_96        db ?                    ; 20=no driver in car 40=stop car 80=show cc fuel?
 flags_97        db ?                    ; 2=engine on  4=car on jacks
 wThrottle       dw ?
 flagsDamage     db ?                    ; 80=wing damage 40=rw 20=fw
 bThrottleRaw    db ?
 field_9C        dw ?
-bFrontWingSetup db ?                   
-bRearWingSetup  db ?                   
-field_A0        dw ?
-field_A2        dw ?
+bFrontWingSetup db ?
+bRearWingSetup  db ?
+dTyreWear       dd ?
 wDrivenDistInSegs?_lo dw ?
 wDrivenDistInSegs?_hi dw ?
-wPower          dw ?                   
+wPower          dw ?
 bRacePos        db ?                    ; (race pos - 1) * 2
 field_AB        db ?
-bID             db ?                   
+bID             db ?
 bTeamPitPos     db ?
-timeBest_lo     dw ?                   
-timeBest_hi     dw ?                   
+timeBest_lo     dw ?
+timeBest_hi     dw ?
 bTyreType       db ?                    ; 0=A 1=B 2=C 3=D 4=Q 5=W
 flags_B3        db ?                    ; 4=pitlight?  20=unk
 field_B4        dw ?
@@ -174,7 +173,7 @@ field_B8        dw ?
 field_BA        dw ?
 flags_BC        db ?                    ; 1=SpeedAbove1877 80=RevsTooLowToShiftUp
 bNumHotseatSwitchesDone db ?
-wGrip           dw ?                   
+wCornerSpeedFactor dw ?
 Car             ends
 
                 .286
@@ -198,29 +197,6 @@ SAVGAM_OFF_USA  equ     0000h
 
 ; ---------------------------------------------------------------------------
                 align 2
-
-SEG_COUNT       equ 14
-eu_seg_base     dw 0, 0F47h, 19EDh, 1E61h, 2914h, 30CAh, 40C1h, 50BAh, 605Ah, 6BE7h, 7BCEh, 8B6Eh, 8CE6h, 8EAAh, 9151h
-us_seg_base     dw 0, 0F47h, 19EDh, 1E5Eh, 2911h, 30C7h, 40BEh, 50B7h, 6057h, 6BE2h, 7BC4h, 8B64h, 8CDCh, 8EA0h, 9147h
-it_seg_base     dw 0, 0F47h, 19EDh, 1E5Dh, 2910h, 30C6h, 40BDh, 50B6h, 6056h, 6BE3h, 7BC5h, 8B65h, 8CDDh, 8EA1h, 9148h
-eu_to_us        dw 2, 00179h, -24h
-                dw 2, 00C25h, -08h
-                dw 8, 0A04Eh, -09h
-                dw 8, 0A0D2h, -09h
-                dw 8, 0A248h, -09h
-                dw 8, 0A46Ch, -01h
-                dw 8, 0A4A0h, -09h
-                dw 9, 00576h, -4Eh
-                dw 9, 005A6h, -0Ah
-                dw 9, 07932h,  01h
-                dw SEG_COUNT, 0, 0
-eu_to_it        dw 2, 00179h, -2Ch
-                dw 2, 00C25h, -08h
-                dw 9, 00576h, -4Eh
-                dw 9, 005A6h, -0Ah
-                dw 9, 07932h,  01h
-                dw SEG_COUNT, 0, 0
-offset_diffs    dw eu_to_us, eu_to_it
 
 psp_env         dd 2Ch
 old08_handler   dd 0
@@ -464,7 +440,7 @@ __start:
                 mov     ds, ax
                 assume ds:TSR
                 mov     di, sp
-                
+
                 mov     cs:game_ss, ss
                 mov     cs:game_sp, sp
 
@@ -534,77 +510,6 @@ __call_old21:
 
 new21_hndlr     endp
 
-
-
-; =============== S U B R O U T I N E =======================================
-
-; in ax -> eu memory offset
-; in dx -> segnr (0...13)
-; out dx:ax -> translated memory address of actual exe version
-calc_offset     proc near
-                push si
-                push di
-                push bx
-                push cx
-                push ds
-
-                mov cx, cs
-                mov ds, cx
-                assume ds:TSR
-                mov cx, dx
-                mov bx, ax
-                mov si, offset eu_seg_base
-                xor ax, ax
-                mov al, gp_ver
-                mov dx, ((SEG_COUNT + 1) * 2)
-                imul dx
-                add si, ax
-
-                ; set dx to runtime value of seg000
-                mov dx, game_ss
-                sub dx, [si + 4 * 2]
-
-                add si, cx
-                add si, cx
-                add dx, [si]
-
-                xor ax, ax
-                mov al, gp_ver
-                cmp ax, GP_VER_EUR
-                ja __not_eu
-                mov ax, bx
-                jmp __end
-__not_eu:
-                dec ax
-                shl ax, 1
-                mov si, offset offset_diffs
-                add si, ax
-                mov ax, bx
-__loop:
-                mov di, [si]   ; seg nr
-                cmp di, cx
-                ja __end
-                jne __cont
-
-                mov di, [si+2] ; seg offset
-                cmp di, bx
-                ja __end
-
-                mov di, [si+4] ; diff
-                add ax, di
-__cont:
-                add si, 6
-                jmp __loop
-__end:
-                pop ds
-                assume ds:nothing
-                pop cx
-                pop bx
-                pop di
-                pop si
-                retn
-
-calc_offset     endp
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -717,7 +622,7 @@ loc_1062E:
                 jmp     short loc_10689
                 nop
 
-                
+
 loc_1065F:
                 sub     di, 798Dh
                 mov     ax, es
@@ -787,7 +692,7 @@ loc_106EA:
                 loop    loc_106EA
 
 ; ---------------------------------------------------------------------------
-                
+
                 mov     si, offset hook5_start
                 mov     di, sp
                 les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
@@ -797,7 +702,7 @@ loc_106EA:
                 cmp     gp_ver, GP_VER_ITA
                 jz      short loc_1072F
 
-                mov     diff_seg002_seg008_seg, (605AH - 19EDH) ; seg008.start - seg002.start    
+                mov     diff_seg002_seg008_seg, (605AH - 19EDH) ; seg008.start - seg002.start
                 mov     cs:func_lcdinit_off, 14C0h ; LCDInit
                 mov     cs:func_renderlaptime_off, 15B6h ; RenderLCDLapTime
                 sub     di, (0BCECh - 171Dh)
@@ -1308,8 +1213,8 @@ hook4_player_grip proc far
 
                 cmp     al, dl
                 jne     __repeat_orig_code
-                
-                mov     [si+Car.wGrip], 4000h
+
+                mov     [si+Car.wCornerSpeedFactor], 4000h
 
 __repeat_orig_code:
                 popa
@@ -1361,7 +1266,7 @@ hook8_hotseat_automatic proc far
                 push    cs
                 pop     ds
                 assume ds:TSR
-                
+
                 ; shortcut InitCarGrip right after grip is set (same location as hook4)
                 mov     si, offset hook4_alt_start
                 les     di, hook4_dest
@@ -1375,7 +1280,7 @@ __loop1:
                 pop     es
                 pop     ds
                 assume ds:nothing
-                
+
                 ; call patched InitCarGrip
                 call    [cs:fpInitCarGrip]
 
@@ -1411,7 +1316,7 @@ hook8_hotseat_automatic endp
 
 ; set Player grip to 1
 hook9_hotseat_control proc far
-                mov     [si+Car.wGrip], 4000h
+                mov     [si+Car.wCornerSpeedFactor], 4000h
 
 __repeat_orig_code:
                 mov     byte ptr [bp+192h], 0ffh
@@ -1421,6 +1326,7 @@ hook9_hotseat_control endp
 
 
 ; ---------------------------------------------------------------------------
+
 
 loc_10A77:
                 jmp     loc_10C24
@@ -1838,7 +1744,7 @@ loc_10DB5:
 ;                mov     ax, es:[bx]
                 les     si, pCar
                 mov     ax, es:[si+Car.wPower]
-                
+
                 sub     ax, 632
                 xor     dx, dx
                 mov     cx, 22
@@ -1892,7 +1798,7 @@ loc_10DFE:
                 and     al, 80h
                 shr     al, 1
                 or      rec_auth.ar_drv_aids, al
-                
+
                 mov     ah, 2Ah
                 int     21h             ; DOS - GET CURRENT DATE
                                         ; Return: DL = day, DH = month, CX = year
@@ -3333,7 +3239,7 @@ loc_116FB:
 
                 cmp     split3_perc, 99
                 jg     short loc_11725
-                
+
                 jmp     loc_1178D
 
 loc_11725:
@@ -3394,7 +3300,7 @@ loc_11776:
                 mul     cx
                 add     ax, 632
                 mov     ccplayer_power, ax
-                
+
                 jmp     short loc_1178D
 
 __end_w:
@@ -3637,11 +3543,8 @@ atoi            endp
 
 ; ---------------------------------------------------------------------------
 title_msg       db '@(#)GpLapTim V7.0 12th Nov 2018 - Grand Prix/World Circuit Lap Time Logger.',0Ah
-                db 'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.'
-                db 0Ah
-                db 'Copyright (c) Rene Smit 2018 - All Rights Reserved.'
-                db 0Ah
-                db 0Ah,0
+                db 'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.',0Ah
+                db 'Copyright (c) Rene Smit 2018 - All Rights Reserved.',0Ah,0Ah,0
 aGplaptimMissin db 'GpLapTim: missing log filename.',0Ah,0
 aGplaptimInvali db 'GpLapTim: Invalid 1st split percentage (-a)',0Ah,0
 aGplaptimInvali_0 db 'GpLapTim: Invalid 2nd split percentage (-b)',0Ah,0
