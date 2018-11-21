@@ -62,6 +62,8 @@ PUBLIC          limit_cars_race
 limit_cars_race db      26
 PUBLIC          disable_rng
 disable_rng     db      0
+PUBLIC          rng_value
+rng_value       db    0
 
 err_notify      db      0
 
@@ -281,6 +283,9 @@ hook_gp_exe     proc near
                 call    init_hook_frame
                 call    patch_menu
                 call    init_race_car_limit
+                ; call    disable_overtaking
+                ; call    disable_cc_driving
+
                 ret
 hook_gp_exe     endp
 
@@ -293,13 +298,14 @@ TSR_DATA        segment
 hook_random_seed_start      db  5 dup(90h)  ; nops
 HOOK_RANDOM_SEED_LENGTH     equ $ - hook_random_seed_start
 
-hook_random_number_offs     dw 059Dh, 05ACh         ; track related
-                            dw 3CACh, 3CFCh, 3D05h  ; pitstop timers
-                            dw 4B20h, 4C13h, 4C44h  ; car power
+; these offsets are all in seg000
+; more can be found in seg013, but they are all track compilation related, which often hangs with a fixed RNG value
+hook_random_number_offs     dw 3CACh, 3CFCh, 3D05h  ; pitstop timers
                             dw 1030h                ; 50% chance: or [si+Car.flags_BC], 2
                             dw 1FA4h                ; 14% chance: CC pitting in practice
                             dw 0FBEh, 0FD2h         ; car grip related
                             dw 4C97h, 4CEFh, 4D23h  ; car grip related
+                            dw 4B20h, 4C13h, 4C44h  ; car power
                             dw 50B7h, 526Fh, 528Dh  ; starting grid related
                             dw 7E62h                ; wobbling (mostly on grass)
                             dw 9D1Eh, 9D31h, 9D59h  ; revs (not just pitch, does affect times)
@@ -309,6 +315,7 @@ hook_random_number_offs     dw 059Dh, 05ACh         ; track related
                             dw 0D9E4h               ; race start driver reaction time
                             dw 0DC6Eh               ; start lights duration
                             dw 0E212h               ; 6.25% chance: wet weather
+                            ; dw 059Dh, 05ACh         ; track related, hangs with rng_value 127
 HOOK_RANDOM_NUMBER_COUNT    equ ($ - hook_random_number_offs) / 2
 
 hook_random_number_start    db  0B8h, 0, 0  ; mov al, 0
@@ -328,6 +335,8 @@ disable_randomization proc near
                 jz      __seed
 
                 ; disable randomization of CC's
+                mov     al, rng_value
+                mov     BYTE PTR [hook_random_number_start + 1], al
                 mov     si, OFFSET TSR:hook_random_number_offs
                 mov     cx, HOOK_RANDOM_NUMBER_COUNT
 __loop0:
@@ -475,6 +484,42 @@ init_race_car_limit endp
 
 TSR_CODE        ends
 
+
+;-------------------------------------------------------
+
+TSR_CODE        segment
+
+disable_overtaking proc near
+                push    0
+                push    586Dh
+                call    calc_offset_esdi
+                mov     al, 90h
+                stosb
+                stosb
+                stosb
+                ret
+disable_overtaking endp
+
+TSR_CODE        ends
+
+
+TSR_CODE        segment
+
+
+;-------------------------------------------------------
+
+disable_cc_driving proc near
+            push    0
+            push    9AFEh
+            call    calc_offset_esdi
+            mov     al, 90h
+            stosb
+            stosb
+            stosb
+            ret
+disable_cc_driving endp
+
+TSR_CODE        ends
 
 
 ;*****************************************************************************

@@ -91,6 +91,7 @@ parse(
                 }
                 else if (cmd_line[1] == 'n') {
                      disable_rng = 2;
+                     rng_value = atoi(&cmd_line[2]);
                 }
                 else {
                      display_msg("GpPerf: -r value should be either s or n.\n");
@@ -133,7 +134,7 @@ Usage(
                 "       -f(name)  Specify log filename's location.\n"
                 "       -r(mode)  Disable randomization.\n"
                 "          -rs       disable seed from timer.\n"
-                "          -rn       random number always 0.\n"
+                "          -rn(N)    random number always N (default 0).\n"
                 "       -l(N)     Limit race to N cars.\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
