@@ -13,7 +13,7 @@ CR              equ     13                      ; Caridge return
 LF              equ     10                      ; Line Feed
 BELL            equ     07h                     ; Bell Code
 
-MAGIC_CX_IN     equ     0c0deh 
+MAGIC_CX_IN     equ     0c0deh
 MAGIC_DX_IN     equ     0dea0h
 MAGIC_CX_OUT    equ     05a5ah
 MAGIC_DX_OUT    equ     03654h
@@ -43,5 +43,4 @@ MAGIC_DX_OUT    equ     03654h
      global    psp_seg:word
      global    psp_env_off:word
 
-     global    hook_random_seed_off:word
      global    hook_frame_off:word

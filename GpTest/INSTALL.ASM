@@ -45,7 +45,6 @@ STACK_SIZE      equ     128
 ;** Data
 ;**
 
-        extrn   hook_random_seed
         extrn   hook_frame
 
         extrn   new08_hndlr
@@ -92,14 +91,14 @@ STACK_TMP       ends
 
 TSR_TMP         segment
 
-extrn           parse:near 
+extrn           parse:near
 
 ;*****************************************************************************
 ;** Purpose: Install TSR.
 ;**
 ;** Returns: Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
         public  install
 install proc    near
@@ -111,14 +110,14 @@ install proc    near
         mov     ax, cs
         mov     ss, ax
         mov     sp, OFFSET TSR:stack_top
-        sti     
+        sti
 
         ;***
         ;*** Get Environment variable info.
         ;***
         mov     ah, 62h
         int     DOS                             ; Get PSP segment address
-        mov     cs:psp_seg, bx            
+        mov     cs:psp_seg, bx
         mov     cs:cmd_line_seg, bx
         mov     bx, 0080h                       ; PSP Command line length
         mov     al, [bx]
@@ -167,7 +166,7 @@ nothing_to_unload:
 installed:
         mov     al, unload_flag
         or      al, al
-        jz      no_unload        
+        jz      no_unload
 
         ;**
         ;** TSR's CS will be 100h bigger, i.e. 10h for segment register for an EXE.
@@ -224,7 +223,7 @@ name_q_ok:
         call    install_hooks
 
         ;**
-        ;** Display message 
+        ;** Display message
         ;**
         mov     dx, OFFSET TSR:load_msg
         mov     ah, 09h
@@ -254,14 +253,14 @@ name_q_ok:
         ;***
 quit:   ret
 
-install endp    
+install endp
 
 ;*****************************************************************************
 ;** Purpose: Uninstall (if possible). Check vectors still point to us.
 ;**
 ;** Returns: If uninstall fails, terminates if successful.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
         public  tsr_unload
 tsr_unload proc near
@@ -275,7 +274,7 @@ tsr_unload proc near
         jnz     cant_unload
         cmp     bx, OFFSET TSR:new08_hndlr
         jnz     cant_unload
-        
+
         mov     ax, 3511h
         int     DOS
         mov     ax, es
@@ -283,7 +282,7 @@ tsr_unload proc near
         jnz     cant_unload
         cmp     bx, OFFSET TSR:new11_hndlr
         jnz     cant_unload
-        
+
         mov     ax, 3521h
         int     DOS
         mov     ax, es
@@ -291,7 +290,7 @@ tsr_unload proc near
         jnz     cant_unload
         cmp     bx, OFFSET TSR:new21_hndlr
         jnz     cant_unload
-        
+
         ;**
         ;** Restore original vectors, point DS at currently installed TSR.
         ;**
@@ -319,10 +318,10 @@ tsr_unload proc near
         ;** Recover PSP value by knocking TSR's CS down by 10:0h
         ;**
         mov     ax, tsrs_cs
-        sub     ax, 10h    
-        mov     es, ax     
-        mov     ah, 49h    
-        INT     DOS        
+        sub     ax, 10h
+        mov     es, ax
+        mov     ah, 49h
+        INT     DOS
         jmp     terminate
 cant_unload:
         ret
@@ -382,16 +381,11 @@ tsr_vectors_install endp
 ;**
 install_hooks proc near
 
-        mov     bx, OFFSET cs:hook_random_seed_off
-        mov     WORD PTR [bx], OFFSET cs:hook_random_seed
-        mov     ax, cs
-        mov     [bx+2], ax
-        
         mov     bx, OFFSET cs:hook_frame_off
         mov     WORD PTR [bx], OFFSET cs:hook_frame
         mov     ax, cs
         mov     [bx+2], ax
-        
+
         ret
 
 install_hooks endp

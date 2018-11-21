@@ -85,6 +85,18 @@ parse(
                      return FALSE;
                 }
             }
+            else if (*cmd_line == 'r') {
+                if (cmd_line[1] == 's') {
+                     disable_rng = 1;
+                }
+                else if (cmd_line[1] == 'n') {
+                     disable_rng = 2;
+                }
+                else {
+                     display_msg("GpPerf: -r value should be either s or n.\n");
+                     return FALSE;
+                }
+            }
             else if (*cmd_line == 'l') {
                 n = atoi(&cmd_line[1]);
                 if (n >= 1 && n <= 26) {
@@ -119,6 +131,9 @@ Usage(
 ) {
     display_msg("Usage: GpTest [-lN] [-h?] [-u] [-f(filename)]\n"
                 "       -f(name)  Specify log filename's location.\n"
+                "       -r(mode)  Disable randomization.\n"
+                "          -rs       disable seed from timer.\n"
+                "          -rn       random number always 0.\n"
                 "       -l(N)     Limit race to N cars.\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
