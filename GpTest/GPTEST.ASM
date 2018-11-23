@@ -30,6 +30,12 @@ GP_VER_EUR      equ     0
 GP_VER_USA      equ     1
 GP_VER_ITA      equ     2
 
+LED_COLIDX      equ     0
+LED_ROWIDX      equ     1
+LED_COLSUB      equ     2
+LED_ROWSUB      equ     3
+LED_TRANSPARENT equ     10
+
 ;*****************************************************************************
 ;**
 ;** Externals.
@@ -75,6 +81,7 @@ gp_hex2bcd      dd      ?
 gp_lcd_init     dd      ?
 gp_render_char  dd      ?
 gp_sel_car_ptr  dd      ?
+gp_led_pos_ptr  dd      ?
 
 q_filename      db      ?
                 db      64 + 13 dup(?)
@@ -405,6 +412,11 @@ init_hook_frame proc near
                 mov     bx, OFFSET TSR:gp_sel_car_ptr
                 call    store_offset
 
+                mov     dx, 3
+                mov     ax, 0958h
+                mov     bx, OFFSET TSR:gp_led_pos_ptr
+                call    store_offset
+
                 mov     si, OFFSET TSR:hook_frame_start
                 mov     bx, OFFSET TSR:hook_frame_orig
                 push    2
@@ -620,7 +632,7 @@ calc_offset_esdi endp
 
 ;** Notes  :    AX = eu memory offset.
 ;**             DX = segnr (0...13).
-;**             BX = near address to store far result
+;**             DS:BX = near address to store far result
 store_offset    proc near
                 call    calc_offset
                 mov     [bx], ax
@@ -633,9 +645,7 @@ TSR_CODE        ends
 
 
 ;*****************************************************************************
-;** Purpose:    Render a character at a specific location.
-;**
-;** Returns:    Nothing.
+;** Purpose:    Render a cockpit character at a specific location.
 ;**
 ;** Notes  :    BL = character to render
 ;**             column pixel offset = (AL & 7Fh) * 7 + (CL & 7)
@@ -646,82 +656,88 @@ TSR_CODE        ends
 
 TSR_CODE        segment
 
-render_char     proc near
+render_cockpit_char proc near
+                push    es
+                push    si
+                les     di, cs:gp_led_pos_ptr
+                mov     BYTE PTR es:[di + LED_TRANSPARENT], 0
+                pop     si
+                pop     es
                 call    cs:[gp_lcd_init]
-
                 mov     al, bl
                 call    cs:[gp_render_char]
-
                 ret
-
-render_char     endp
+render_cockpit_char endp
 
 
 TSR_CODE        ends
 
 
 ;*****************************************************************************
-;** Purpose:    Render a word in hex.
+;** Purpose:    Prepare to render text at a specific location.
 ;**
-;** Returns:    Nothing.
-;**
-;** Notes  :    BX = word value to render
-;**             column pixel offset = (AL & 7Fh) * 7 + (CL & 7)
-;**             row                 = (AL & 80h) ? bottom row : top row
-;**
-;**             e.g. bottom left -> AL = 128, CL = 0
-;**             number of columns = 88 (7 pixels each)
+;** Notes  :    AL = row index
+;**             AH = row index
+;**             CL = column index (negative aligns right)
+;**             CH = column sub index
+;**             BL = 0: bg green, 80h: bg transparent
 
 TSR_CODE        segment
 
-render_hex_word proc near
-                push    dx
-                mov     dx, bx
-
-                call    cs:[gp_lcd_init]
-
-                mov     al, dh
-                shr     al, 4
-                call    render_nibble
-
-                mov     al, dh
-                and     al, 0fh
-                call    render_nibble
-
-                mov     al, dl
-                shr     al, 4
-                call    render_nibble
-
-                mov     al, dl
-                and     al, 0fh
-                call    render_nibble
-
-                pop     dx
+lcd_init        proc near
+                cmp     cl, 0
+                jge     __left
+                add     cl, 45
+__left:
+                push    es
+                push    si
+                les     di, cs:gp_led_pos_ptr
+                mov     BYTE PTR es:[di + LED_ROWIDX], al
+                mov     BYTE PTR es:[di + LED_ROWSUB], ah
+                mov     BYTE PTR es:[di + LED_COLIDX], cl
+                mov     BYTE PTR es:[di + LED_COLSUB], ch
+                mov     BYTE PTR es:[di + LED_TRANSPARENT], bl
+                pop     si
+                pop     es
                 ret
+lcd_init        endp
 
+
+;** Notes  :    BX = number to render
+render_hex_word proc near
+                mov     al, bh
+                shr     al, 4
+                call    render_nibble
+
+                mov     al, bh
+                and     al, 0fh
+                call    render_nibble
+
+                mov     al, bl
+                shr     al, 4
+                call    render_nibble
+
+                mov     al, bl
+                and     al, 0fh
+                call    render_nibble
+                ret
 render_hex_word endp
 
 
+;** Notes  :    BL = number to render
 render_hex_byte proc near
-                push    dx
-                mov     dl, bl
-
-                call    cs:[gp_lcd_init]
-
-                mov     al, dl
+                mov     al, bl
                 shr     al, 4
                 call    render_nibble
 
-                mov     al, dl
+                mov     al, bl
                 and     al, 0fh
                 call    render_nibble
-
-                pop     dx
                 ret
-
 render_hex_byte endp
 
 
+;** Notes  :    BX = number to render
 render_dec_word proc near
                 push    dx
                 push    ax
@@ -733,10 +749,10 @@ render_dec_word proc near
                 pop     dx
                 call    render_hex_word
                 ret
-
 render_dec_word endp
 
 
+;** Notes  :    BL = number to render
 render_dec_byte proc near
                 push    dx
                 push    ax
@@ -749,10 +765,10 @@ render_dec_byte proc near
                 pop     dx
                 call    render_hex_byte
                 ret
-
 render_dec_byte endp
 
 
+;** Notes  :    AL = digit to render
 render_nibble   proc near
                 cmp     al, 10
                 jb      __num
@@ -763,7 +779,6 @@ __num:
 __render:
                 call    cs:[gp_render_char]
                 ret
-
 render_nibble   endp
 
 
@@ -787,9 +802,9 @@ announce_hook   proc near
                 int     DOS
                 sti
                 mov     delay_count, DELAY_TIME
-do_delay:
+__do_delay:
                 cmp     delay_count, 0
-                jnz     do_delay
+                jnz     __do_delay
                 ret
 announce_hook   endp
 
@@ -819,16 +834,247 @@ hook_frame      proc far
                 les     di, cs:gp_sel_car_ptr
                 mov     ax, es:[di]
                 or      ax, ax
-                jnz     __start
-                jmp     __end
-__start:
+                jz      __end
+
                 mov     si, ax  ; es:si points to selected car
 
-                ; render fuel load
-                mov     bl, 'L'
+                ; top left
+                call    render_corner_speed_factor
+                call    render_power
+
+                ; top right
+                call    render_pitseq
+                call    render_lap_dist
+                call    render_driven_segs
+                call    render_tyre_wear
+                call    render_best_line
+                call    render_segdist
+
+                ; bottom left
+                call    render_fuel_load
+                call    render_actual_tyre_grip
+                call    render_actual_wings
+
+                ; bottom right
+                call    render_actual_tyre_compound
+__end:
+                pop es
+                popa
+
+hook_frame_orig:
+                db      HOOK_FRAME_LENGTH dup(0)
+                retf
+hook_frame      endp
+
+
+render_pitseq   proc near
+                mov     ax, 3
+                mov     ch, 3
+                mov     cl, -4
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'P'
+                call    cs:[gp_render_char]
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     al, es:[si+067h] ; bPitSeq
+                call    render_nibble
+                ret
+render_pitseq   endp
+
+
+render_lap_dist proc near
+                mov     ax, 4
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, '2'
+                call    cs:[gp_render_char]
+                mov     al, '6'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+026h] ; wSegNr?
+                call    render_hex_word
+
+                mov     ax, 5
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, '8'
+                call    cs:[gp_render_char]
+                mov     al, '0'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+080h] ; wNumFeetIntoLap?
+                call    render_hex_word
+                ret
+render_lap_dist endp
+
+
+render_driven_segs proc near
+                mov     ax, 6
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'D'
+                call    cs:[gp_render_char]
+                mov     al, 'D'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+0a4h]
+                call    render_hex_word
+                ret
+render_driven_segs endp
+
+
+render_tyre_wear proc near
+                mov     ax, 7
+                mov     ch, 3
+                mov     cl, -9
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'T'
+                call    cs:[gp_render_char]
+                mov     al, 'W'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+0a2h]
+                call    render_hex_word
+                mov     bl, es:[si+0a1h]
+                call    render_hex_byte
+                ret
+render_tyre_wear endp
+
+
+render_best_line proc near
+                mov     ax, 8
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'B'
+                call    cs:[gp_render_char]
+                mov     al, 'L'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+0eh]
+                call    render_hex_word
+                ret
+render_best_line endp
+
+
+render_segdist  proc near
+                mov     ax, 9
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, 'D'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+1ch]
+                call    render_hex_word
+
+                mov     ax, 10
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, 'L'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+16h]
+                call    render_hex_word
+
+                mov     ax, 11
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, 'C'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+1eh]
+                call    render_hex_word
+
+                mov     ax, 12
+                mov     ch, 3
+                mov     cl, -7
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'A'
+                call    cs:[gp_render_char]
+                mov     al, 'X'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+2]
+                call    render_hex_word
+
+                ret
+render_segdist  endp
+
+
+render_power    proc near
+                mov     ax, 3
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'H'
+                call    cs:[gp_render_char]
+                mov     al, 'P'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+0a8h] ; wPower
+                call    render_hex_word
+                ret
+render_power    endp
+
+
+render_corner_speed_factor proc near
+                mov     ax, 4
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'C'
+                call    cs:[gp_render_char]
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+0beh] ; wCornerSpeedFactor
+                call    render_hex_word
+                ret
+render_corner_speed_factor endp
+
+
+render_fuel_load proc near
                 mov     cl, 0
                 mov     al, 0
-                call    render_char
+                mov     bl, 'F'
+                call    render_cockpit_char
+                mov     al, 'L'
+                call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
                 mov     bx, es:[si+44h] ; weight
@@ -837,23 +1083,27 @@ __start:
                 mov     ax, es:[di]
                 pop     es
                 sub     bx, ax
-                mov     cl, 0
-                mov     al, 2
                 call    render_dec_word
+                ret
+render_fuel_load endp
 
-                ; render actual tyre grip
-                mov     bl, 'G'
+
+render_actual_tyre_grip proc near
                 mov     cl, 0
                 mov     al, 128
-                call    render_char
+                mov     bl, 'T'
+                call    render_cockpit_char
+                mov     al, 'G'
+                call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
                 mov     bx, es:[si+46h] ; tyreGrip
-                mov     cl, 0
-                mov     al, 128 + 2
                 call    render_hex_word
+                ret
+render_actual_tyre_grip endp
 
-                ; render actual tyre compound
+
+render_actual_tyre_compound proc near
                 xor     ax, ax
                 mov     al, es:[si+0b2h] ; tyre compound
                 cmp     al, 6
@@ -865,43 +1115,38 @@ __compound_ok:
                 mov     bl, cs:[bx]
                 mov     cl, 0
                 mov     al, 128 + 35
-                call    render_char
+                call    render_cockpit_char
+                ret
+render_actual_tyre_compound endp
 
+
+render_actual_wings proc near
                 ; render actual front wing
-                mov     bl, 'F'
-                mov     cl, 0
+                mov     cl, 4
                 mov     al, 7
-                call    render_char
+                mov     bl, 'F'
+                call    render_cockpit_char
                 mov     al, 'W'
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
                 mov     bl, es:[si+9eh] ; front wing
-                mov     cl, 0
-                mov     al, 10
                 call    render_dec_byte
 
                 ; render actual rear wing
-                mov     bl, 'R'
-                mov     cl, 0
+                mov     cl, 4
                 mov     al, 128 + 7
-                call    render_char
+                mov     bl, 'R'
+                call    render_cockpit_char
                 mov     al, 'W'
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
                 mov     bl, es:[si+9fh] ; rear wing
-                mov     cl, 0
-                mov     al, 128 + 10
                 call    render_dec_byte
-__end:
-                pop es
-                popa
+                ret
+render_actual_wings endp
 
-hook_frame_orig:
-                db      HOOK_FRAME_LENGTH dup(0)
-                retf
-hook_frame      endp
 
 TSR_CODE        ends
 
