@@ -1,16 +1,5 @@
+include gpdef.inc
 include gplaptim.ash
-
-LOCALS __
-
-SURFACE_TYPE_TRACK      equ     0
-SURFACE_TYPE_CURB_LOW   equ     1
-SURFACE_TYPE_CURB_HIGH  equ     2
-SURFACE_TYPE_GRASS      equ     3
-
-GP_VER_UNK              equ     -1
-GP_VER_EUR              equ     0
-GP_VER_USA              equ     1
-GP_VER_ITA              equ     2
 
 Timestamp       struc
 secs            db ?
@@ -21,158 +10,6 @@ field_7         db 37 dup(?)
 Timestamp       ends
 
 
-Seg             struc
-wAngleZ         dw ?
-wAngleX         dw ?
-wPosX           dw ?
-wPosZ           dw ?
-wPosY           dw ?
-flagsTexture    dw ?
-wLeftAndRightSideX dw ?
-wLeftAndRightSideY dw ?
-flags_10        db ?                    ; Number of following Segs where ccLine is within
-                                        ; border (maximum of left and right side).
-                                        ; If left side value was used, bit 80 is also set
-bExtraSideX     db ?
-flags_12        db ?                    ; 2=s/f 10=tc0x92 20=tc0x93
-                                        ; 40=wCCLine outside right border  80 wCCLine outside left border
-bExtraSideY     db ?
-wAngleZChangeMulHalfPI dw ?
-wCCLine         dw ?
-wCCLineRAngle   dw ?
-wNr             dw ?
-wSegDist        dw ?
-bObjectID       db ?
-flagsPitlaneJoin db ?
-bViewDistance   db ?                    ; 60 or from cmd 0xa9 (pitlane only), or from cmd 81/82/90/91
-bFineOffset?_21 db ?                    ; lo nibble X, hi nibble Y
-bKerbColourFlags db ?                   ; if 0Ch set kerb colour changes on segment
-bKerbColourIndex db ?                   ; kerb colour table index
-flags_TC0xa6And0xa7 dw ?
-flags_26        db ?                    ; pitlane parking zone: bits C0 set.
-field_27        db ?
-field_28        db ?                    ; count for consecutive Segs with bit 20h set in flags_26.
-                                        ; Segs with even number hold count when going from back to front,
-                                        ; Segs with odd numbers hold count when goint from front to back.
-field_29        db ?                    ; like field_28, but for bit 10h of flags_26
-field_2A        db ?                    ; pitlane parking zone: bit 80 set
-field_2B        db ?
-field_2C        dw ?
-Seg             ends
-
-; ---------------------------------------------------------------------------
-
-Car                     struc ; (sizeof=0xC0)
-wSpeedAngleZ            dw ?                                ; like wAngleZ, but rotates 180 degrees when going backwards
-wCarAngleX              dw ?                                ; seg X angle * cos(abs(seg Z angle - Car Z angle)), -ve going downhill, +ve going uphill
-time_4_lo               dw ?
-time_4_hi               dw ?
-wCarPosZ                dw ?                                ; weighted average of seg Z pos + track deviation
-wSegPosX                dw ?
-wSegPosY                dw ?
-wSegPosCCLine           dw ?                                ; weighted average of current and next seg ccline
-wSpeed                  dw ?
-pSeg                    dd ?
-wSegLength              dw ?                                ; length of segment at wSegPosX, so 400h on straights, less on inside of corner, more on outside of corner
-flags_18                db ?                                ; 80 = unk
-flags_19                db ?
-wCarAngleZ              dw ?
-wSegDist                dw ?                                ; range around 0...400h, but can be shifted below 0 in outside of corner, or shifted beyond 400h in inside of corner
-wSegDistCompleted       dw ?                                ; wSegDist / wSegLength, range around 0 to 4000h
-wSegPosXFactor_20       dw ?
-bCurLap                 db ?
-flags_23                db ?                                ; 1=CCReverseGear 2=unk 4=SpeedBelowMinus469 8=unk 10=unk (speed rel.) 20=in pitlane 40=unk 80=pitting
-bGear                   db ?
-bTeamNr?                db ?
-wSegNr?                 dw ?
-wPosX_lo                dw ?
-wPosX_hi                dw ?
-wPosY_lo                dw ?
-wPosY_hi                dw ?
-wSpeedX_lo              dw ?
-wSpeedX_hi              dw ?
-wSpeedY_lo              dw ?
-wSpeedY_hi              dw ?
-wSpeedZ_lo              dw ?
-wSpeedZ_hi              dw ?
-flags_3C                db ?                                ; 10=retired 20=pit crew ready? 40=pit crew busy?
-flagsNonLinearControl   db ?                                ; 20=nonlinear brake, 40=nonlinear throttle, 80=nonlinear steering
-wSegPosX_3E             dw ?
-timeLast_lo             dw ?
-timeLast_hi             dw ?
-weight                  dw ?
-tyreGrip                dw ?                                ; of current set, starts at a certain value depending on tyre type
-wSteeringAngle          dw ?
-field_4A                dw ?                                ; some sort of angle
-field_4C                dw ?                                ; front wing efficiency
-field_4E                dw ?                                ; rear wing efficiency
-field_50                dd ?
-timeAbsLast_lo          dw ?
-timeAbsLast_hi          dw ?
-field_58                dw ?
-field_5A                dw ?
-field_5C                dw ?                                ; copied from wSpeed
-flags_5E                db ?                                ; 1=session over 10=retired 40=in Pit sequence 80=unk
-bBrakeRaw               db ?
-field_60                dw ?
-wRevs                   dw ?
-field_64                db ?
-field_65                db ?                                ; 2=brake
-bTrackOrderIndex        db ?
-bPitSeq                 db ?                                ; 0=on track 1=crossed pit s/f 2=on jacks 3=pit menu 4=want leave pit 5=off jacks 6=jacks away 7=lollipop away 8=driving to pit exit
-dSpeedSquared           dd ?
-field_6C                dw ?
-field_6E                dw ?                                ; empty weight / actual weight
-wCCSpeed                dw ?                                ; used for CC autobrake and pit speed limit
-wAcc                    dw ?                                ; difference with old speed
-field_74                dw ?                                ; related to segPosX
-field_76                dw ?
-field_78                dw ?
-pCar_7A                 dw ?
-wSteerRaw               dw ?
-autoFlags               db ?                                ; 1=steer rel. 2=gear rel. 4=CC  10=spin gear  20=unk  40=unk  80=gear rel.  rest=related to trouble
-bDigitalControl         db ?                                ; 1=throttle 2=brake 4=left 8=right 10=gear change 80=using downshift
-wNumFeetIntoLap?        dw ?
-pCar_82                 dw ?
-field_84                db ?
-bDrvAids                db ?
-field_86                dw ?
-field_88                db ?
-flagsAnalogControl      db ?                                ; 4=unk, 8=analog throttle, 10=analog steering, 20=analog brake
-wSegPosX_8A             dw ?                                ; related to pit? 20 in box, 18 in pitlane, 0 on track
-wTrackDeviation         dw ?                                ; height above track
-field_8E                dw ?
-wPrevAngleZ             dw ?
-timerPitSeq_lo          dw ?                                ; also used for pulling away
-timerPitSeq_hi          dw ?
-flags_96                db ?                                ; 20=no driver in car 40=stop car 80=show cc fuel?
-flags_97                db ?                                ; 1=use pitstop strategy in 75%+ race (off=no stops)  2=engine on  4=car on jacks
-wThrottle               dw ?
-flagsDamage             db ?                                ; 80=wing damage 40=rw 20=fw
-bThrottleRaw            db ?
-field_9C                dw ?
-bFrontWingSetup         db ?
-bRearWingSetup          db ?
-dTyreWear               dd ?                                ; abs(speed * delta(z angle))
-wDrivenDistInSegs       dd ?
-wPower                  dw ?
-bRacePos                db ?                                ; (race pos - 1) * 2
-field_AB                db ?                                ; unused
-bID                     db ?
-bTeamPitPos             db ?
-timeBest_lo             dw ?
-timeBest_hi             dw ?
-tyreCompound            db ?                                ; 0=A 1=B 2=C 3=D 4=Q 5=W
-flags_B3                db ?                                ; 4=pitlight?  20=unk
-field_B4                dw ?
-field_B6                dw ?
-field_B8                dw ?
-field_BA                dw ?
-flags_BC                db ?                                ; 1=SpeedAbove1877 2=Unk left/right (50% chance each) 80=RevsTooLowToShiftUp
-bNumHotseatSwitchesDone db ?
-wCornerSpeedFactor      dw ?                                ; derived from driver skill
-Car                     ends
-
                 .286
                 .model tiny
 
@@ -181,6 +18,7 @@ TSR             segment para public 'CODE' use16
                 org 100h
                 assume es:nothing, ss:nothing, ds:nothing
 
+LOCALS __
 
                 public start
 start           proc near
@@ -188,19 +26,30 @@ start           proc near
 
 start           endp
 
+
+;*****************************************************************************
+;**
+;** Equates & Macros
+;**
+
+TRUE            equ     1
+FALSE           equ     0
+
+DOS             equ     21h                     ; Dos interrupt call
+DOS_TERMINATE   equ     20h                     ; Terminate interrupt.
+CR              equ     0Dh                     ; Caridge return
+LF              equ     0Ah                     ; Line Feed
+BELL            equ     07h                     ; Bell Code
+TAB             equ     09h                     ; Tab
+
+MAGIC_CX_IN     equ     0c0deh
+MAGIC_DX_IN     equ     0deadh
+MAGIC_CX_OUT    equ     5a5ah
+MAGIC_DX_OUT    equ     3412h
+
 SAVGAM_OFF_EUR  equ     0030h
 SAVGAM_OFF_ITA  equ     -10h
 SAVGAM_OFF_USA  equ     0000h
-
-; ---------------------------------------------------------------------------
-                align 2
-
-psp_env         dd 2Ch
-old08_handler   dd 0
-old11_handler   dd 0
-old21_handler   dd 0
-
-delay_count     db 0
 
 GP_EUR_RET_ADDR equ     0b74ch
 GP_ITA_RET_ADDR equ     0b74ch
@@ -209,6 +58,16 @@ MATCH_OFFSET    equ     6
 CONV_BASE_SUB   equ     357h
 CONV_BASE_3     equ     1e5eh - 1f7h + CONV_BASE_SUB
 CONV_BASE_4     equ     2911h - 1f7h + CONV_BASE_SUB
+
+; ---------------------------------------------------------------------------
+                align 2
+
+psp_env         dd      2Ch
+old08_handler   dd      0
+old11_handler   dd      0
+old21_handler   dd      0
+
+delay_count     db      0
 
 gp_code_eur     db      0B0h, 000h
                 db      0B4h, 030h
@@ -251,41 +110,41 @@ MATCH_BYTES_ITA equ     $ - gp_code_ita
 gp_code_usa     db      0b0h, 00h, 0b4h, 30h, 0cdh, 21h, 0ah, 0c0h, 75h, 03h
 MATCH_BYTES_USA equ     $ - gp_code_usa
 
-logfile_path    db 78 dup(0)
-logfile_handle  dw 0
-pCar            dd 0
-fpInitCarGrip   dd 0
-gp_ver          db GP_VER_UNK
-game_ss         dw 0
-game_sp         dw 0
-game_sg_off     dw 0
-gp_end_of_lap_off dd 0
-hook4_dest      dd 0
+logfile_path    db      78 dup(0)
+logfile_handle  dw      0
+pCar            dd      0
+fpInitCarGrip   dd      0
+gp_ver          db      GP_VER_UNK
+game_ss         dw      0
+game_sp         dw      0
+game_sg_off     dw      0
+gp_end_of_lap_off dd    0
+hook4_dest      dd      0
 
 log_player_times_only db 0
 
-hook1_start     db 9Ah
-hook1_off       dw 0, 0
-hook2_start     db 9Ah
-hook2_off       dw 0, 0
-                db 90h
-hook3_start     db 9Ah
-hook3_off       dw 0, 0
-hook4_start     db 9Ah
-hook4_off       dw 0, 0
-                db 90h
-hook4_alt_start db 61h, 7h, 1Fh, 0CBh, 90h
-hook5_start     db 9Ah
-hook5_off       dw 0, 0
-                db 90h
-hook6_start     db 9Ah
-hook6_off       dw 0, 0
-hook7_start     db 9Ah
-hook7_off       dw 0, 0
-hook8_start     db 9Ah
-hook8_off       dw 0, 0
-hook9_start     db 9Ah
-hook9_off       dw 0, 0
+hook1_start     db      9Ah
+hook1_off       dw      0, 0
+hook2_start     db      9Ah
+hook2_off       dw      0, 0
+                db      90h
+hook3_start     db      9Ah
+hook3_off       dw      0, 0
+hook4_start     db      9Ah
+hook4_off       dw      0, 0
+                db      90h
+hook4_alt_start db      61h, 7h, 1Fh, 0CBh, 90h
+hook5_start     db      9Ah
+hook5_off       dw      0, 0
+                db      90h
+hook6_start     db      9Ah
+hook6_off       dw      0, 0
+hook7_start     db      9Ah
+hook7_off       dw      0, 0
+hook8_start     db      9Ah
+hook8_off       dw      0, 0
+hook9_start     db      9Ah
+hook9_off       dw      0, 0
 
 rec_lap         LAP_RECORD <0>
 rec_auth        AUTH_RECORD <0>
@@ -303,67 +162,24 @@ grass_touched_this_lap db 0
 
 diff_seg002_seg008_seg dw 0
 
-unk1            dw 0
-unk2            dw 0
+split1_perc     dw      25
+split2_perc     dw      50
+split3_perc     dw      75
+stop_time       dw      10000
+ccplayer_power  dw      4000h
+trackseg_count  dw      0
+car_trackseg    dw      0
 
-split1_perc     dw 25
-split2_perc     dw 50
-split3_perc     dw 75
-stop_time       dw 10000
-ccplayer_power  dw 4000h
-trackseg_count  dw 0
-car_trackseg    dw 0
+circuit_lap_counts      db  81, 71, 61, 78, 69, 69, 72, 59, 45, 77, 44, 53, 71, 65, 53, 81
+circuit_half_lap_counts db  41, 36, 31, 39, 35, 35, 36, 30, 23, 39, 22, 27, 36, 33, 27, 41
 
-circuit_lap_counts db 81
-                db 71
-                db 61
-                db 78
-                db 69
-                db 69
-                db 72
-                db 59
-                db 45
-                db 77
-                db 44
-                db 53
-                db 71
-                db 65
-                db 53
-                db 81
-circuit_half_lap_counts db 41
-                db 36
-                db 31
-                db 39
-                db 35
-                db 35
-                db 36
-                db 30
-                db 23
-                db 39
-                db 22
-                db 27
-                db 36
-                db 33
-                db 27
-                db 41
+gp_exe_data_bytes1      db  0, 1Dh, 0, 20h, 0, 10h, 0, 7, 0, 7
 
-gp_exe_data_bytes1 db    0
-                db  1Dh
-                db    0
-                db  20h
-                db    0
-                db  10h
-                db    0
-                db    7
-                db    0
-                db    7
-
-hooked_msg      db 0Dh,0Ah
-                db 'GpLapTim activated OK',0Dh,0Ah,'$'
+hooked_msg      db      CR,LF,'GpLapTim activated OK',CR,LF,'$'
 
                 align 2
-                db 200 dup('#')          ; stack
-stack_top       dw 5A5Ah
+                db      200 dup('#')          ; stack
+stack_top       dw      5A5Ah
 
 
 ; =============== S U B R O U T I N E =======================================
@@ -378,7 +194,6 @@ new08_hndlr     proc far
 
                 dec     cs:delay_count
 
-
 __end:
                 iret
 
@@ -389,14 +204,14 @@ new08_hndlr     endp
 
 
 new11_hndlr     proc far
-                cmp     cx, 0C0DEh
+                cmp     cx, MAGIC_CX_IN
                 jnz     short __skip
 
-                cmp     dx, 0DEADh
+                cmp     dx, MAGIC_DX_IN
                 jnz     short __skip
 
-                mov     cx, 5A5Ah
-                mov     dx, 3412h
+                mov     cx, MAGIC_CX_OUT
+                mov     dx, MAGIC_DX_OUT
                 mov     bx, word ptr cs:psp_env+2
                 push    bx
                 push    cx
@@ -501,7 +316,6 @@ __no_match:
                 popa
                 popf
 
-
 __call_old21:
                 jmp     cs:old21_handler
 
@@ -575,7 +389,6 @@ __loop1:
                 jmp     short loc_1062B
                 nop
 
-
 loc_10601:
                 sub     di, 7B8Eh
                 mov     ax, es
@@ -584,7 +397,6 @@ loc_10601:
                 mov     es, ax
                 jmp     short loc_1062B
                 nop
-
 
 loc_1061F:
                 sub     di, 7B79h
@@ -618,7 +430,6 @@ loc_1062E:
                 mov     es, ax
                 jmp     short loc_10689
                 nop
-
 
 loc_1065F:
                 sub     di, 798Dh
@@ -989,7 +800,7 @@ announce_hook   proc near
                 assume ds:TSR
                 mov     dx, offset hooked_msg
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 sti
@@ -1166,7 +977,6 @@ loc_10A02:
                 mov     dx, offset rec_pit_out
                 call    log_record
 
-
 loc_10A50:
                 pop     ds
                 assume ds:nothing
@@ -1238,7 +1048,7 @@ hook6_randomize_player_car_power endp
 
 ; out cx -> power value
 hook7_randomize_ccplayer_car_power proc far
-                mov cx, cs:ccplayer_power
+                mov     cx, cs:ccplayer_power
                 retf
 
 hook7_randomize_ccplayer_car_power endp
@@ -1508,9 +1318,9 @@ loc_10BE8:
                 mov     cl, 2
 
 ; ---------------------------------------------------------------------------
-                db 9Ah
-func_lcdinit_off dw 0
-func_lcdinit_seg dw 0
+                db      9Ah
+func_lcdinit_off dw     0
+func_lcdinit_seg dw     0
 ; ---------------------------------------------------------------------------
                 mov     ax, ds:294Fh    ; timeCurrent_lo
                 mov     dx, ds:2951h    ; timeCurrent_hi
@@ -1519,7 +1329,7 @@ func_lcdinit_seg dw 0
                 call    adjust_laptime_with_segdist
 
 ; ---------------------------------------------------------------------------
-                db 9Ah
+                db      9Ah
 func_renderlaptime_off dw 0
 func_renderlaptime_seg dw 0
 ; ---------------------------------------------------------------------------
@@ -1530,7 +1340,7 @@ loc_10C24:
                 assume ds:nothing
                 popa
 hook5_orig_code:
-                db 6 dup(0)
+                db      6 dup(0)
                 retf
 
 
@@ -1538,7 +1348,7 @@ hook5_orig_code:
 
 
 call_render_lcd_image proc near
-                db 9Ah
+                db      9Ah
 func_renderlcdimage_off dw 0
 func_renderlcdimage_seg dw 0
                 retn
@@ -1585,7 +1395,7 @@ loc_10C6F:
                 jnz     short loc_10C93
 
                 mov     ah, 2Ch
-                int     21h             ; DOS - GET CURRENT TIME
+                int     DOS             ; DOS - GET CURRENT TIME
                                         ; Return: CH = hours, CL = minutes, DH = seconds
                                         ; DL = hundredths of seconds
 
@@ -1797,7 +1607,7 @@ loc_10DFE:
                 or      rec_auth.ar_drv_aids, al
 
                 mov     ah, 2Ah
-                int     21h             ; DOS - GET CURRENT DATE
+                int     DOS             ; DOS - GET CURRENT DATE
                                         ; Return: DL = day, DH = month, CX = year
                                         ; AL = day of the week (0=Sunday, 1=Monday, etc.)
 
@@ -1805,7 +1615,7 @@ loc_10DFE:
                 mov     rec_auth.ar_month, dh
                 mov     rec_auth.ar_day, dl
                 mov     ah, 2Ch
-                int     21h             ; DOS - GET CURRENT TIME
+                int     DOS             ; DOS - GET CURRENT TIME
                                         ; Return: CH = hours, CL = minutes, DH = seconds
                                         ; DL = hundredths of seconds
 
@@ -2383,7 +2193,7 @@ log_date_record proc near
                 assume ds:TSR
                 mov     rec_date.dr_record_type, REC_TYPE_DATE
                 mov     ah, 2Ah
-                int     21h             ; DOS - GET CURRENT DATE
+                int     DOS             ; DOS - GET CURRENT DATE
                                         ; Return: DL = day, DH = month, CX = year
                                         ; AL = day of the week (0=Sunday, 1=Monday, etc.)
 
@@ -2392,7 +2202,7 @@ log_date_record proc near
                 mov     rec_date.dr_day, dl
                 mov     rec_date.dr_week_day, al
                 mov     ah, 2Ch
-                int     21h             ; DOS - GET CURRENT TIME
+                int     DOS             ; DOS - GET CURRENT TIME
                                         ; Return: CH = hours, CL = minutes, DH = seconds
                                         ; DL = hundredths of seconds
 
@@ -2422,7 +2232,7 @@ log_record      proc near
                 mov     dx, offset logfile_path
                 mov     ah, 3Dh
                 mov     al, 22h
-                int     21h             ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
+                int     DOS             ; DOS - 2+ - OPEN DISK FILE WITH HANDLE
                                         ; DS:DX -> ASCIZ filename
                                         ; AL = access mode
                                         ; 0 - read, 1 - write, 2 - read & write
@@ -2436,7 +2246,7 @@ loc_11249:
 
 loc_11250:
                 mov     cx, 0
-                int     21h             ; DOS - 2+ - CREATE A FILE WITH HANDLE (CREAT)
+                int     DOS             ; DOS - 2+ - CREATE A FILE WITH HANDLE (CREAT)
                                         ; CX = attributes for file
                                         ; DS:DX -> ASCIZ filename (may include drive and path)
 
@@ -2450,7 +2260,7 @@ loc_11257:
                 mov     bx, logfile_handle
                 xor     cx, cx
                 xor     dx, dx
-                int     21h             ; DOS - 2+ - MOVE FILE READ/WRITE POINTER (LSEEK)
+                int     DOS             ; DOS - 2+ - MOVE FILE READ/WRITE POINTER (LSEEK)
                                         ; AL = method: offset from end of file
 
                 jb      short loc_1127C
@@ -2459,7 +2269,7 @@ loc_11257:
                 mov     bx, logfile_handle
                 mov     cx, record_size
                 mov     dx, record_off
-                int     21h             ; DOS - 2+ - WRITE TO FILE WITH HANDLE
+                int     DOS             ; DOS - 2+ - WRITE TO FILE WITH HANDLE
                                         ; BX = file handle, CX = number of bytes to write, DS:DX -> buffer
 
                 jb      short $+2
@@ -2468,7 +2278,7 @@ loc_11257:
 loc_1127C:
                 mov     bx, logfile_handle
                 mov     ah, 3Eh
-                int     21h             ; DOS - 2+ - CLOSE A FILE WITH HANDLE
+                int     DOS             ; DOS - 2+ - CLOSE A FILE WITH HANDLE
                                         ; BX = file handle
 
 
@@ -2646,19 +2456,19 @@ adjust_laptime_with_segdist endp
 ; ----------- END OF TSR, everything below does not stay resident -----------
 ; ---------------------------------------------------------------------------
 
-load_msg        db 'Installed OK',0Dh,0Ah,'$'
-already_msg     db 'Already installed !',0Dh,0Ah,'$'
-parse_msg       db 'Failed to determine absolute pathname.',7,0Dh,0Ah,'$'
-cant_unload_msg db 'Unable to unload as another TSR was loaded after GPLAPTIM.',7,0Dh,0Ah,'$'
-no_unload_msg   db 'Can',27h,'t unload as GPLAPTIM isn',27h,'t loaded!',7,0Dh,0Ah,'$'
-unloaded_msg    db 'GPLAPTIM unloaded OK.',0Dh,0Ah,'$'
-filename_offset dw offset filename      ; "GPLAPTIM.LOG"
-filename        db 'GPLAPTIM.LOG',0
-cmd_line        dd 81h
-cmd_line_len    db 0
-msg_text        dw 0
-unload_flag     db 0
-tsrs_cs         dw 0
+load_msg        db      'Installed OK',CR,LF,'$'
+already_msg     db      'Already installed !',CR,LF,'$'
+parse_msg       db      'Failed to determine absolute pathname.',BELL,CR,LF,'$'
+cant_unload_msg db      'Unable to unload as another TSR was loaded after GPLAPTIM.',BELL,CR,LF,'$'
+no_unload_msg   db      'Can''t unload as GPLAPTIM isn''t loaded!',BELL,CR,LF,'$'
+unloaded_msg    db      'GPLAPTIM unloaded OK.',CR,LF,'$'
+filename_offset dw      offset filename      ; "GPLAPTIM.LOG"
+filename        db      'GPLAPTIM.LOG',0
+cmd_line        dd      81h           ; Point to PSP command line.
+cmd_line_len    db      0
+msg_text        dw      0
+unload_flag     db      0
+tsrs_cs         dw      0
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -2666,9 +2476,9 @@ tsrs_cs         dw 0
 
 install         proc near
 
-        ;**
-        ;** Switch to our stack.
-        ;**
+                ;**
+                ;** Switch to our stack.
+                ;**
                 cli
                 mov     ax, cs
                 mov     ss, ax
@@ -2676,12 +2486,11 @@ install         proc near
                 mov     sp, offset stack_top
                 sti
 
-        ;***
-        ;*** Get Environment variable info.
-        ;***
-
+                ;***
+                ;*** Get Environment variable info.
+                ;***
                 mov     ah, 62h
-                int     21h             ; DOS - 3+ - GET PSP ADDRESS
+                int     DOS             ; DOS - 3+ - GET PSP ADDRESS
 
                 mov     word ptr psp_env+2, bx
                 mov     word ptr cs:cmd_line+2, bx
@@ -2689,9 +2498,9 @@ install         proc near
                 mov     al, [bx]
                 mov     cs:cmd_line_len, al
 
-        ;**
-        ;** Point DS at our common segment before calling C code.
-        ;**
+                ;**
+                ;** Point DS at our common segment before calling C code.
+                ;**
                 mov     ax, cs
                 mov     ds, ax
                 assume ds:TSR
@@ -2703,21 +2512,20 @@ install         proc near
                 int     20h             ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
-        ;**
-        ;** Check to see if we are already installed
-        ;** Note: BX is currently loaded TSR's CS:
-        ;**
-
+                ;**
+                ;** Check to see if we are already installed
+                ;** Note: BX is currently loaded TSR's CS:
+                ;**
 parse_ok:
-                mov     cx, 0C0DEh
-                mov     dx, 0DEADh
+                mov     cx, MAGIC_CX_IN
+                mov     dx, MAGIC_DX_IN
                 int     11h             ; EQUIPMENT DETERMINATION
                                         ; Return: AX = equipment flag bits
 
-                cmp     cx, 5A5Ah
+                cmp     cx, MAGIC_CX_OUT
                 jnz     short not_installed
 
-                cmp     dx, 3412h
+                cmp     dx, MAGIC_DX_OUT
                 jnz     short not_installed
 
                 jmp     short installed
@@ -2736,7 +2544,7 @@ nothing_to_unload:
                 assume ds:TSR
                 mov     dx, offset no_unload_msg ; "Can't unload as GPLAPTIM isn't loaded!"...
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 int     20h             ; DOS - PROGRAM TERMINATION
@@ -2758,7 +2566,7 @@ installed:
                 assume ds:TSR
                 mov     dx, offset cant_unload_msg ; "Unable to unload as another TSR was loa"...
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 int     20h             ; DOS - PROGRAM TERMINATION
@@ -2771,7 +2579,7 @@ installed:
 no_unload:
                 mov     dx, offset already_msg ; "Already installed !\r\n$"
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 int     20h             ; DOS - PROGRAM TERMINATION
@@ -2787,7 +2595,7 @@ not_installed1:
                 mov     si, filename_offset
                 mov     di, offset logfile_path
                 mov     ah, 60h
-                int     21h             ; DOS - RESOLVE PATH STRING TO CANONICAL PATH STRING
+                int     DOS             ; DOS - RESOLVE PATH STRING TO CANONICAL PATH STRING
                                         ; DS:SI -> ASCIZ relative path string or directory name
                                         ; ES:DI -> 128-byte buffer for ASCIZ canonical fully qualified name
 
@@ -2795,7 +2603,7 @@ not_installed1:
 
                 mov     dx, offset parse_msg ; "Failed to determine absolute pathname."...
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 int     20h             ; DOS - PROGRAM TERMINATION
@@ -2858,7 +2666,7 @@ name_q_ok:
         ;**
                 mov     dx, offset load_msg ; "Installed OK\r\n$"
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
         ;***
@@ -2868,7 +2676,7 @@ name_q_ok:
                 mov     ax, es:[bx]
                 mov     es, ax
                 mov     ah, 49h
-                int     21h             ; DOS - 2+ - FREE MEMORY
+                int     DOS             ; DOS - 2+ - FREE MEMORY
                                         ; ES = segment address of area to be freed
 
         ;***
@@ -2880,7 +2688,7 @@ name_q_ok:
                 inc     ax
                 mov     dx, ax
                 mov     ax, 3100h
-                int     21h             ; DOS - DOS 2+ - TERMINATE BUT STAY RESIDENT
+                int     DOS             ; DOS - DOS 2+ - TERMINATE BUT STAY RESIDENT
                                         ; AL = exit code, DX = program size, in paragraphs
 
         ;***
@@ -2905,7 +2713,7 @@ install         endp
 tsr_unload      proc near
                 mov     tsrs_cs, bx
                 mov     ax, 3508h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -2917,7 +2725,7 @@ tsr_unload      proc near
                 jnz     short cant_unload
 
                 mov     ax, 3511h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -2929,7 +2737,7 @@ tsr_unload      proc near
                 jnz     short cant_unload
 
                 mov     ax, 3521h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -2946,19 +2754,19 @@ tsr_unload      proc near
                 mov     es, tsrs_cs
                 lds     dx, es:old08_handler
                 mov     ax, 2508h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
                 lds     dx, es:old11_handler
                 mov     ax, 2511h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
                 lds     dx, es:old21_handler
                 mov     ax, 2521h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
@@ -2969,7 +2777,7 @@ tsr_unload      proc near
                 pop     ds
                 mov     dx, offset unloaded_msg ; "GPLAPTIM unloaded OK.\r\n$"
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
         ;**
@@ -2977,10 +2785,10 @@ tsr_unload      proc near
         ;**
                 mov     es, tsrs_cs
                 mov     ah, 49h
-                int     21h             ; DOS - 2+ - FREE MEMORY
+                int     DOS             ; DOS - 2+ - FREE MEMORY
                                         ; ES = segment address of area to be freed
 
-                int     20h             ; DOS - PROGRAM TERMINATION
+                int     DOS_TERMINATE   ; DOS - PROGRAM TERMINATION
                                         ; returns to DOS--identical to INT 21/AH=00h
 
 cant_unload:
@@ -2994,7 +2802,7 @@ tsr_unload      endp
 
 tsr_vectors_install proc near
                 mov     ax, 3508h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -3002,12 +2810,12 @@ tsr_vectors_install proc near
                 mov     word ptr old08_handler+2, es
                 mov     dx, offset new08_hndlr
                 mov     ax, 2508h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
                 mov     ax, 3511h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -3015,14 +2823,14 @@ tsr_vectors_install proc near
                 mov     word ptr old11_handler+2, es
                 mov     dx, offset new11_hndlr
                 mov     ax, 2511h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
 
 loc_115B4:
                 mov     ax, 3521h
-                int     21h             ; DOS - 2+ - GET INTERRUPT VECTOR
+                int     DOS             ; DOS - 2+ - GET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; Return: ES:BX = value of interrupt vector
 
@@ -3030,7 +2838,7 @@ loc_115B4:
                 mov     word ptr old21_handler+2, es
                 mov     dx, offset new21_hndlr
                 mov     ax, 2521h
-                int     21h             ; DOS - SET INTERRUPT VECTOR
+                int     DOS             ; DOS - SET INTERRUPT VECTOR
                                         ; AL = interrupt number
                                         ; DS:DX = new vector to be used for specified interrupt
 
@@ -3045,7 +2853,7 @@ tsr_vectors_install endp
 wrt_msg         proc near
                 mov     dx, msg_text
                 mov     ah, 9
-                int     21h             ; DOS - PRINT STRING
+                int     DOS             ; DOS - PRINT STRING
                                         ; DS:DX -> string terminated by "$"
 
                 retn
@@ -3082,16 +2890,16 @@ loc_115F2:
                 les     bx, cmd_line
                 add     bx, dx
                 mov     ax, bx
-                cmp     byte ptr es:[bx], 0Dh
+                cmp     byte ptr es:[bx], CR
                 jz      short loc_11612
 
-                cmp     byte ptr es:[bx], 0Ah
+                cmp     byte ptr es:[bx], LF
                 jz      short loc_11612
 
                 cmp     byte ptr es:[bx], ' '
                 jz      short loc_11612
 
-                cmp     byte ptr es:[bx], 9
+                cmp     byte ptr es:[bx], TAB
                 jnz     short loc_1161C
 
 
@@ -3390,10 +3198,10 @@ arg_0           = word ptr  4
 
 loc_117D2:
                 mov     bx, [bp+arg_0]
-                cmp     byte ptr [bx], 0Ah
+                cmp     byte ptr [bx], LF
                 jnz     short loc_117E2
 
-                push    0Dh
+                push    CR
                 call    display_chr
 
                 add     sp, 2
@@ -3539,29 +3347,29 @@ loc_11882:
 atoi            endp
 
 ; ---------------------------------------------------------------------------
-title_msg       db '@(#)GpLapTim V7.0 12th Nov 2018 - Grand Prix/World Circuit Lap Time Logger.',0Ah
-                db 'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.',0Ah
-                db 'Copyright (c) Rene Smit 2018 - All Rights Reserved.',0Ah,0Ah,0
-aGplaptimMissin db 'GpLapTim: missing log filename.',0Ah,0
-aGplaptimInvali db 'GpLapTim: Invalid 1st split percentage (-a)',0Ah,0
-aGplaptimInvali_0 db 'GpLapTim: Invalid 2nd split percentage (-b)',0Ah,0
-aGplaptimInvali_1 db 'GpLapTim: Invalid 3rd split percentage (-c)',0Ah,0
-aGplaptimSStopT db 'GpLapTim: -s Stop time must be between 1s and 15s',0Ah,0
-aUsageGplaptimH db 0Ah
-                db 'Usage: gplaptim [-h?]  [-aN -bN -cN -s] [-p] [-u] [-f(filename)]',0Ah
-                db '       -f(name)  Specify log filename',27h,'s location.',0Ah
-                db '       -p        Log player',27h,'s times only.',0Ah
-                db 0Ah
-                db '       -aN       1st split time percentage (default 25%).',0Ah
-                db '       -bN       2nd split time percentage (default 50%).',0Ah
-                db '       -cN       3rd split time percentage (default 75%).',0Ah
-                db 0Ah
-                db '       -sN       Stop (freeze) delay in seconds (default 10s).',0Ah
-                db 0Ah
-                db '       -wN       Set BHP for CC player during hotseat (default 716).',0Ah
-                db 0Ah
-                db '       -h,-?     This help message.',0Ah
-                db '       -u        Unload TSR.',0Ah,0
+title_msg       db      '@(#)GpLapTim V7.0 12th Nov 2018 - Grand Prix/World Circuit Lap Time Logger.',LF
+                db      'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.',LF
+                db      'Copyright (c) Rene Smit 2018 - All Rights Reserved.',LF,LF,0
+aGplaptimMissin db      'GpLapTim: missing log filename.',LF,0
+aGplaptimInvali db      'GpLapTim: Invalid 1st split percentage (-a)',LF,0
+aGplaptimInvali_0 db    'GpLapTim: Invalid 2nd split percentage (-b)',LF,0
+aGplaptimInvali_1 db    'GpLapTim: Invalid 3rd split percentage (-c)',LF,0
+aGplaptimSStopT db      'GpLapTim: -s Stop time must be between 1s and 15s',LF,0
+aUsageGplaptimH db      LF
+                db      'Usage: gplaptim [-h?]  [-aN -bN -cN -s] [-p] [-u] [-f(filename)]',LF
+                db      '       -f(name)  Specify log filename''s location.',LF
+                db      '       -p        Log player''s times only.',LF
+                db      LF
+                db      '       -aN       1st split time percentage (default 25%).',LF
+                db      '       -bN       2nd split time percentage (default 50%).',LF
+                db      '       -cN       3rd split time percentage (default 75%).',LF
+                db      LF
+                db      '       -sN       Stop (freeze) delay in seconds (default 10s).',LF
+                db      LF
+                db      '       -wN       Set BHP for CC player during hotseat (default 716).',LF
+                db      LF
+                db      '       -h,-?     This help message.',LF
+                db      '       -u        Unload TSR.',LF,0
 TSR             ends
 
 

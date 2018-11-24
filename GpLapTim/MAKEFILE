@@ -3,12 +3,12 @@
 ##
 
 ASM            =    tasm
-ASM_FLAGS      =    -Ml -zd -zi
+ASM_FLAGS      =    -Ml -zd -zi -i..\inc
 LINK           =    tlink /k /l /m /s /c /Tdc
 
 OBJS           =    gplaptim.obj
 
-.asm.obj:      
+.asm.obj:
                $(ASM) $< $(ASM_FLAGS),,;
 
 all:           gplaptim.com

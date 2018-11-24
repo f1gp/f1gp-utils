@@ -14,7 +14,7 @@ LF              equ     10                      ; Line Feed
 BELL            equ     07h                     ; Bell Code
 
 MAGIC_CX_IN     equ     0c0deh
-MAGIC_DX_IN     equ     0dea0h
+MAGIC_DX_IN     equ     0deaeh
 MAGIC_CX_OUT    equ     05a5ah
 MAGIC_DX_OUT    equ     03654h
 

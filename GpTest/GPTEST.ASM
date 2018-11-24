@@ -4,16 +4,17 @@
         name    gptest
         title   'Test Support Tool'
 
-LOCALS __
-
 ;*****************************************************************************
 ;**
 ;** Include files
 ;**
 
 include segments.inc
+include gpdef.inc
 include gptest.inc
 include gptest.ash
+
+LOCALS __
 
 ;*****************************************************************************
 ;**
@@ -22,13 +23,6 @@ include gptest.ash
 
 TICK_TIME_MS    equ     18                      ; Approx ms of a tick
 DELAY_TIME      equ     (500 / TICK_TIME_MS)    ; Time to display hook msg
-
-DOS             equ     21h                     ; Dos interrupt call
-
-GP_VER_UNK      equ     -1
-GP_VER_EUR      equ     0
-GP_VER_USA      equ     1
-GP_VER_ITA      equ     2
 
 LED_COLIDX      equ     0
 LED_ROWIDX      equ     1
@@ -307,27 +301,27 @@ HOOK_RANDOM_SEED_LENGTH     equ $ - hook_random_seed_start
 
 ; these offsets are all in seg000
 ; more can be found in seg013, but they are all track compilation related, which often hangs with a fixed RNG value
-hook_random_number_offs     dw 3CACh, 3CFCh, 3D05h  ; pitstop timers
-                            dw 1030h                ; 50% chance: or [si+Car.flags_BC], 2
-                            dw 1FA4h                ; 14% chance: CC pitting in practice
-                            dw 0FBEh, 0FD2h         ; car grip related
-                            dw 4C97h, 4CEFh, 4D23h  ; car grip related
-                            dw 4B20h, 4C13h, 4C44h  ; car power
-                            dw 50B7h, 526Fh, 528Dh  ; starting grid related
-                            dw 7E62h                ; wobbling (mostly on grass)
-                            dw 9D1Eh, 9D31h, 9D59h  ; revs (not just pitch, does affect times)
-                            dw 0A873h               ; wing setup variation
-                            dw 0A964h               ; tyre compound variation
-                            dw 0D96Ch               ; race start car launch speed (very low value)
-                            dw 0D9E4h               ; race start driver reaction time
-                            dw 0DC6Eh               ; start lights duration
-                            dw 0E212h               ; 6.25% chance: wet weather
-                            ; dw 059Dh, 05ACh         ; track related, hangs with rng_value 127
+hook_random_number_offs     dw  3CACh, 3CFCh, 3D05h  ; pitstop timers
+                            dw  1030h                ; 50% chance: or [si+Car.flags_BC], 2
+                            dw  1FA4h                ; 14% chance: CC pitting in practice
+                            dw  0FBEh, 0FD2h         ; car grip related
+                            dw  4C97h, 4CEFh, 4D23h  ; car grip related
+                            dw  4B20h, 4C13h, 4C44h  ; car power
+                            dw  50B7h, 526Fh, 528Dh  ; starting grid related
+                            dw  7E62h                ; wobbling (mostly on grass)
+                            dw  9D1Eh, 9D31h, 9D59h  ; revs (not just pitch, does affect times)
+                            dw  0A873h               ; wing setup variation
+                            dw  0A964h               ; tyre compound variation
+                            dw  0D96Ch               ; race start car launch speed (very low value)
+                            dw  0D9E4h               ; race start driver reaction time
+                            dw  0DC6Eh               ; start lights duration
+                            dw  0E212h               ; 6.25% chance: wet weather
+                            ; dw  059Dh, 05ACh         ; track related, hangs with rng_value 127
 HOOK_RANDOM_NUMBER_COUNT    equ ($ - hook_random_number_offs) / 2
 
 hook_random_number_start    db  0B8h, 0, 0  ; mov al, 0
                             db  90h         ; nop
-HOOK_RANDOM_NUMBER_LENGTH   equ  $ - hook_random_number_start
+HOOK_RANDOM_NUMBER_LENGTH   equ $ - hook_random_number_start
 
 TSR_DATA        ends
 
@@ -879,7 +873,7 @@ render_pitseq   proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     al, es:[si+067h] ; bPitSeq
+                mov     al, es:[si+Car.bPitSeq]
                 call    render_nibble
                 ret
 render_pitseq   endp
@@ -897,7 +891,7 @@ render_lap_dist proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+026h] ; wSegNr?
+                mov     bx, es:[si+Car.wSegNr?]
                 call    render_hex_word
 
                 mov     ax, 5
@@ -911,7 +905,7 @@ render_lap_dist proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+080h] ; wNumFeetIntoLap?
+                mov     bx, es:[si+Car.wNumFeetIntoLap?]
                 call    render_hex_word
                 ret
 render_lap_dist endp
@@ -929,7 +923,7 @@ render_driven_segs proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+0a4h]
+                mov     bx, WORD PTR es:[si+Car.wDrivenDistInSegs]
                 call    render_hex_word
                 ret
 render_driven_segs endp
@@ -947,9 +941,9 @@ render_tyre_wear proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+0a2h]
+                mov     bx, WORD PTR es:[si+Car.dTyreWear+2]
                 call    render_hex_word
-                mov     bl, es:[si+0a1h]
+                mov     bl, BYTE PTR es:[si+Car.dTyreWear+1]
                 call    render_hex_byte
                 ret
 render_tyre_wear endp
@@ -967,7 +961,7 @@ render_best_line proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+0eh]
+                mov     bx, es:[si+Car.wSegPosCCLine]
                 call    render_hex_word
                 ret
 render_best_line endp
@@ -985,7 +979,7 @@ render_segdist  proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+1ch]
+                mov     bx, es:[si+Car.wSegDist]
                 call    render_hex_word
 
                 mov     ax, 10
@@ -999,7 +993,7 @@ render_segdist  proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+16h]
+                mov     bx, es:[si+Car.wSegLength]
                 call    render_hex_word
 
                 mov     ax, 11
@@ -1013,7 +1007,7 @@ render_segdist  proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+1eh]
+                mov     bx, es:[si+Car.wSegDistCompleted]
                 call    render_hex_word
 
                 mov     ax, 12
@@ -1027,7 +1021,7 @@ render_segdist  proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+2]
+                mov     bx, es:[si+Car.wCarAngleX]
                 call    render_hex_word
 
                 ret
@@ -1045,7 +1039,7 @@ render_power    proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+0a8h] ; wPower
+                mov     bx, es:[si+Car.wPower]
                 call    render_hex_word
                 ret
 render_power    endp
@@ -1062,7 +1056,7 @@ render_corner_speed_factor proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+0beh] ; wCornerSpeedFactor
+                mov     bx, es:[si+Car.wCornerSpeedFactor]
                 call    render_hex_word
                 ret
 render_corner_speed_factor endp
@@ -1077,7 +1071,7 @@ render_fuel_load proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+44h] ; weight
+                mov     bx, es:[si+Car.weight]
                 push    es
                 les     di, cs:gp_car_base_weight
                 mov     ax, es:[di]
@@ -1097,7 +1091,7 @@ render_actual_tyre_grip proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, es:[si+46h] ; tyreGrip
+                mov     bx, es:[si+Car.tyreGrip]
                 call    render_hex_word
                 ret
 render_actual_tyre_grip endp
@@ -1105,7 +1099,7 @@ render_actual_tyre_grip endp
 
 render_actual_tyre_compound proc near
                 xor     ax, ax
-                mov     al, es:[si+0b2h] ; tyre compound
+                mov     al, es:[si+Car.tyreCompound]
                 cmp     al, 6
                 jb      __compound_ok
                 mov     al, 6
@@ -1130,7 +1124,7 @@ render_actual_wings proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bl, es:[si+9eh] ; front wing
+                mov     bl, es:[si+Car.bFrontWingSetup]
                 call    render_dec_byte
 
                 ; render actual rear wing
@@ -1142,7 +1136,7 @@ render_actual_wings proc near
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bl, es:[si+9fh] ; rear wing
+                mov     bl, es:[si+Car.bRearWingSetup]
                 call    render_dec_byte
                 ret
 render_actual_wings endp

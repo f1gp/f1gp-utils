@@ -5,12 +5,12 @@
 CC             =    bcc
 CC_FLAGS       =    -v -c -y -O2 -1 -u- -w
 ASM            =    tasm
-ASM_FLAGS      =    -Ml -zd -zi
+ASM_FLAGS      =    -Ml -zd -zi -i..\inc
 LINK           =    tlink /l /m /s /c /Tde
 
 ##                                    Code class/segment  Data class/group/segment    BSS class/group/segment
-CC_RESIDENT    =    $(CC) $(CC_FLAGS) -zACODE -zCTSR_CODE -zTDATA -zSTSR -zRTSR_DATA  -zBDATA -zGTSR -zDTSR_DATA 
-CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR  -zRTSR_TMP  -zBTMP  -zGTSR  -zDTSR_TMP  
+CC_RESIDENT    =    $(CC) $(CC_FLAGS) -zACODE -zCTSR_CODE -zTDATA -zSTSR -zRTSR_DATA  -zBDATA -zGTSR -zDTSR_DATA
+CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR  -zRTSR_TMP  -zBTMP  -zGTSR  -zDTSR_TMP
 
 ##
 ## Note: endres.obj *must* be last!
@@ -19,7 +19,7 @@ OBJS           =    gptest.obj install.obj int08.obj int11.obj \
                     parse.obj \
                     endres.obj
 
-.asm.obj:      
+.asm.obj:
                $(ASM) $< $(ASM_FLAGS),,;
 
 all:           gptest.exe
@@ -40,7 +40,7 @@ int08.obj:     int08.asm segments.inc gptest.inc
 int11.obj:     int11.asm segments.inc gptest.inc
 
 parse.obj:     parse.c gptest.h version.i
-               $(CC_TRANSIENT) parse.c 
+               $(CC_TRANSIENT) parse.c
 
 endres.obj:    endres.asm segments.inc
 
