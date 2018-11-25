@@ -932,7 +932,7 @@ render_driven_segs endp
 render_tyre_wear proc near
                 mov     ax, 7
                 mov     ch, 3
-                mov     cl, -9
+                mov     cl, -7
                 mov     bl, 80h
                 call    lcd_init
                 mov     al, 'T'
@@ -943,8 +943,8 @@ render_tyre_wear proc near
                 call    cs:[gp_render_char]
                 mov     bx, WORD PTR es:[si+Car.dTyreWear+2]
                 call    render_hex_word
-                mov     bl, BYTE PTR es:[si+Car.dTyreWear+1]
-                call    render_hex_byte
+                ; mov     bl, BYTE PTR es:[si+Car.dTyreWear+1]
+                ; call    render_hex_byte
                 ret
 render_tyre_wear endp
 
