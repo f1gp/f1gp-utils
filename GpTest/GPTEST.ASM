@@ -671,7 +671,7 @@ TSR_CODE        ends
 ;** Purpose:    Prepare to render text at a specific location.
 ;**
 ;** Notes  :    AL = row index
-;**             AH = row index
+;**             AH = row sub index
 ;**             CL = column index (negative aligns right)
 ;**             CH = column sub index
 ;**             BL = 0: bg green, 80h: bg transparent
@@ -833,20 +833,21 @@ hook_frame      proc far
                 mov     si, ax  ; es:si points to selected car
 
                 ; top left
-                call    render_corner_speed_factor
                 call    render_power
+                call    render_corner_speed_factor
+                call    render_tyre_wear
+                call    render_actual_tyre_grip
 
                 ; top right
                 call    render_pitseq
                 call    render_lap_dist
                 call    render_driven_segs
-                call    render_tyre_wear
+                call    render_seg_nr
                 call    render_best_line
                 call    render_segdist
 
                 ; bottom left
                 call    render_fuel_load
-                call    render_actual_tyre_grip
                 call    render_actual_wings
 
                 ; bottom right
@@ -859,6 +860,76 @@ hook_frame_orig:
                 db      HOOK_FRAME_LENGTH dup(0)
                 retf
 hook_frame      endp
+
+
+render_power    proc near
+                mov     ax, 3
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'H'
+                call    cs:[gp_render_char]
+                mov     al, 'P'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+Car.wPower]
+                call    render_hex_word
+                ret
+render_power    endp
+
+
+render_corner_speed_factor proc near
+                mov     ax, 4
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'C'
+                call    cs:[gp_render_char]
+                mov     al, 'S'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+Car.wCornerSpeedFactor]
+                call    render_hex_word
+                ret
+render_corner_speed_factor endp
+
+
+render_tyre_wear proc near
+                mov     ax, 5
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'T'
+                call    cs:[gp_render_char]
+                mov     al, 'W'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, WORD PTR es:[si+Car.dTyreWear+2]
+                call    render_hex_word
+                ; mov     bl, BYTE PTR es:[si+Car.dTyreWear+1]
+                ; call    render_hex_byte
+                ret
+render_tyre_wear endp
+
+
+render_actual_tyre_grip proc near
+                mov     ax, 6
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                mov     al, 'T'
+                call    cs:[gp_render_char]
+                mov     al, 'G'
+                call    cs:[gp_render_char]
+                mov     al, '='
+                call    cs:[gp_render_char]
+                mov     bx, es:[si+Car.tyreGrip]
+                call    render_hex_word
+                ret
+render_actual_tyre_grip endp
 
 
 render_pitseq   proc near
@@ -929,24 +1000,27 @@ render_driven_segs proc near
 render_driven_segs endp
 
 
-render_tyre_wear proc near
+render_seg_nr   proc near
                 mov     ax, 7
                 mov     ch, 3
                 mov     cl, -7
                 mov     bl, 80h
                 call    lcd_init
-                mov     al, 'T'
+                mov     al, 'S'
                 call    cs:[gp_render_char]
-                mov     al, 'W'
+                mov     al, 'N'
                 call    cs:[gp_render_char]
                 mov     al, '='
                 call    cs:[gp_render_char]
-                mov     bx, WORD PTR es:[si+Car.dTyreWear+2]
+                push    es
+                push    di
+                les     di, es:[si+Car.pSeg]
+                mov     bx, es:[di+Segment.wNr]
+                pop     di
+                pop     es
                 call    render_hex_word
-                ; mov     bl, BYTE PTR es:[si+Car.dTyreWear+1]
-                ; call    render_hex_byte
                 ret
-render_tyre_wear endp
+render_seg_nr   endp
 
 
 render_best_line proc near
@@ -1028,40 +1102,6 @@ render_segdist  proc near
 render_segdist  endp
 
 
-render_power    proc near
-                mov     ax, 3
-                mov     cx, 0
-                mov     bl, 80h
-                call    lcd_init
-                mov     al, 'H'
-                call    cs:[gp_render_char]
-                mov     al, 'P'
-                call    cs:[gp_render_char]
-                mov     al, '='
-                call    cs:[gp_render_char]
-                mov     bx, es:[si+Car.wPower]
-                call    render_hex_word
-                ret
-render_power    endp
-
-
-render_corner_speed_factor proc near
-                mov     ax, 4
-                mov     cx, 0
-                mov     bl, 80h
-                call    lcd_init
-                mov     al, 'C'
-                call    cs:[gp_render_char]
-                mov     al, 'S'
-                call    cs:[gp_render_char]
-                mov     al, '='
-                call    cs:[gp_render_char]
-                mov     bx, es:[si+Car.wCornerSpeedFactor]
-                call    render_hex_word
-                ret
-render_corner_speed_factor endp
-
-
 render_fuel_load proc near
                 mov     cl, 0
                 mov     al, 0
@@ -1080,21 +1120,6 @@ render_fuel_load proc near
                 call    render_dec_word
                 ret
 render_fuel_load endp
-
-
-render_actual_tyre_grip proc near
-                mov     cl, 0
-                mov     al, 128
-                mov     bl, 'T'
-                call    render_cockpit_char
-                mov     al, 'G'
-                call    cs:[gp_render_char]
-                mov     al, '='
-                call    cs:[gp_render_char]
-                mov     bx, es:[si+Car.tyreGrip]
-                call    render_hex_word
-                ret
-render_actual_tyre_grip endp
 
 
 render_actual_tyre_compound proc near
