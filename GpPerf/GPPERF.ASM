@@ -915,7 +915,7 @@ TSR_CODE        ends
 ;** 01CD64  8BC2           mov    ax,dx
 ;** 01CD66  9A170E0000     call   0:0E17        <----
 ;** 01CD6B  50             push   ax
-;** 01CD6C úC1E808         shr    ax,8
+;** 01CD6C ï¿½C1E808         shr    ax,8
 ;** 01CD6F  240F           and    al,0F
 ;** 01CD71  0430           add    al,30
 ;**
@@ -987,6 +987,7 @@ hs6:    mov     dl, BAR_COLOUR_WARN
         sub     ax, [si+46h]
         jns     hs2
         neg     ax
+        shr     ax, 1
         mov     dl, BAR_COLOUR_GOOD
         jmp     hs3
 hs2:    shr     ax, 3

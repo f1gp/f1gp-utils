@@ -17,7 +17,9 @@
 **                  Display of tyre grip added.
 **                  Updated SHOWPERF for display of steering, accel & braking.
 ** V3.1 25-Oct-95   Corrected missing readme text file info and Usage message.
+**
+** V3.2 18-Nov-18   Made the yellow grip bar fill up twice as slow.
 */
 
-#define VERSION          "V3.1 25-Oct-95"
+#define VERSION          "V3.2 28-Nov-2018"
 
