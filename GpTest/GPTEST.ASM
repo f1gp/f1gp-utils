@@ -284,6 +284,7 @@ hook_gp_exe     proc near
                 call    init_hook_frame
                 call    patch_menu
                 call    init_race_car_limit
+                call    fix_max_fuel_load
                 ; call    disable_overtaking
                 ; call    disable_cc_driving
 
@@ -487,6 +488,26 @@ init_race_car_limit proc near
 __end:
                 ret
 init_race_car_limit endp
+
+TSR_CODE        ends
+
+
+;-------------------------------------------------------
+
+TSR_CODE        segment
+
+fix_max_fuel_load proc near
+                push    13
+                push    05A2h
+                call    calc_offset_esdi
+                mov     BYTE PTR es:[di], 73h   ; JGE -> JAE (signed to unsigned)
+                push    0
+                push    5B67h
+                call    calc_offset_esdi
+                ; following fix has drawback that fuel load in the victory lap goes to max
+                mov     BYTE PTR es:[di], 0E3h  ; IMUL BX -> MUL BX (signed to unsigned)
+                ret
+fix_max_fuel_load endp
 
 TSR_CODE        ends
 
