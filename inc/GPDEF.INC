@@ -10,7 +10,7 @@ GP_VER_ITA              equ     2
 
 ; ---------------------------------------------------------------------------
 
-Seg             struc
+Segment         struc ; (sizeof=0x2E)
 wAngleZ         dw ?
 wAngleX         dw ?
 wPosX           dw ?
@@ -47,7 +47,7 @@ field_29        db ?                    ; like field_28, but for bit 10h of flag
 field_2A        db ?                    ; pitlane parking zone: bit 80 set
 field_2B        db ?
 field_2C        dw ?
-Seg             ends
+Segment         ends
 
 ; ---------------------------------------------------------------------------
 
