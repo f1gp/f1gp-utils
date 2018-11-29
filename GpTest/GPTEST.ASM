@@ -76,6 +76,7 @@ gp_lcd_init     dd      ?
 gp_render_char  dd      ?
 gp_sel_car_ptr  dd      ?
 gp_led_pos_ptr  dd      ?
+gp_sestime_left dd      ?
 
 q_filename      db      ?
                 db      64 + 13 dup(?)
@@ -410,6 +411,11 @@ init_hook_frame proc near
                 mov     dx, 3
                 mov     ax, 0958h
                 mov     bx, OFFSET TSR:gp_led_pos_ptr
+                call    store_offset
+
+                mov     dx, 3
+                mov     ax, 298Dh
+                mov     bx, OFFSET TSR:gp_sestime_left
                 call    store_offset
 
                 mov     si, OFFSET TSR:hook_frame_start
@@ -853,6 +859,8 @@ hook_frame      proc far
 
                 mov     si, ax  ; es:si points to selected car
 
+                call    render_session_timer
+
                 ; top left
                 call    render_power
                 call    render_corner_speed_factor
@@ -881,6 +889,18 @@ hook_frame_orig:
                 db      HOOK_FRAME_LENGTH dup(0)
                 retf
 hook_frame      endp
+
+
+render_session_timer proc near
+                mov     ax, 0
+                mov     cx, 0
+                mov     bl, 80h
+                call    lcd_init
+                les     di, cs:gp_sestime_left  ; minutes remaining encoded as BCD
+                mov     bx, es:[di]
+                call    render_hex_word
+                ret
+render_session_timer endp
 
 
 render_power    proc near
