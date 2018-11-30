@@ -29,6 +29,26 @@ LED_ROWIDX      equ     1
 LED_COLSUB      equ     2
 LED_ROWSUB      equ     3
 LED_TRANSPARENT equ     10
+LED_COLOR_BG    equ     11
+LED_COLOR_FG    equ     12
+
+COLOR_BLACK     equ     0
+COLOR_LGRAY     equ     1
+COLOR_RED       equ     2
+COLOR_YELLOW    equ     3
+COLOR_LGREEN    equ     4
+COLOR_PURPLE    equ     5
+COLOR_LBLUE     equ     6
+COLOR_GRAY      equ     7
+COLOR_WHITE     equ     8
+COLOR_LRED      equ     9
+COLOR_DGRAY     equ     10
+COLOR_GREEN     equ     11
+COLOR_L2GRAY    equ     12
+COLOR_L3GRAY    equ     13
+COLOR_GRGREEN   equ     18
+COLOR_CPGREEN   equ     153
+
 
 ;*****************************************************************************
 ;**
@@ -682,6 +702,8 @@ render_cockpit_char proc near
                 push    si
                 les     di, cs:gp_led_pos_ptr
                 mov     BYTE PTR es:[di + LED_TRANSPARENT], 0
+                mov     BYTE PTR es:[di + LED_COLOR_FG], COLOR_BLACK
+                mov     BYTE PTR es:[di + LED_COLOR_BG], COLOR_CPGREEN
                 pop     si
                 pop     es
                 call    cs:[gp_lcd_init]
@@ -701,7 +723,9 @@ TSR_CODE        ends
 ;**             AH = row sub index
 ;**             CL = column index (negative aligns right)
 ;**             CH = column sub index
-;**             BL = 0: bg green, 80h: bg transparent
+;**             BL = 0: bg opaque, 80h: bg transparent
+;**             DL = fg color
+;**             DH = bg color (unused if bg transparent)
 
 TSR_CODE        segment
 
@@ -718,6 +742,11 @@ __left:
                 mov     BYTE PTR es:[di + LED_COLIDX], cl
                 mov     BYTE PTR es:[di + LED_COLSUB], ch
                 mov     BYTE PTR es:[di + LED_TRANSPARENT], bl
+                mov     BYTE PTR es:[di + LED_COLOR_FG], dl
+                cmp     bl, 80h
+                jz      __end
+                mov     BYTE PTR es:[di + LED_COLOR_BG], dh
+__end:
                 pop     si
                 pop     es
                 ret
@@ -852,6 +881,15 @@ hook_frame      proc far
                 pusha
                 push es
 
+                les     di, cs:gp_led_pos_ptr
+                xor     ax, ax
+                mov     al, BYTE PTR es:[di + LED_TRANSPARENT]
+                push    ax
+                mov     al, BYTE PTR es:[di + LED_COLOR_FG]
+                push    ax
+                mov     al, BYTE PTR es:[di + LED_COLOR_BG]
+                push    ax
+
                 les     di, cs:gp_sel_car_ptr
                 mov     ax, es:[di]
                 or      ax, ax
@@ -882,6 +920,13 @@ hook_frame      proc far
                 ; bottom right
                 call    render_actual_tyre_compound
 __end:
+                les     di, cs:gp_led_pos_ptr
+                pop     ax
+                mov     BYTE PTR es:[di + LED_COLOR_BG], al
+                pop     ax
+                mov     BYTE PTR es:[di + LED_COLOR_FG], al
+                pop     ax
+                mov     BYTE PTR es:[di + LED_TRANSPARENT], al
                 pop es
                 popa
 
@@ -895,6 +940,7 @@ render_session_timer proc near
                 mov     ax, 0
                 mov     cx, 0
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 les     di, cs:gp_sestime_left  ; minutes remaining encoded as BCD
                 mov     bx, es:[di]
@@ -907,6 +953,7 @@ render_power    proc near
                 mov     ax, 3
                 mov     cx, 0
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'H'
                 call    cs:[gp_render_char]
@@ -924,6 +971,7 @@ render_corner_speed_factor proc near
                 mov     ax, 4
                 mov     cx, 0
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'C'
                 call    cs:[gp_render_char]
@@ -941,6 +989,7 @@ render_tyre_wear proc near
                 mov     ax, 5
                 mov     cx, 0
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'T'
                 call    cs:[gp_render_char]
@@ -960,6 +1009,7 @@ render_actual_tyre_grip proc near
                 mov     ax, 6
                 mov     cx, 0
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'T'
                 call    cs:[gp_render_char]
@@ -975,9 +1025,10 @@ render_actual_tyre_grip endp
 
 render_pitseq   proc near
                 mov     ax, 3
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -4
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'P'
                 call    cs:[gp_render_char]
@@ -993,9 +1044,10 @@ render_pitseq   endp
 
 render_lap_dist proc near
                 mov     ax, 4
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, '2'
                 call    cs:[gp_render_char]
@@ -1007,9 +1059,10 @@ render_lap_dist proc near
                 call    render_hex_word
 
                 mov     ax, 5
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, '8'
                 call    cs:[gp_render_char]
@@ -1025,9 +1078,10 @@ render_lap_dist endp
 
 render_driven_segs proc near
                 mov     ax, 6
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'D'
                 call    cs:[gp_render_char]
@@ -1043,9 +1097,10 @@ render_driven_segs endp
 
 render_seg_nr   proc near
                 mov     ax, 7
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'S'
                 call    cs:[gp_render_char]
@@ -1066,9 +1121,10 @@ render_seg_nr   endp
 
 render_best_line proc near
                 mov     ax, 8
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'B'
                 call    cs:[gp_render_char]
@@ -1084,9 +1140,10 @@ render_best_line endp
 
 render_segdist  proc near
                 mov     ax, 9
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'S'
                 call    cs:[gp_render_char]
@@ -1098,9 +1155,10 @@ render_segdist  proc near
                 call    render_hex_word
 
                 mov     ax, 10
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'S'
                 call    cs:[gp_render_char]
@@ -1112,9 +1170,10 @@ render_segdist  proc near
                 call    render_hex_word
 
                 mov     ax, 11
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'S'
                 call    cs:[gp_render_char]
@@ -1126,9 +1185,10 @@ render_segdist  proc near
                 call    render_hex_word
 
                 mov     ax, 12
-                mov     ch, 3
+                mov     ch, 4
                 mov     cl, -7
                 mov     bl, 80h
+                mov     dx, COLOR_BLACK
                 call    lcd_init
                 mov     al, 'A'
                 call    cs:[gp_render_char]
