@@ -83,14 +83,16 @@ limit_cars_race db      26
 PUBLIC          disable_rng
 disable_rng     db      0
 PUBLIC          rng_value
-rng_value       db    0
+rng_value       db      0
+PUBLIC          keep_fw
+keep_fw         db      0
 
 err_notify      db      0
 
 game_ds         dw      ?
 game_ss         dw      ?
 
-gp_car_base_weight dd      ?
+gp_car_base_weight dd   ?
 gp_hex2bcd      dd      ?
 gp_lcd_init     dd      ?
 gp_render_char  dd      ?
@@ -305,6 +307,7 @@ hook_gp_exe     proc near
                 call    init_hook_frame
                 call    patch_menu
                 call    init_race_car_limit
+                call    init_ccsetup
                 call    fix_max_fuel_load
                 ; call    disable_overtaking
                 ; call    disable_cc_driving
@@ -539,6 +542,26 @@ TSR_CODE        ends
 
 
 ;-------------------------------------------------------
+
+TSR_CODE        segment
+
+init_ccsetup    proc near
+                xor     dx, dx
+                mov     dl, keep_fw
+                cmp     dl, 0
+                jz      __end
+                push    0
+                push    0A897h
+                call    calc_offset_esdi
+                mov     WORD PTR es:[di], 9090h
+__end:
+                ret
+init_ccsetup    endp
+
+TSR_CODE        ends
+
+;-------------------------------------------------------
+
 
 TSR_CODE        segment
 

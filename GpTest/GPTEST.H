@@ -35,6 +35,7 @@ extern char    near *msg_text;
 extern char         beep_count;
 extern char    far  *fname_ptr;
 extern char         limit_cars_race;
+extern char         keep_fw;
 extern char         disable_rng;
 extern char         rng_value;
 

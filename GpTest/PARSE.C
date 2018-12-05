@@ -108,6 +108,10 @@ parse(
                      return FALSE;
                 }
             }
+            else if (*cmd_line == 'w') {
+                keep_fw = TRUE;
+                return TRUE;
+            }
             else if (*cmd_line == 'u') {
                 unload_flag = TRUE;
                 return TRUE;
@@ -136,6 +140,7 @@ Usage(
                 "          -rs       disable seed from timer.\n"
                 "          -rn(N)    random number always N (default 0).\n"
                 "       -l(N)     Limit race to N cars.\n"
+                "       -w        Do not copy rear wing to front wing.\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
     );
