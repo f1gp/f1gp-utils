@@ -366,8 +366,7 @@ __dohook1:
                 mov     word ptr gp_end_of_lap_off, di
                 mov     cx, 5
 __loop1:
-                lodsb
-                stosb
+                movsb
                 loop    __loop1
 
 ; ---------------------------------------------------------------------------
@@ -408,8 +407,7 @@ loc_1061F:
 loc_1062B:
                 mov     cx, 6
 loc_1062E:
-                lodsb
-                stosb
+                movsb
                 loop    loc_1062E
 
 ; ---------------------------------------------------------------------------
@@ -450,8 +448,7 @@ loc_1067D:
 loc_10689:
                 mov     cx, 5
 loc_1068C:
-                lodsb
-                stosb
+                movsb
                 loop    loc_1068C
 
 ; ---------------------------------------------------------------------------
@@ -495,8 +492,7 @@ loc_106E7:
                 mov     cx, 6
 
 loc_106EA:
-                lodsb
-                stosb
+                movsb
                 loop    loc_106EA
 
 ; ---------------------------------------------------------------------------
@@ -556,8 +552,7 @@ loc_10795:
                 mov     es, ax
                 mov     cx, 6
 loc_107A9:
-                lodsb
-                stosb
+                movsb
                 loop    loc_107A9
 
 ; ---------------------------------------------------------------------------
@@ -568,8 +563,7 @@ loc_107A9:
                 pop     si
                 mov     cx, 6
 loc_107B4:
-                lodsb
-                stosb
+                movsb
                 loop    loc_107B4
 
 ; ---------------------------------------------------------------------------
@@ -616,8 +610,7 @@ loc_10817:
 loc_10823:
                 mov     cx, 6
 loc_10826:
-                lodsb
-                stosb
+                movsb
                 loop    loc_10826
 
 ; ---------------------------------------------------------------------------
@@ -658,8 +651,7 @@ loc_10875:
 loc_10881:
                 mov     cx, 5
 loc_10884:
-                lodsb
-                stosb
+                movsb
                 loop    loc_10884
 
 ; ---------------------------------------------------------------------------
@@ -701,8 +693,7 @@ __usa7:
 __dohook7:
                 mov     cx, 5
 __loop7:
-                lodsb
-                stosb
+                movsb
                 loop    __loop7
 
 ; ---------------------------------------------------------------------------
@@ -719,12 +710,13 @@ __loop7:
                 mov     di, sp
                 les     di, ss:[di + ((PUSHED_WORDS + 1) * 2)]
                 sub     di, (0BCECh - 0D83Ah)
+                mov     ax, es
+                sub     ax, 6000h
                 mov     es, ax
 
                 mov     cx, 5
 __loop8:
-                lodsb
-                stosb
+                movsb
                 loop    __loop8
 
 ; ---------------------------------------------------------------------------
@@ -740,8 +732,7 @@ __loop8:
 
                 mov     cx, 5
 __loop9:
-                lodsb
-                stosb
+                movsb
                 loop    __loop9
 
 ; ---------------------------------------------------------------------------
@@ -1074,13 +1065,14 @@ hook8_hotseat_automatic proc far
                 pop     ds
                 assume ds:TSR
 
-                ; shortcut InitCarGrip right after grip is set (same location as hook4)
-                mov     si, offset hook4_alt_start
+                ; skip pitstop strategy code
                 les     di, hook4_dest
+                mov     byte ptr es:[di-53h], 0EBh  ; JNS -> JMP
+                ; skip all code in InitCarGrip right after grip is set (same location as hook4)
+                mov     si, offset hook4_alt_start
                 mov     cx, 5
 __loop1:
-                lodsb
-                stosb
+                movsb
                 loop    __loop1
 
                 pop     si
@@ -1095,13 +1087,14 @@ __loop1:
                 pop     ds
                 assume ds:TSR
 
+                ; restore original pitstop strategy code
+                les     di, hook4_dest
+                mov     byte ptr es:[di-53h], 79h
                 ; restore original hook4
                 mov     si, offset hook4_start
-                les     di, hook4_dest
                 mov     cx, 5
 __loop2:
-                lodsb
-                stosb
+                movsb
                 loop    __loop2
 
 __repeat_orig_code:
@@ -1126,7 +1119,7 @@ hook9_hotseat_control proc far
                 mov     [si+Car.wCornerSpeedFactor], 4000h
 
 __repeat_orig_code:
-                mov     byte ptr [bp+192h], 0ffh
+                mov     byte ptr [bp+192h], 0FFh
                 retf
 
 hook9_hotseat_control endp
@@ -1194,7 +1187,7 @@ loc_10AD1:
                 mov     cx, 1
                 mov     ax, ss:15Ch     ; pAfterLastSeg
                 sub     ax, 30h
-                mov     bx, size Seg
+                mov     bx, size Segment
                 mov     di, 100
                 xor     dx, dx
                 div     bx
@@ -1632,8 +1625,7 @@ loc_10DFE:
 
 
 loc_10E8E:
-                lodsb
-                stosb
+                movsb
                 loop    loc_10E8E
 
                 les     si, pCar
@@ -1810,8 +1802,7 @@ loc_10FC9:
 
 
 loc_10FD4:
-                lodsb
-                stosb
+                movsb
                 loop    loc_10FD4
 
                 mov     al, rec_auth_race.rr_record_type
@@ -2141,8 +2132,7 @@ get_driver_name proc near
 
 
 loc_111D3:
-                lodsb
-                stosb
+                movsb
                 loop    loc_111D3
 
                 pop     ds
@@ -3347,7 +3337,7 @@ loc_11882:
 atoi            endp
 
 ; ---------------------------------------------------------------------------
-title_msg       db      '@(#)GpLapTim V7.0 12th Nov 2018 - Grand Prix/World Circuit Lap Time Logger.',LF
+title_msg       db      '@(#)GpLapTim V7.1 9th Dec 2018 - Grand Prix/World Circuit Lap Time Logger.',LF
                 db      'Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.',LF
                 db      'Copyright (c) Rene Smit 2018 - All Rights Reserved.',LF,LF,0
 aGplaptimMissin db      'GpLapTim: missing log filename.',LF,0
