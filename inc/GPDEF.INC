@@ -54,8 +54,8 @@ Segment         ends
 Car                     struc ; (sizeof=0xC0)
 wSpeedAngleZ            dw ?                                ; like wAngleZ, but rotates 180 degrees when going backwards
 wCarAngleX              dw ?                                ; seg X angle * cos(abs(seg Z angle - Car Z angle)), -ve going downhill, +ve going uphill
-time_4_lo               dw ?
-time_4_hi               dw ?
+gapToCarInFront_lo      dw ?
+gapToCarInFront_hi      dw ?
 wCarPosZ                dw ?                                ; weighted average of seg Z pos + track deviation
 wSegPosX                dw ?
 wSegPosY                dw ?

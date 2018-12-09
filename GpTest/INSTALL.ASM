@@ -15,8 +15,8 @@
 ;**                                                                         **
 ;*****************************************************************************
 
-                name    install
-                title   'Install TSR'
+                        name    install
+                        title   'Install TSR'
 
 ;*****************************************************************************
 ;**
@@ -31,67 +31,91 @@ include gptest.inc
 ;** Segments
 ;**
 
-TSR_TMP         segment
+TSR_TMP                 segment
 
 ;*****************************************************************************
 ;**
 ;** Equates & Macros
 ;**
 
-STACK_SIZE      equ     128
+STACK_SIZE              equ     128
+
+
+;*****************************************************************************
+;**
+;** Externals
+;**
+
+                        extrn   hook_frame
+                        extrn   hook_load_track
+                        extrn   hook_new_session
+
+                        extrn   new08_hndlr
+                        extrn   new11_hndlr
+                        extrn   new21_hndlr
+
+                        extrn   end_resident
+
+                        extrn   parse:near
+
+
+;*****************************************************************************
+;**
+;** Exports
+;**
+
+                        public  fname_ptr
+                        public  cmd_line
+                        public  cmd_line_len
+                        public  msg_text
+                        public  stack_top
+                        public  unload_flag
+
+                        public  install
+                        public  tsr_unload
+                        public  tsr_vectors_install
+                        public  wrt_msg
+                        public  terminate
+
 
 ;*****************************************************************************
 ;**
 ;** Data
 ;**
 
-        extrn   hook_frame
+load_msg                db      "Installed OK", CR, LF, '$'
+already_msg             db      "Already installed !", CR, LF, "$"
+parse_msg               db      "Failed to determine absolute pathname.", BELL, CR, LF, "$"
+cant_unload_msg         db      "Unable to unload as another TSR was loaded after GpTest.", BELL, CR, LF, "$"
+no_unload_msg           db      "Can't unload as GpTest isn't loaded!", BELL, CR, LF, "$"
+unloaded_msg            db      "GpTest unloaded OK.", CR, LF, "$"
 
-        extrn   new08_hndlr
-        extrn   new11_hndlr
-        extrn   new21_hndlr
+fname_ptr               label   dword
+                        dw      OFFSET TSR:filename
+                        dw      SEG TSR
+filename                db      "GPTEST.LOG", 0
 
-        extrn   end_resident
+cmd_line                label   dword
+cmd_line_off            dw      0081h           ; Point to PSP command line.
+cmd_line_seg            dw      ?
+cmd_line_len            db      ?
 
-load_msg        db      "Installed OK", CR, LF, '$'
-already_msg     db      "Already installed !", CR, LF, "$"
-parse_msg       db      "Failed to determine absolute pathname.", BELL, CR, LF, "$"
-cant_unload_msg db      "Unable to unload as another TSR was loaded after GpTest.", BELL, CR, LF, "$"
-no_unload_msg   db      "Can't unload as GpTest isn't loaded!", BELL, CR, LF, "$"
-unloaded_msg    db      "GpTest unloaded OK.", CR, LF, "$"
+msg_text                dw      ?
 
-                public  fname_ptr
-fname_ptr       label   dword
-                dw      OFFSET TSR:filename
-                dw      SEG TSR
-filename        db      "GPTEST.LOG", 0
+unload_flag             db      0
 
-public          cmd_line
-public          cmd_line_len
-cmd_line        label   dword
-cmd_line_off    dw      0081h           ; Point to PSP command line.
-cmd_line_seg    dw      ?
-cmd_line_len    db      ?
+tsrs_cs                 dw      ?
 
-public          msg_text
-msg_text        dw      ?
+TSR_TMP                 ends
 
-public          unload_flag
-unload_flag     db      0
 
-tsrs_cs         dw      ?
-
-TSR_TMP         ends
-
-STACK_TMP       segment
-                db      STACK_SIZE dup('#')
-                public  stack_top
+STACK_TMP               segment
+                        db      STACK_SIZE dup('#')
 stack_top:
-STACK_TMP       ends
+STACK_TMP               ends
 
-TSR_TMP         segment
+TSR_TMP                 segment
 
-extrn           parse:near
 
 ;*****************************************************************************
 ;** Purpose: Install TSR.
@@ -100,160 +124,160 @@ extrn           parse:near
 ;**
 ;** Notes  :
 ;**
-        public  install
-install proc    near
+install                 proc    near
 
-        ;**
-        ;** Switch to our stack.
-        ;**
-        cli
-        mov     ax, cs
-        mov     ss, ax
-        mov     sp, OFFSET TSR:stack_top
-        sti
+                        ;**
+                        ;** Switch to our stack.
+                        ;**
+                        cli
+                        mov     ax, cs
+                        mov     ss, ax
+                        mov     sp, OFFSET TSR:stack_top
+                        sti
 
-        ;***
-        ;*** Get Environment variable info.
-        ;***
-        mov     ah, 62h
-        int     DOS                             ; Get PSP segment address
-        mov     cs:psp_seg, bx
-        mov     cs:cmd_line_seg, bx
-        mov     bx, 0080h                       ; PSP Command line length
-        mov     al, [bx]
-        mov     cs:cmd_line_len, al
+                        ;***
+                        ;*** Get Environment variable info.
+                        ;***
+                        mov     ah, 62h
+                        int     DOS                             ; Get PSP segment address
+                        mov     cs:psp_seg, bx
+                        mov     cs:cmd_line_seg, bx
+                        mov     bx, 0080h                       ; PSP Command line length
+                        mov     al, [bx]
+                        mov     cs:cmd_line_len, al
 
-        ;**
-        ;** Point DS at our common segment before calling C code.
-        ;**
-        mov     ax, cs
-        mov     ds, ax
-        call    parse
-        or      al, al
-        jnz     parse_ok
-        jmp     terminate
+                        ;**
+                        ;** Point DS at our common segment before calling C code.
+                        ;**
+                        mov     ax, cs
+                        mov     ds, ax
+                        call    parse
+                        or      al, al
+                        jnz     parse_ok
+                        jmp     terminate
 
 parse_ok:
-        ;**
-        ;** Check to see if we are already installed
-        ;** Note: BX is currently loaded TSR's CS:
-        ;**
-        mov     cx, MAGIC_CX_IN
-        mov     dx, MAGIC_DX_IN
-        int     11h
-        cmp     cx, MAGIC_CX_OUT
-        jne     not_installed
-        cmp     dx, MAGIC_DX_OUT
-        jne     not_installed
-        jmp     installed
+                        ;**
+                        ;** Check to see if we are already installed
+                        ;** Note: BX is currently loaded TSR's CS:
+                        ;**
+                        mov     cx, MAGIC_CX_IN
+                        mov     dx, MAGIC_DX_IN
+                        int     11h
+                        cmp     cx, MAGIC_CX_OUT
+                        jne     not_installed
+                        cmp     dx, MAGIC_DX_OUT
+                        jne     not_installed
+                        jmp     installed
 
 not_installed:
-        mov     al, unload_flag
-        or      al, al
-        jz      not_installed1
+                        mov     al, unload_flag
+                        or      al, al
+                        jz      not_installed1
 
 nothing_to_unload:
-        ;**
-        ;** User is trying to unload non-existant resident portion!
-        ;**
-        push    cs
-        pop     ds
-        mov     dx, OFFSET TSR:no_unload_msg
-        mov     ah, 09h
-        int     DOS
-        jmp     terminate
+                        ;**
+                        ;** User is trying to unload non-existant resident portion!
+                        ;**
+                        push    cs
+                        pop     ds
+                        mov     dx, OFFSET TSR:no_unload_msg
+                        mov     ah, 09h
+                        int     DOS
+                        jmp     terminate
 
 installed:
-        mov     al, unload_flag
-        or      al, al
-        jz      no_unload
+                        mov     al, unload_flag
+                        or      al, al
+                        jz      no_unload
 
-        ;**
-        ;** TSR's CS will be 100h bigger, i.e. 10h for segment register for an EXE.
-        ;**
-        add     bx, 10h
-        call    tsr_unload
+                        ;**
+                        ;** TSR's CS will be 100h bigger, i.e. 10h for segment register for an EXE.
+                        ;**
+                        add     bx, 10h
+                        call    tsr_unload
 
-        ;**
-        ;** Can't unload as someone else has hooked one of our vectors.
-        ;**
-        push    cs
-        pop     ds
-        mov     dx, OFFSET TSR:cant_unload_msg
-        mov     ah, 09h
-        int     DOS
-        jmp     terminate
+                        ;**
+                        ;** Can't unload as someone else has hooked one of our vectors.
+                        ;**
+                        push    cs
+                        pop     ds
+                        mov     dx, OFFSET TSR:cant_unload_msg
+                        mov     ah, 09h
+                        int     DOS
+                        jmp     terminate
 
-        ;**
-        ;** Already installed !
-        ;**
+                        ;**
+                        ;** Already installed !
+                        ;**
 no_unload:
-        mov     dx, OFFSET TSR:already_msg
-        mov     ah, 09h
-        int     DOS
-        jmp     terminate
+                        mov     dx, OFFSET TSR:already_msg
+                        mov     ah, 09h
+                        int     DOS
+                        jmp     terminate
 
 not_installed1:
-        ;**
-        ;** Convert current filename to fully qualified name.
-        ;**
-        push    ds
-        mov     ax, ds
-        mov     es, ax
-        lds     si, fname_ptr
-        mov     di, OFFSET TSR:q_filename
-        mov     ah, 60h
-        int     DOS
-        pop     ds
-        jnc     name_q_ok
-        mov     dx, OFFSET TSR:parse_msg
-        mov     ah, 09h
-        int     DOS
-        int     DOS_TERMINATE
+                        ;**
+                        ;** Convert current filename to fully qualified name.
+                        ;**
+                        push    ds
+                        mov     ax, ds
+                        mov     es, ax
+                        lds     si, fname_ptr
+                        mov     di, OFFSET TSR:q_filename
+                        mov     ah, 60h
+                        int     DOS
+                        pop     ds
+                        jnc     name_q_ok
+                        mov     dx, OFFSET TSR:parse_msg
+                        mov     ah, 09h
+                        int     DOS
+                        int     DOS_TERMINATE
 
-        ;**
-        ;** Install our vectors
-        ;**
+                        ;**
+                        ;** Install our vectors
+                        ;**
 name_q_ok:
-        call    tsr_vectors_install
+                        call    tsr_vectors_install
 
-        ;**
-        ;** Patch our entry points patches!
-        ;**
-        call    install_hooks
+                        ;**
+                        ;** Patch our entry points patches!
+                        ;**
+                        call    install_hooks
 
-        ;**
-        ;** Display message
-        ;**
-        mov     dx, OFFSET TSR:load_msg
-        mov     ah, 09h
-        int     DOS
+                        ;**
+                        ;** Display message
+                        ;**
+                        mov     dx, OFFSET TSR:load_msg
+                        mov     ah, 09h
+                        int     DOS
 
-        ;***
-        ;*** Free environment memory
-        ;***
-        les     bx, psp_env                     ; Point to ENV ptr in PSP
-        mov     ax, es:[bx]                     ; Get ENV segment pointer
-        mov     es, ax
-        mov     ah, 49h
-        int     DOS
+                        ;***
+                        ;*** Free environment memory
+                        ;***
+                        les     bx, psp_env                     ; Point to ENV ptr in PSP
+                        mov     ax, es:[bx]                     ; Get ENV segment pointer
+                        mov     es, ax
+                        mov     ah, 49h
+                        int     DOS
 
-        ;***
-        ;*** Terminate and stay resident for our resident routines only.
-        ;***
-        mov     ax, TSR_TMP
-        inc     ax
-        sub     ax, psp_seg
-        mov     dx, ax
-        mov     ax, 3100h
-        int     DOS
+                        ;***
+                        ;*** Terminate and stay resident for our resident routines only.
+                        ;***
+                        mov     ax, TSR_TMP
+                        inc     ax
+                        sub     ax, psp_seg
+                        mov     dx, ax
+                        mov     ax, 3100h
+                        int     DOS
 
-        ;***
-        ;*** Not reached
-        ;***
-quit:   ret
+                        ;***
+                        ;*** Not reached
+                        ;***
+quit:                   ret
 
-install endp
+install                 endp
+
 
 ;*****************************************************************************
 ;** Purpose: Uninstall (if possible). Check vectors still point to us.
@@ -262,71 +286,70 @@ install endp
 ;**
 ;** Notes  :
 ;**
-        public  tsr_unload
-tsr_unload proc near
+tsr_unload              proc    near
 
-        mov     tsrs_cs, bx
+                        mov     tsrs_cs, bx
 
-        mov     ax, 3508h
-        int     DOS
-        mov     ax, es
-        cmp     ax, tsrs_cs
-        jnz     cant_unload
-        cmp     bx, OFFSET TSR:new08_hndlr
-        jnz     cant_unload
+                        mov     ax, 3508h
+                        int     DOS
+                        mov     ax, es
+                        cmp     ax, tsrs_cs
+                        jnz     cant_unload
+                        cmp     bx, OFFSET TSR:new08_hndlr
+                        jnz     cant_unload
 
-        mov     ax, 3511h
-        int     DOS
-        mov     ax, es
-        cmp     ax, tsrs_cs
-        jnz     cant_unload
-        cmp     bx, OFFSET TSR:new11_hndlr
-        jnz     cant_unload
+                        mov     ax, 3511h
+                        int     DOS
+                        mov     ax, es
+                        cmp     ax, tsrs_cs
+                        jnz     cant_unload
+                        cmp     bx, OFFSET TSR:new11_hndlr
+                        jnz     cant_unload
 
-        mov     ax, 3521h
-        int     DOS
-        mov     ax, es
-        cmp     ax, tsrs_cs
-        jnz     cant_unload
-        cmp     bx, OFFSET TSR:new21_hndlr
-        jnz     cant_unload
+                        mov     ax, 3521h
+                        int     DOS
+                        mov     ax, es
+                        cmp     ax, tsrs_cs
+                        jnz     cant_unload
+                        cmp     bx, OFFSET TSR:new21_hndlr
+                        jnz     cant_unload
 
-        ;**
-        ;** Restore original vectors, point DS at currently installed TSR.
-        ;**
-        mov     es, tsrs_cs
-        lds     dx, es:old08_hndlr
-        mov     ax, 2508h
-        int     DOS
-        lds     dx, es:old11_hndlr
-        mov     ax, 2511h
-        int     DOS
-        lds     dx, es:old21_hndlr
-        mov     ax, 2521h
-        int     DOS
+                        ;**
+                        ;** Restore original vectors, point DS at currently installed TSR.
+                        ;**
+                        mov     es, tsrs_cs
+                        lds     dx, es:old08_hndlr
+                        mov     ax, 2508h
+                        int     DOS
+                        lds     dx, es:old11_hndlr
+                        mov     ax, 2511h
+                        int     DOS
+                        lds     dx, es:old21_hndlr
+                        mov     ax, 2521h
+                        int     DOS
 
-        ;**
-        ;** Free memory. Set original PSP, then terminate process.
-        ;**
-        push    cs
-        pop     ds
-        mov     dx, OFFSET TSR:unloaded_msg
-        mov     ah, 09h
-        int     DOS
+                        ;**
+                        ;** Free memory. Set original PSP, then terminate process.
+                        ;**
+                        push    cs
+                        pop     ds
+                        mov     dx, OFFSET TSR:unloaded_msg
+                        mov     ah, 09h
+                        int     DOS
 
-        ;**
-        ;** Recover PSP value by knocking TSR's CS down by 10:0h
-        ;**
-        mov     ax, tsrs_cs
-        sub     ax, 10h
-        mov     es, ax
-        mov     ah, 49h
-        INT     DOS
-        jmp     terminate
+                        ;**
+                        ;** Recover PSP value by knocking TSR's CS down by 10:0h
+                        ;**
+                        mov     ax, tsrs_cs
+                        sub     ax, 10h
+                        mov     es, ax
+                        mov     ah, 49h
+                        INT     DOS
+                        jmp     terminate
 cant_unload:
-        ret
+                        ret
 
-tsr_unload      endp
+tsr_unload              endp
 
 ;*****************************************************************************
 ;** Purpose: Install our interrupt vectors.
@@ -335,60 +358,70 @@ tsr_unload      endp
 ;**
 ;** Notes  : Hooked interrupts, INT 08H, INT 11H, INT 21H.
 ;**
-        public  tsr_vectors_install
-tsr_vectors_install proc near
+tsr_vectors_install     proc    near
 
-        ;***
-        ;*** Install new timer tick vector
-        ;***
-        mov     ax, 3508h
-        int     DOS
-        mov     old08_off, bx
-        mov     old08_seg, es
-        mov     dx, OFFSET TSR:new08_hndlr
-        mov     ax, 2508h
-        int     DOS
+                        ;***
+                        ;*** Install new timer tick vector
+                        ;***
+                        mov     ax, 3508h
+                        int     DOS
+                        mov     old08_off, bx
+                        mov     old08_seg, es
+                        mov     dx, OFFSET TSR:new08_hndlr
+                        mov     ax, 2508h
+                        int     DOS
 
-        ;***
-        ;*** Install new equipment list vector
-        ;***
-        mov     ax, 3511h
-        int     DOS
-        mov     old11_off, bx
-        mov     old11_seg, es
-        mov     dx, OFFSET TSR:new11_hndlr
-        mov     ax, 2511h
-        int     DOS
+                        ;***
+                        ;*** Install new equipment list vector
+                        ;***
+                        mov     ax, 3511h
+                        int     DOS
+                        mov     old11_off, bx
+                        mov     old11_seg, es
+                        mov     dx, OFFSET TSR:new11_hndlr
+                        mov     ax, 2511h
+                        int     DOS
 
-        ;***
-        ;*** Install new DOS Int 21 handler
-        ;***
-        mov     ax, 3521h
-        int     DOS
-        mov     old21_off, bx
-        mov     old21_seg, es
-        mov     dx, OFFSET TSR:new21_hndlr
-        mov     ax, 2521h
-        int     DOS
-        ret
+                        ;***
+                        ;*** Install new DOS Int 21 handler
+                        ;***
+                        mov     ax, 3521h
+                        int     DOS
+                        mov     old21_off, bx
+                        mov     old21_seg, es
+                        mov     dx, OFFSET TSR:new21_hndlr
+                        mov     ax, 2521h
+                        int     DOS
+                        ret
 
-tsr_vectors_install endp
+tsr_vectors_install     endp
+
 
 ;*****************************************************************************
 ;** Purpose: Install our hooks.
 ;**
 ;** Returns: Nothing.
 ;**
-install_hooks proc near
+install_hooks           proc    near
+                        mov     ax, cs
+                        mov     bx, OFFSET cs:hook_frame_off
+                        mov     WORD PTR [bx], OFFSET cs:hook_frame
+                        mov     [bx+2], ax
 
-        mov     bx, OFFSET cs:hook_frame_off
-        mov     WORD PTR [bx], OFFSET cs:hook_frame
-        mov     ax, cs
-        mov     [bx+2], ax
+                        mov     bx, OFFSET cs:hook_new_session_off
+                        mov     WORD PTR [bx], OFFSET cs:hook_new_session
+                        mov     ax, cs
+                        mov     [bx+2], ax
 
-        ret
+                        mov     bx, OFFSET cs:hook_load_track_off
+                        mov     WORD PTR [bx], OFFSET cs:hook_load_track
+                        mov     ax, cs
+                        mov     [bx+2], ax
 
-install_hooks endp
+                        ret
+
+install_hooks           endp
+
 
 ;*****************************************************************************
 ;** Purpose: Write message string to display.
@@ -397,25 +430,25 @@ install_hooks endp
 ;**
 ;** Notes  : Message should be terminated with a '$', not '\0'!
 ;**
-        public  wrt_msg
-wrt_msg proc   near
+wrt_msg                 proc    near
 
-        mov     dx, msg_text
-        mov     ah, 09h
-        int     DOS
-        ret
+                        mov     dx, msg_text
+                        mov     ah, 09h
+                        int     DOS
+                        ret
 
-wrt_msg endp
+wrt_msg                 endp
+
 
 ;*****************************************************************************
 
-        public  terminate
 terminate:
-        mov     ah, 4ch
-        int     DOS
+                        mov     al, 5   ; abnormal termination, use non-zero exit code
+                        mov     ah, 4ch
+                        int     DOS
 
-TSR_TMP         ends
+TSR_TMP                 ends
 
 ;*****************************************************************************
 
-                end     install
+                        end     install

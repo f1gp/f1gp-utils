@@ -86,15 +86,20 @@ parse(
                 }
             }
             else if (*cmd_line == 'r') {
-                if (cmd_line[1] == 's') {
-                     disable_rng = 1;
+                if (cmd_line[1] == 'g') {
+                     rng_mode = 1;
+                     rng_seed = atoi(&cmd_line[2]);
                 }
-                else if (cmd_line[1] == 'n') {
-                     disable_rng = 2;
-                     rng_value = atoi(&cmd_line[2]);
+                else if (cmd_line[1] == 'e') {
+                     rng_mode = 2;
+                     rng_seed = atoi(&cmd_line[2]);
                 }
+                // else if (cmd_line[1] == 'n') {
+                //      rng_mode = 3;
+                //      rng_value = atoi(&cmd_line[2]);
+                // }
                 else {
-                     display_msg("GpPerf: -r value should be either s or n.\n");
+                     Usage();
                      return FALSE;
                 }
             }
@@ -104,7 +109,7 @@ parse(
                      limit_cars_race = n;
                 }
                 else {
-                     display_msg("GpPerf: -l value should be between 1 and 26 cars.\n");
+                     display_msg("GpTest: -l value should be between 1 and 26 cars.\n");
                      return FALSE;
                 }
             }
@@ -134,11 +139,11 @@ void
 Usage(
      void
 ) {
-    display_msg("Usage: GpTest [-lN] [-h?] [-u] [-f(filename)]\n"
-                "       -f(name)  Specify log filename's location.\n"
-                "       -r(mode)  Disable randomization.\n"
-                "          -rs       disable seed from timer.\n"
-                "          -rn(N)    random number always N (default 0).\n"
+    display_msg("Usage: GpTest [-r] [-l] [-w] [-h?] [-u]\n"
+                "       -r(mode)  Set randomization mode. One of:\n"
+                "          -rg(N)    use random seed N for game instance.\n"
+                "          -re(N)    use random seed N for each event.\n"
+                // "          -rn(N)    random number always N (default 0).\n"
                 "       -l(N)     Limit race to N cars.\n"
                 "       -w        Do not copy rear wing to front wing.\n"
                 "       -h,-?     This help message.\n"
