@@ -319,6 +319,7 @@ hook_gp_exe             proc    near
                         mov     cs:err_notify, 0
 
                         call    disable_default_driver
+                        call    lower_race_dist_limit
                         call    init_rng
                         call    init_hook_load_track
                         call    init_hook_new_session
@@ -354,6 +355,24 @@ disable_default_driver  proc    near
 __end:
                         ret
 disable_default_driver  endp
+
+TSR_CODE                ends
+
+
+;-------------------------------------------------------
+
+TSR_CODE                segment
+
+lower_race_dist_limit   proc    near
+                        push    13
+                        push    05A0h
+                        call    calc_offset_esdi
+                        mov     ax, 1001h
+                        stosw
+                        add     di, 3
+                        stosw
+                        ret
+lower_race_dist_limit   endp
 
 TSR_CODE                ends
 
