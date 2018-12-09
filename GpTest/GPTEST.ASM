@@ -71,6 +71,7 @@ TSR_CODE                ends
                         public  rng_mode
                         public  rng_seed
                         public  keep_fw
+                        public  no_drivers
 
                         public  new21_hndlr
                         public  hook_gp_exe
@@ -101,6 +102,7 @@ limit_cars_race         db      26
 rng_mode                db      0
 rng_seed                db      0
 keep_fw                 db      0
+no_drivers              db      0
 
 err_notify              db      0
 
@@ -316,6 +318,7 @@ TSR_CODE                segment
 hook_gp_exe             proc    near
                         mov     cs:err_notify, 0
 
+                        call    disable_default_driver
                         call    init_rng
                         call    init_hook_load_track
                         call    init_hook_new_session
@@ -329,6 +332,28 @@ hook_gp_exe             proc    near
 
                         ret
 hook_gp_exe             endp
+
+TSR_CODE                ends
+
+
+;-------------------------------------------------------
+
+TSR_CODE                segment
+
+disable_default_driver  proc    near
+                        mov     al, no_drivers
+                        cmp     al, 0
+                        jz      __end
+                        push    2
+                        push    0C28h
+                        call    calc_offset_esdi
+                        mov     al, 90h
+                        stosb
+                        stosb
+                        stosb
+__end:
+                        ret
+disable_default_driver  endp
 
 TSR_CODE                ends
 

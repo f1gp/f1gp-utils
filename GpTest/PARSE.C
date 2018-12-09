@@ -117,6 +117,10 @@ parse(
                 keep_fw = TRUE;
                 return TRUE;
             }
+            else if (*cmd_line == 'd') {
+                no_drivers = TRUE;
+                return TRUE;
+            }
             else if (*cmd_line == 'u') {
                 unload_flag = TRUE;
                 return TRUE;
@@ -145,6 +149,7 @@ Usage(
                 "          -re(N)    use random seed N for each event.\n"
                 // "          -rn(N)    random number always N (default 0).\n"
                 "       -l(N)     Limit race to N cars.\n"
+                "       -d        Do not select a default driver.\n"
                 "       -w        Do not copy rear wing to front wing.\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"

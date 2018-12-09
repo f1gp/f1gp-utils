@@ -36,6 +36,7 @@ extern char         beep_count;
 extern char    far  *fname_ptr;
 extern char         limit_cars_race;
 extern char         keep_fw;
+extern char         no_drivers;
 extern char         rng_mode;
 extern char         rng_seed;
 
