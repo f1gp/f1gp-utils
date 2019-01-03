@@ -78,6 +78,7 @@ TSR_CODE                ends
                         public  announce_hook
                         public  hook_load_track
                         public  hook_new_session
+                        public  hook_pausing
                         public  hook_frame
 
 
@@ -121,6 +122,10 @@ gp_rnd2                 dd      ?
 gp_rnd1_next            dd      ?
 gp_rnd_car_next         dd      ?
 gp_rnd2_next            dd      ?
+gp_display_paused       dd      ?
+gp_update_keys          dd      ?
+gp_mute_audio           dd      ?
+gp_play_engine_sound    dd      ?
 
 q_filename              db      ?
                         db      64 + 13 dup(?)
@@ -323,6 +328,7 @@ hook_gp_exe             proc    near
                         call    init_rng
                         call    init_hook_load_track
                         call    init_hook_new_session
+                        call    init_hook_pausing
                         call    init_hook_frame
                         call    patch_menu
                         call    init_race_car_limit
@@ -509,6 +515,26 @@ init_hook_load_track    proc    near
                         mov     bx, OFFSET TSR:gp_rnd2_next
                         call    store_offset
 
+                        mov     dx, 0
+                        mov     ax, 0EB6Eh
+                        mov     bx, OFFSET TSR:gp_display_paused
+                        call    store_offset
+
+                        mov     dx, 2
+                        mov     ax, 2D8Ch
+                        mov     bx, OFFSET TSR:gp_mute_audio
+                        call    store_offset
+
+                        mov     dx, 2
+                        mov     ax, 2CFDh
+                        mov     bx, OFFSET TSR:gp_play_engine_sound
+                        call    store_offset
+
+                        mov     dx, 0
+                        mov     ax, 5h
+                        mov     bx, OFFSET TSR:gp_update_keys
+                        call    store_offset
+
                         mov     si, OFFSET TSR:hook_load_track_start
                         push    2
                         push    029Fh
@@ -546,6 +572,29 @@ __loop:
                         loop    __loop
                         ret
 init_hook_new_session   endp
+
+TSR_CODE                ends
+
+
+;-------------------------------------------------------
+
+TSR_CODE                segment
+
+init_hook_pausing       proc    near
+                        mov     si, OFFSET TSR:hook_pausing_start
+                        push    0
+                        push    0DE6Dh
+                        call    calc_offset_esdi
+                        mov     cx, HOOK_PAUSING_LENGTH
+                        mov     bx, OFFSET TSR:hook_pausing_orig
+__loop:
+                        mov     al, es:[di]
+                        mov     cs:[bx], al
+                        add     bx, 1
+                        movsb
+                        loop    __loop
+                        ret
+init_hook_pausing       endp
 
 TSR_CODE                ends
 
@@ -1127,6 +1176,58 @@ hook_new_session        proc    far
 hook_new_session_orig   db      ?, ?, ?, ?, ?
                         retf
 hook_new_session        endp
+
+TSR_CODE                ends
+
+
+;*****************************************************************************
+;** Purpose: Called when the game is pausing in single player mode.
+;**
+
+TSR_DATA                segment
+
+hook_pausing_start      db      9Ah
+hook_pausing_off        dw      ?
+hook_pausing_seg        dw      ?
+HOOK_PAUSING_LENGTH     equ     $ - hook_pausing_start
+
+TSR_DATA                ends
+
+
+TSR_CODE                segment
+
+hook_pausing            proc    far
+                        pusha
+
+                        push    es
+                        les     di, cs:gp_display_paused
+                        add     di, 21h
+                        mov     al, 0CBh
+                        mov     es:[di], al
+                        les     di, cs:gp_play_engine_sound
+                        add     di, 0Bh
+                        mov     al, 0EBh
+                        mov     es:[di], al
+                        pop     es
+
+                        call    cs:[gp_update_keys]
+                        call    cs:[gp_display_paused]
+
+                        push    es
+                        les     di, cs:gp_display_paused
+                        add     di, 21h
+                        mov     al, 0E8h
+                        mov     es:[di], al
+                        les     di, cs:gp_play_engine_sound
+                        add     di, 0Bh
+                        mov     al, 74h
+                        mov     es:[di], al
+                        pop     es
+
+                        popa
+hook_pausing_orig       db      ?, ?, ?, ?, ?
+                        retf
+hook_pausing            endp
 
 TSR_CODE                ends
 

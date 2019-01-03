@@ -46,3 +46,4 @@ MAGIC_DX_OUT            equ     03654h
                         global  hook_frame_off:word
                         global  hook_load_track_off:word
                         global  hook_new_session_off:word
+                        global  hook_pausing_off:word

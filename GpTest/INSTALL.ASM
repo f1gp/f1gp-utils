@@ -49,6 +49,7 @@ STACK_SIZE              equ     128
                         extrn   hook_frame
                         extrn   hook_load_track
                         extrn   hook_new_session
+                        extrn   hook_pausing
 
                         extrn   new08_hndlr
                         extrn   new11_hndlr
@@ -410,6 +411,11 @@ install_hooks           proc    near
 
                         mov     bx, OFFSET cs:hook_new_session_off
                         mov     WORD PTR [bx], OFFSET cs:hook_new_session
+                        mov     ax, cs
+                        mov     [bx+2], ax
+
+                        mov     bx, OFFSET cs:hook_pausing_off
+                        mov     WORD PTR [bx], OFFSET cs:hook_pausing
                         mov     ax, cs
                         mov     [bx+2], ax
 
