@@ -153,8 +153,8 @@ timeBest_lo             dw ?
 timeBest_hi             dw ?
 tyreCompound            db ?                                ; 0=A 1=B 2=C 3=D 4=Q 5=W
 flags_B3                db ?                                ; 4=pitlight?  20=unk
-field_B4                dw ?
-field_B6                dw ?
+wSpeedNextCorner        dw ?
+headAngleX              dw ?
 field_B8                dw ?
 field_BA                dw ?
 flags_BC                db ?                                ; 1=SpeedAbove1877 2=Unk left/right (50% chance each) 80=RevsTooLowToShiftUp

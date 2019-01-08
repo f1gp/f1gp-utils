@@ -123,6 +123,7 @@ gp_rnd1_next            dd      ?
 gp_rnd_car_next         dd      ?
 gp_rnd2_next            dd      ?
 gp_display_paused       dd      ?
+gp_copy_screen_buf      dd      ?
 gp_update_keys          dd      ?
 gp_mute_audio           dd      ?
 gp_play_engine_sound    dd      ?
@@ -515,26 +516,6 @@ init_hook_load_track    proc    near
                         mov     bx, OFFSET TSR:gp_rnd2_next
                         call    store_offset
 
-                        mov     dx, 0
-                        mov     ax, 0EB6Eh
-                        mov     bx, OFFSET TSR:gp_display_paused
-                        call    store_offset
-
-                        mov     dx, 2
-                        mov     ax, 2D8Ch
-                        mov     bx, OFFSET TSR:gp_mute_audio
-                        call    store_offset
-
-                        mov     dx, 2
-                        mov     ax, 2CFDh
-                        mov     bx, OFFSET TSR:gp_play_engine_sound
-                        call    store_offset
-
-                        mov     dx, 0
-                        mov     ax, 5h
-                        mov     bx, OFFSET TSR:gp_update_keys
-                        call    store_offset
-
                         mov     si, OFFSET TSR:hook_load_track_start
                         push    2
                         push    029Fh
@@ -581,9 +562,34 @@ TSR_CODE                ends
 TSR_CODE                segment
 
 init_hook_pausing       proc    near
+                        mov     dx, 0
+                        mov     ax, 0EB6Eh
+                        mov     bx, OFFSET TSR:gp_display_paused
+                        call    store_offset
+
+                        mov     dx, 2
+                        mov     ax, 31FAh
+                        mov     bx, OFFSET TSR:gp_copy_screen_buf
+                        call    store_offset
+
+                        mov     dx, 2
+                        mov     ax, 2D8Ch
+                        mov     bx, OFFSET TSR:gp_mute_audio
+                        call    store_offset
+
+                        mov     dx, 2
+                        mov     ax, 2CFDh
+                        mov     bx, OFFSET TSR:gp_play_engine_sound
+                        call    store_offset
+
+                        mov     dx, 0
+                        mov     ax, 5h
+                        mov     bx, OFFSET TSR:gp_update_keys
+                        call    store_offset
+
                         mov     si, OFFSET TSR:hook_pausing_start
                         push    0
-                        push    0DE6Dh
+                        push    0DDEDh ;0DE6Dh
                         call    calc_offset_esdi
                         mov     cx, HOOK_PAUSING_LENGTH
                         mov     bx, OFFSET TSR:hook_pausing_orig
@@ -906,6 +912,33 @@ TSR_CODE                ends
 
 
 ;*****************************************************************************
+;** Purpose:    Convert GP's speed in 1/64 foot/s to km/h
+;**
+;** Notes  :    AX = GP's speed
+;** Returns:    AX = speed in km/h
+;**
+TSR_CODE                segment
+
+speed_to_kph            proc    near
+                        push    bx
+                        push    dx
+                        mov     bx, 16000
+                        mul     bx
+                        mov     bx, 52493
+                        div     bx
+                        mov     bx, 36
+                        mul     bx
+                        mov     bx, 640
+                        div     bx
+                        pop     dx
+                        pop     bx
+                        ret
+speed_to_kph            endp
+
+TSR_CODE                ends
+
+
+;*****************************************************************************
 ;** Purpose:    Render a cockpit character at a specific location.
 ;**
 ;** Notes  :    BL = character to render
@@ -1173,7 +1206,7 @@ TSR_DATA                ends
 TSR_CODE                segment
 
 hook_new_session        proc    far
-hook_new_session_orig   db      ?, ?, ?, ?, ?
+hook_new_session_orig   db      HOOK_NEW_SESSION_LENGTH dup(0)
                         retf
 hook_new_session        endp
 
@@ -1197,6 +1230,7 @@ TSR_DATA                ends
 TSR_CODE                segment
 
 hook_pausing            proc    far
+hook_pausing_orig       db      HOOK_PAUSING_LENGTH dup(0)
                         pusha
 
                         push    es
@@ -1212,6 +1246,8 @@ hook_pausing            proc    far
 
                         call    cs:[gp_update_keys]
                         call    cs:[gp_display_paused]
+                        call    render_data
+                        ;call    cs:[gp_copy_screen_buf]    ; works to show top text, but flickers
 
                         push    es
                         les     di, cs:gp_display_paused
@@ -1225,7 +1261,6 @@ hook_pausing            proc    far
                         pop     es
 
                         popa
-hook_pausing_orig       db      ?, ?, ?, ?, ?
                         retf
 hook_pausing            endp
 
@@ -1249,9 +1284,17 @@ TSR_DATA                ends
 TSR_CODE                segment
 
 hook_frame              proc    far
+                        call    render_data
+hook_frame_orig         db      HOOK_FRAME_LENGTH dup(0)
+                        retf
+hook_frame              endp
+
+
+render_data             proc    near
                         pusha
                         push    es
 
+                        ; backup led render state
                         les     di, cs:gp_led_pos_ptr
                         xor     ax, ax
                         mov     al, BYTE PTR es:[di + LED_TRANSPARENT]
@@ -1261,6 +1304,8 @@ hook_frame              proc    far
                         mov     al, BYTE PTR es:[di + LED_COLOR_BG]
                         push    ax
 
+                        call    render_session_timer
+
                         les     di, cs:gp_sel_car_ptr
                         mov     ax, es:[di]
                         or      ax, ax
@@ -1268,13 +1313,13 @@ hook_frame              proc    far
 
                         mov     si, ax  ; es:si points to selected car
 
-                        call    render_session_timer
-
                         ; top left
                         call    render_power
                         call    render_cs_factor
                         call    render_tyre_wear
                         call    render_actual_tyre_grip
+                        call    render_speed
+                        call    render_unk
 
                         ; top right
                         call    render_pitseq
@@ -1291,6 +1336,7 @@ hook_frame              proc    far
                         ; bottom right
                         call    render_actual_tyre_compound
 __end:
+                        ; restore led render state
                         les     di, cs:gp_led_pos_ptr
                         pop     ax
                         mov     BYTE PTR es:[di + LED_COLOR_BG], al
@@ -1300,10 +1346,8 @@ __end:
                         mov     BYTE PTR es:[di + LED_TRANSPARENT], al
                         pop     es
                         popa
-hook_frame_orig         db      HOOK_FRAME_LENGTH dup(0)
-                        retf
-hook_frame              endp
-
+                        ret
+render_data             endp
 
 render_session_timer    proc    near
                         mov     ax, 0
@@ -1390,6 +1434,85 @@ render_actual_tyre_grip proc    near
                         call    render_hex_word
                         ret
 render_actual_tyre_grip endp
+
+
+render_speed            proc    near
+                        mov     ax, es:[si+Car.wSpeedNextCorner]
+                        cmp     ax, 7700h
+                        je      __skip
+                        mov     dx, es:[si+Car.wSpeed]
+                        cmp     ax, dx
+                        jb      __red
+                        mov     dx, COLOR_BLACK
+                        jmp     __cont
+__red:
+                        mov     dx, COLOR_RED
+__cont:
+                        push    ax
+                        mov     ax, 7
+                        mov     cx, 0
+                        mov     bl, 80h
+                        call    lcd_init
+                        mov     al, 'S'
+                        call    cs:[gp_render_char]
+                        mov     al, 'I'
+                        call    cs:[gp_render_char]
+                        mov     al, '='
+                        call    cs:[gp_render_char]
+                        pop     ax
+                        call    speed_to_kph
+                        mov     bx, ax
+                        call    render_dec_word
+__skip:
+                        ; mov     ax, 8
+                        ; mov     cx, 0
+                        ; mov     bl, 80h
+                        ; mov     dx, COLOR_BLACK
+                        ; call    lcd_init
+                        ; mov     al, 'S'
+                        ; call    cs:[gp_render_char]
+                        ; mov     al, 'P'
+                        ; call    cs:[gp_render_char]
+                        ; mov     al, '='
+                        ; call    cs:[gp_render_char]
+                        ; mov     ax, es:[si+Car.wSpeed]
+                        ; call    speed_to_kph
+                        ; mov     bx, ax
+                        ; call    render_dec_word
+                        ret
+render_speed            endp
+
+
+render_unk              proc    near
+                        mov     ax, 9
+                        mov     cx, 0
+                        mov     bl, 80h
+                        mov     dx, COLOR_BLACK
+                        call    lcd_init
+                        mov     al, 'b'
+                        call    cs:[gp_render_char]
+                        mov     al, '8'
+                        call    cs:[gp_render_char]
+                        mov     al, '='
+                        call    cs:[gp_render_char]
+                        mov     bx, es:[si+Car.field_B8]
+                        call    render_hex_word
+
+                        mov     ax, 10
+                        mov     cx, 0
+                        mov     bl, 80h
+                        mov     dx, COLOR_BLACK
+                        call    lcd_init
+                        mov     al, 'b'
+                        call    cs:[gp_render_char]
+                        mov     al, 'a'
+                        call    cs:[gp_render_char]
+                        mov     al, '='
+                        call    cs:[gp_render_char]
+                        mov     bx, es:[si+Car.field_BA]
+                        call    render_hex_word
+                        ret
+render_unk              endp
 
 
 render_pitseq           proc    near
