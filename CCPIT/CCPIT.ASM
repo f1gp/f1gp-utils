@@ -1,6 +1,6 @@
 ;**
 ;** File   : ccpit.asm
-;** Author : TK 
+;** Author : TK
 ;** Date   :  6/06/94
 ;**
         name    ccpit
@@ -69,38 +69,38 @@ pFirstCar       label   dword
 pFirstCarOff    dw      0d1bh
 pFirstCarSeg    dw      ?
 
-SG_DRIVER_NAM   equ     0c57ah
+SG_REPLAY_STOR  equ     0C9Bh   ; start of 128 unused bytes before car structs (included in replay and save game)
 
                 public  pSaveGame1
 pSaveGame1      label   dword
-pSaveGame1Off   dw      SG_DRIVER_NAM + (38 * 24)
+pSaveGame1Off   dw      SG_REPLAY_STOR + (2 * 24)
 pSaveGame1Seg   dw      ?
 
                 public  pSaveGame2
 pSaveGame2      label   dword
-pSaveGame2Off   dw      SG_DRIVER_NAM + (39 * 24)
+pSaveGame2Off   dw      SG_REPLAY_STOR + (3 * 24)
 pSaveGame2Seg   dw      ?
 
                 public  pSaveGame3
 pSaveGame3      label   dword
-pSaveGame3Off   dw      SG_DRIVER_NAM + (36 * 24)
+pSaveGame3Off   dw      SG_REPLAY_STOR + (0 * 24)
 pSaveGame3Seg   dw      ?
 
                 public  pSaveGame4
 pSaveGame4      label   dword
-pSaveGame4Off   dw      SG_DRIVER_NAM + (37 * 24)
+pSaveGame4Off   dw      SG_REPLAY_STOR + (1 * 24)
 pSaveGame4Seg   dw      ?
 
 ;*****************************************************************************
-;** 
+;**
 ;** European V1.05 GP.EXE - DOS Version code fragment
-;** 
+;**
 ;** 92D2:5C76  B0 00 mov	al,0
 ;** 92D2:5C78  B4 30 mov	ah,30h
 ;** 92D2:5C7A  CD 21 int	21h	        @06d2eaH in GPU.EXE
-;** 92D2:5C7C  0A C0 or	        al,al	
+;** 92D2:5C7C  0A C0 or	        al,al
 ;** 92D2:5C7E  75 03 jnz	loc_5593
-;** 
+;**
 
 GP_EUR_RET_ADDR equ     0b74ch
 GP_US_RET_ADDR  equ     0b727h
@@ -108,7 +108,7 @@ MATCH_BYTES     equ     10
 MATCH_OFFSET    equ     6
 
 gp_code         db      0b0h, 00h, 0b4h, 30h, 0cdh, 21h, 0ah, 0c0h, 75h, 03h
-        
+
 ;*****************************************************************************
 
 game_sg_off     dw      ?
@@ -119,9 +119,9 @@ hooked_msg      db      CR, LF, "CCPIT activated OK", CR, LF, '$'
 TSR_DATA        ends
 
 ;****************************************************************************
-;** 
+;**
 ;** Our DOS Int 21 handler
-;** 
+;**
 
 TSR_CODE        segment
 
@@ -130,7 +130,7 @@ new21_hndlr     proc near
 
         ;**
         ;** Is it DOS Get Version?
-        ;** 
+        ;**
         cmp     ah, 30h
         jz      push_start
         jmp     do_orig_int21
@@ -195,7 +195,7 @@ TSR_CODE        ends
 ;**
 ;** Returns: Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 
 TSR_CODE        segment
@@ -203,7 +203,7 @@ TSR_CODE        segment
         public  hook_gp_exe
 hook_gp_exe proc near
 
-        mov     cx, HOOK_EUR_SG_MSW 
+        mov     cx, HOOK_EUR_SG_MSW
         mov     ax, HOOK_EUR_SG_LSW
         mov     dx, HOOK_US_SG_MSW
         mov     bx, HOOK_US_SG_LSW
@@ -212,7 +212,7 @@ hook_gp_exe proc near
         mov     cx, HOOK_SG_LENGTH
         call    copy_patch_block
 
-        mov     cx, HOOK_EUR_ST_MSW 
+        mov     cx, HOOK_EUR_ST_MSW
         mov     ax, HOOK_EUR_ST_LSW
         mov     dx, HOOK_US_ST_MSW
         mov     bx, HOOK_US_ST_LSW
@@ -221,7 +221,7 @@ hook_gp_exe proc near
         mov     cx, HOOK_ST_LENGTH
         call    copy_patch_block
 
-        mov     cx, HOOK_EUR_PT_MSW 
+        mov     cx, HOOK_EUR_PT_MSW
         mov     ax, HOOK_EUR_PT_LSW
         mov     dx, HOOK_US_PT_MSW
         mov     bx, HOOK_US_PT_LSW
@@ -230,7 +230,7 @@ hook_gp_exe proc near
         mov     cx, HOOK_PT_LENGTH
         call    copy_patch_block
 
-        mov     cx, HOOK_EUR_SF_MSW 
+        mov     cx, HOOK_EUR_SF_MSW
         mov     ax, HOOK_EUR_SF_LSW
         mov     dx, HOOK_US_SF_MSW
         mov     bx, HOOK_US_SF_LSW
@@ -239,7 +239,7 @@ hook_gp_exe proc near
         mov     cx, HOOK_SF_LENGTH
         call    copy_patch_block
 
-        mov     cx, HOOK_EUR_NC_MSW 
+        mov     cx, HOOK_EUR_NC_MSW
         mov     ax, HOOK_EUR_NC_LSW
         mov     dx, HOOK_US_NC_MSW
         mov     bx, HOOK_US_NC_LSW
@@ -253,7 +253,7 @@ hook_gp_exe proc near
         sub     ax, dx
         mov     cs:hook_nc_value_seg, ax
 
-        mov     cx, HOOK_EUR_OJ_MSW 
+        mov     cx, HOOK_EUR_OJ_MSW
         mov     ax, HOOK_EUR_OJ_LSW
         mov     dx, HOOK_US_OJ_MSW
         mov     bx, HOOK_US_OJ_LSW
@@ -329,7 +329,7 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 
 TSR_CODE        segment
@@ -341,7 +341,7 @@ announce_hook proc near
         int     DOS
         sti
         mov     delay_count, DELAY_TIME
-do_delay:        
+do_delay:
         cmp     delay_count, 0
         jnz     do_delay
         ret
@@ -355,22 +355,22 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 ;** GPU.EXE:
 ;**
 ;** 006298  E83CB8         call   001AD7
-;** 00629B  25FF00         and    ax,0FF 
-;** 00629E úC1E006         shl    ax,6 
-;** 0062A1  3B065202       cmp    ax,[252] 
+;** 00629B  25FF00         and    ax,0FF
+;** 00629E ï¿½C1E006         shl    ax,6
+;** 0062A1  3B065202       cmp    ax,[252]
 ;** 0062A5  7F0E           jg     0062B5                        <----
 ;** 0062A7  36F7062E12FFFF test   word ptr ss:[122E],0FFFF
 ;** 0062AE  7505           jnz    0062B5
 ;** 0062B0  808C970001     or     byte ptr [si+97],1
-;** 0062B5  8A84AC00       mov    al,[si+0AC] 
+;** 0062B5  8A84AC00       mov    al,[si+0AC]
 ;** 0062B9  E892FF         call   00624E
-;** 0062BC úC1E004         shl    ax,4 
-;** 0062BF  F7D8           neg    ax 
+;** 0062BC ï¿½C1E004         shl    ax,4
+;** 0062BF  F7D8           neg    ax
 ;**
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
 ;** (DOS VER hook point = 06d295H in GPU.EXE)
@@ -388,7 +388,7 @@ hook_sg_code_start:
                         nop
                         db      36h, 0f7h, 06h, 2eh, 12h, 0ffh, 0ffh    ; test   word ptr ss:[122E],0FFFF
                         db      75h, 05h                                ; jnz    0062B5
-                                
+
                         db      09ah
 hook_sg_code_off        dw      ?
 hook_sg_code_seg        dw      ?
@@ -426,42 +426,42 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 ;** GPU.EXE:
 ;**
-;** 003215  B90000         mov    cx,0 
-;** 003218  8A0E8B29       mov    cl,[298B] 
-;** 00321C  81C10100       add    cx,1 
-;** 003220  3B8E3C12       cmp    cx,[bp+123C] 
+;** 003215  B90000         mov    cx,0
+;** 003218  8A0E8B29       mov    cl,[298B]
+;** 00321C  81C10100       add    cx,1
+;** 003220  3B8E3C12       cmp    cx,[bp+123C]
 ;** 003224  7D50           jge    003276
 ;** 003226  F684B30004     test   byte ptr [si+0B3],4
 ;** 00322B  7549           jnz    003276
 ;** 00322D  3B0E5002       cmp    cx,[250]                          <----
 ;** 003231  7C43           jl     003276
-;** 003233  F684970001     test   byte ptr [si+97],1 
+;** 003233  F684970001     test   byte ptr [si+97],1
 ;** 003238  743C           jz     003276
-;** 00323A  56             push   si 
-;** 00323B  BE1B0D         mov    si,0D1B 
-;** 00323E  B81900         mov    ax,19 
-;** 003241  B90000         mov    cx,0 
+;** 00323A  56             push   si
+;** 00323B  BE1B0D         mov    si,0D1B
+;** 00323E  B81900         mov    ax,19
+;** 003241  B90000         mov    cx,0
 ;** 003244  F6442380       test   byte ptr [si+23],80
 ;** 003248  7404           jz     00324E
-;** 00324A  81C10100       add    cx,1 
-;** 00324E  81C6C000       add    si,0C0 
-;** 003252  83E801         sub    ax,+1 
+;** 00324A  81C10100       add    cx,1
+;** 00324E  81C6C000       add    si,0C0
+;** 003252  83E801         sub    ax,+1
 ;** 003255  79ED           jns    003244
-;** 003257  5E             pop    si 
-;** 003258  81F90700       cmp    cx,7 
+;** 003257  5E             pop    si
+;** 003258  81F90700       cmp    cx,7
 ;** 00325C  7D18           jge    003276
 ;** 00325E  E8492D         call   005FAA
 ;** 003261  7813           js     003276
-;** 003263  804C2380       or     byte ptr [si+23],80 
+;** 003263  804C2380       or     byte ptr [si+23],80
 ;** 003267  80A49700FB     and    byte ptr [si+97],0FB
-;** 00326C  808CB30004     or     byte ptr [si+0B3],4 
-;** 003271  9ACB1BED19     call   19ED:1BCB 
-;** 003276 ú61             popa    
-;** 003277  C3             ret     
+;** 00326C  808CB30004     or     byte ptr [si+0B3],4
+;** 003271  9ACB1BED19     call   19ED:1BCB
+;** 003276 ï¿½61             popa
+;** 003277  C3             ret
 ;**
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
 ;** (DOS VER hook point = 06d295H in GPU.EXE)
@@ -531,14 +531,14 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 ;** GPU.EXE:
 ;**
-;** 00324E  81C6C000       add    si,0C0 
-;** 003252  83E801         sub    ax,+1 
+;** 00324E  81C6C000       add    si,0C0
+;** 003252  83E801         sub    ax,+1
 ;** 003255  79ED           jns    003244
-;** 003257  5E             pop    si                    
+;** 003257  5E             pop    si
 ;** 003258  81F90700       cmp    cx,7                  <----
 ;** 00325C  7D18           jge    003276
 ;** 00325E  E8492D         call   005FAA
@@ -568,20 +568,20 @@ TSR_DATA                ends
 ;**
 ;** Returns: Nothing.
 ;**
-;** Notes  : 
-;** 
+;** Notes  :
+;**
 ;** GPU.EXE:
 ;**
 ;** 0056DB  E96E02         jmp    00594C
-;** 0056DE  C744100000     mov    word ptr [si+10],0 
-;** 0056E3  C744300000     mov    word ptr [si+30],0 
-;** 0056E8  C744320000     mov    word ptr [si+32],0 
-;** 0056ED  C744340000     mov    word ptr [si+34],0 
-;** 0056F2  C744360000     mov    word ptr [si+36],0 
-;** 0056F7  C744380000     mov    word ptr [si+38],0 
-;** 0056FC  C7443A0000     mov    word ptr [si+3A],0 
+;** 0056DE  C744100000     mov    word ptr [si+10],0
+;** 0056E3  C744300000     mov    word ptr [si+30],0
+;** 0056E8  C744320000     mov    word ptr [si+32],0
+;** 0056ED  C744340000     mov    word ptr [si+34],0
+;** 0056F2  C744360000     mov    word ptr [si+36],0
+;** 0056F7  C744380000     mov    word ptr [si+38],0
+;** 0056FC  C7443A0000     mov    word ptr [si+3A],0
 ;** 005701  808C970040     or     byte ptr [si+97],40           <----
-;** 005706  80A4B300DF     and    byte ptr [si+0B3],0DF 
+;** 005706  80A4B300DF     and    byte ptr [si+0B3],0DF
 ;** 00570B  E886FC         call   005394
 ;**
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
@@ -642,7 +642,7 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 ;** GPU.EXE:
 ;**
@@ -739,7 +739,7 @@ not_wet_race:
         call    TyreChange
         add     sp, 10
         mov     local_tyre, al
-                
+
         pop     es
         pop     ds
         popa
@@ -768,29 +768,29 @@ rnd     proc    near
 
         push    es
         mov     es, cs:game_ds
-        
-        push    bx 
-        push    cx 
+
+        push    bx
+        push    cx
         mov     ax, es:[2985h]
-        shr     ax, 4 
+        shr     ax, 4
         mov     bx, es:[2987h]
-        shr     bx, 1 
-        xor     al, bl 
+        shr     bx, 1
+        xor     al, bl
         mov     bx, es:[2985h]
         mov     cx, es:[2987h]
-        mov     ch, cl 
-        mov     cl, bh 
-        mov     bh, bl 
-        mov     bl, 0 
+        mov     ch, cl
+        mov     cl, bh
+        mov     bh, bl
+        mov     bl, 0
         mov     bl, es:[2984h]
         mov     es:[2985h], bx
         mov     es:[2987h], cx
-        pop     cx 
-        pop     bx 
+        pop     cx
+        pop     bx
         mov     es:[2984h], al
 
         pop     es
-        ret     
+        ret
 
 rnd     endp
 
@@ -801,7 +801,7 @@ TSR_CODE        ends
 ;**
 ;** Returns:    Nothing.
 ;**
-;** Notes  : 
+;** Notes  :
 ;**
 
 TSR_CODE        segment
@@ -824,7 +824,7 @@ TSR_CODE        ends
 
 ;****************************************************************************
 
-        end     
+        end
 
 
 

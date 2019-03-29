@@ -88,8 +88,8 @@ of the graphics screen.
 
 If you wish to unload CCPIT after finishing playing GP then use "CCPIT -u".
 
-Pit Groups 
----------- 
+Pit Groups
+----------
 A pit group definition should start with a '-g'. A pit group should contain
 the number of cars in the group using the '-c' option.  Up to three pit stop
 points may be specified using the '-l' option the appropriate number of
@@ -149,7 +149,7 @@ example of:
 
 We would have:
      1st: G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1,
-    14th: G2, G2, G2, G2, G2, G2, G2, G2, G2, G2, 
+    14th: G2, G2, G2, G2, G2, G2, G2, G2, G2, G2,
     24th: --, --, --
 
 This allows the fairly realistic situation where the faster cars will
@@ -230,7 +230,7 @@ CCPIT has special handling for cars that stop early due to damage to the
 car. If more than 60% of the race distance is complete no futher stops will
 be made. If less than 60% of the race distance is left then a single
 further stop will be made within 40% of the *remaining* distance. So for
-a typical first lap accident the car will then only make one stop at 40% 
+a typical first lap accident the car will then only make one stop at 40%
 of the remaining race distance.
 
 Notes
@@ -247,16 +247,17 @@ should unload the TSRs in the opposite order to that used to load them.
 
 Change History
 --------------
-V0.1 Beta      First test release.
-V1.0           First non-beta release. Added proper handling for cars making
-               stops for to have damage repaired.
-V2.0           Bug fix for double-pitting at some tracks if the first pit
-               stop percentage is below 30% (this varies between tracks).
-V3.0 29/10/94  Added tyre handling and multi-player support.
+V0.1 Beta        First test release.
+V1.0             First non-beta release. Added proper handling for cars making
+                 stops for to have damage repaired.
+V2.0             Bug fix for double-pitting at some tracks if the first pit
+                 stop percentage is below 30% (this varies between tracks).
+V3.0 29/10/1994  Added tyre handling and multi-player support.
+V3.1 31/01/2019  Added support for replays. Not compatible with old save games.
 
 Further Info
 ------------
-Please send any suggestions, comments, or bug reports (include the version 
+Please send any suggestions, comments, or bug reports (include the version
 of CCPIT you are using and the version of the game EXE) to the author
 Trevor Kellaway at:
 
@@ -269,7 +270,7 @@ This program is provided "as is" with no warranties expressed or implied.
 The author will not be held responsible for any losses incurred, either
 directly or indirectly by the use of this program.
 
-This is *not* an MPS product. If you have problems with the game then try 
+This is *not* an MPS product. If you have problems with the game then try
 it without this program loaded.
 
 

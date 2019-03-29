@@ -1,6 +1,6 @@
 /*
 ** File   : parse.c
-** Author : TK 
+** Author : TK
 ** Date   :  9/04/94
 **
 ** $Header:   L:/ccpit/vcs/parse.c__   1.4   31 Oct 1994 22:30:24   tk  $
@@ -46,7 +46,8 @@ short atoi(register const char far *p);
 char title_msg[] =
      "@(#)"
      "CCPIT " VERSION " - Grand Prix/World Circuit Computer Cars Pit Strategy.\n"
-     "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1994 - All Rights Reserved.\n\n";
+     "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1994 - All Rights Reserved.\n"
+     "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Functions
@@ -72,7 +73,7 @@ parse(
 
      for (i = 0; i <= cmd_line_len; i++) {
           if ( cmd_line[i] == '\r' || cmd_line[i] == '\n' ||
-               cmd_line[i] == ' '  || cmd_line[i] == '\t'               
+               cmd_line[i] == ' '  || cmd_line[i] == '\t'
           ) {
                cmd_line[i] = '\0';
           }
