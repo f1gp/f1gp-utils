@@ -1,0 +1,12 @@
+Title   : Grand Prix/World Circuit Wet Race Patch (IBM)
+Keywords: GRAND PRIX WORLD CIRCUIT F1SA F1GP GP WC WET RACE
+
+GpWet (V1.1) patches GP.EXE (USA/English/French/German/Italian V1.05) and
+modifies the probability of a wet race. Normally there is a 6.25% chance
+of a wet race. Using GpWet you can set the probability anywhere from
+always wet (100%) to always dry (0%).
+
+Freeware contributed by the author Trevor Kellaway (CIS:100331,2330). This
+is *not* an MPS product. Requires PKUNZIP v2.04g to decompress.
+
+

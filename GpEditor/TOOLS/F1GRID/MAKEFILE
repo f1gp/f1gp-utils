@@ -1,0 +1,30 @@
+##
+## F1Grid
+##
+
+CC             =    bcc
+CC_FLAGS       =    -c -v -1 -Os
+ASM            =    tasm
+ASM_FLAGS      =    -Ml
+LINK           =    bcc
+LINK_FLAGS     =    -M -v
+
+.asm.obj:      
+               $(ASM) $< $(ASM_FLAGS),,;
+
+.c.obj:      
+               $(CC) $(CC_FLAGS) $< 
+
+all:           f1grid.exe
+
+f1grid.obj:    f1grid.c savinf.h
+
+f1grid.exe:    f1grid.obj makefile
+               $(LINK) $(LINK_FLAGS) f1grid.obj
+               tdstrip -s f1grid.exe
+
+zip:           
+               pkzip f1grid.zip f1grid.exe readme.txt
+
+buildall:      all
+

@@ -1,0 +1,32 @@
+ 1)  #35  Trevor Kellaway
+10)  #01  Juan Manuel Fangio
+21)  #07  Niki Lauda
+31)  #08  James Hunt
+ 5)  #02  Stirling Moss
+ 6)  #11  Jack Brabham
+ 7)  #06  Giuseppe Farina
+ 8)  #04  Alain Prost
+ 9)  #19  Jim Clark
+2)  #32  Michael Schumacher
+11)  #18  Mike Hawthorn
+12)  #21  Alan Jones
+13)  #24  Rene Arnoux
+14)  #16  Graham Hill
+15)  #17  Phil Hill
+16)  #09  Jochen Rindt
+17)  #12  Nelson Piquet
+18)  #15  Ronnie Peterson
+19)  #27  Gilles Villeneuve
+20)  #25  Emerson Fittipaldi
+3)  #31  Nigel Mansell
+22)  #29  Jody Scheckter
+23)  #28  Jacky Ickx
+24)  #22  Carlos Reutemann
+25)  #26  Keke Rosberg
+26)  #30  Denis Hulme
+27)  #05  Alberto Ascari
+28)  #10  Mario Andretti
+29)  #14  Jackie Stewart
+30)  #23  John Surtees
+4)  #03  Ayrton Senna
+

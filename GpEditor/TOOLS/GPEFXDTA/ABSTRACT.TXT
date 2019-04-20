@@ -1,0 +1,5 @@
+This program patches an F1ED.DTA file to ensure that it will coexist with
+GPEDITOR V1.x.
+
+
+

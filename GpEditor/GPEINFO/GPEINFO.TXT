@@ -1,0 +1,89 @@
+GpeInfo V4.1 23-Jun-95                      Trevor Kellaway (CIS:100331,2330)
+
+
+GPeditor Export File Info.
+
+This DOS command line program provides a simple way of viewing the
+settings stored within GPeditor's export file format (*.GPE) files.
+
+For example:
+
+     GPEINFO F1SA.GPE
+
+will display something like:
+
+>>  f1sa.gpe - (GPeditor V3.0) Tue May 24 17:51:23 1994
+>>
+>>  Comment:
+>>  Here's the current F1SA grid in GPEditor format.  It includes the names.  
+>>  
+>>  AI Grip:4
+>>  
+>>  Player's BHP:630
+>>  
+>>  Car Driver                    Q   R  Team          Engine        BHP
+>>  --------------------------------------------------------------------
+>>  #6  JJ Lehto                 10   9  Bennetton     Ford ZeTec    714
+>>  #5  Michael Schumacher        1   1  Bennetton     Ford ZeTec    714
+>>  #3  Ukyo Katayama             9  10  Tyrrell       Yamaha        667
+>>  #4  Mark Blundell            12  15  Tyrrell       Yamaha        667
+>>  #2  David Coulthard          12  15  Williams      Renault       716
+>>  ...
+
+The GPE filename is displayed together with the version of GPeditor used
+to create the GPE file and the date/time the file was created.
+
+If a comment is present in the GPE it will be displayed.
+
+The AI (computer cars) grip level is displayed.
+
+The player's car BHP is displayed (if present - V2.0 of GPEDITOR didn't 
+support the importing/exporting of the player's BHP).
+
+All the driver information is displaued.
+
+GpeInfo can sort the driver information in a number of different ways:
+
+     Usage: gpeinfo [-h?abdnqrt] (filename)
+            -h | -?   This usage message.
+            -b        Sort by car power (BHP).
+            -d        Sort by driver name.
+            -n        Sort by car number.
+            -q        Sort by qualifying probability.
+            -r        Sort by race probability.
+            -t        Sort by team name.
+
+-b   Sort by car power (BHP), then car number.
+
+-d   Sort by driver surname, then given name.
+
+-n   Sort by car number.
+
+-q   Sort by qualifying probability, then car power, then car number.
+
+-r   Sort by race probability, then car power, then car number.
+
+-t   Sort by team name, then car number.     
+
+
+To save the output in a file called DRIVERS.TXT use:
+
+     GPEINFO F1SA.GPE > DRIVERS.TXT
+
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version 
+of GPEINFO you are using [see -h option]) to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+
+This is *not* an MPS product.
+

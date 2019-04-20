@@ -1,0 +1,14 @@
+Here is a work around for GPEDITOR V1.x not recognising GP.EXE after an
+F1ED patch has been performed.
+
+The enclosed batch file patches the F1ED.DTA file and restores some fixed
+bytes that F1ED has modifed. The DOS DEBUG.EXE must be in your path.
+
+To use it:
+
+     1)   Use F1ED to set any parameters desired.
+     2)   Perform a 'W' to update GP.EXE and write the F1ED.DTA.
+     3)   Now run 'DTAV13.BAT' to patch the F1ED.DTA.
+     4)   Now run F1ED again and do another 'W' to update GP.EXE.
+     5)   GPEDITOR should now work on your GP.EXE!
+

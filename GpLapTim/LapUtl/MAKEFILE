@@ -1,0 +1,26 @@
+##
+## GpLap
+##
+
+CC             =    bcc
+CC_FLAGS       =    -c -v -1 -Os -I..
+CC_FLAGS_L     =    -c -v -2 -Os -I.. -ml -WE -N
+LIB            =    tlib
+
+.c.obj:      
+               $(CC) $(CC_FLAGS) $< 
+
+alw:           laputl.lib laputlw.lib
+
+laputl.lib:    laputl.c laputl.h version.i makefile
+               $(CC) $(CC_FLAGS) laputl.c
+               if exist laputl.lib del laputl.lib
+               $(LIB) laputl.lib +laputl.obj
+
+laputlw.lib:   laputl.c laputl.h version.i makefile
+               $(CC) $(CC_FLAGS_L) laputl.c
+               if exist laputlw.lib del laputlw.lib
+               $(LIB) laputlw.lib +laputl.obj
+
+buildalw:      alw
+

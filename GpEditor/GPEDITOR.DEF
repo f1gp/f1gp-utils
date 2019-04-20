@@ -1,0 +1,10 @@
+NAME           GPeditor
+DESCRIPTION    '@(#)GPeditor (c) Copyright 1994 T.Kellaway - All rights reserved.'
+EXETYPE        WINDOWS
+STUB           'WINRUN.EXE'
+CODE           PRELOAD MOVEABLE DISCARDABLE
+DATA           PRELOAD MOVEABLE MULTIPLE
+HEAPSIZE       8000
+STACKSIZE      16000
+
+

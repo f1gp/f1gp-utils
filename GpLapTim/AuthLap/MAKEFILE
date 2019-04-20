@@ -1,0 +1,22 @@
+##
+## GpLap
+##
+
+CC             =    bcc
+CC_FLAGS       =    -c -v -1 -Os -I..
+LINK           =    bcc
+LINK_FLAGS     =    -v
+
+.c.obj:      
+               $(CC) $(CC_FLAGS) $< 
+
+all:           authlap.exe
+
+authlap.obj:   authlap.c
+
+authlap.exe:   authlap.obj makefile
+               $(LINK) $(LINK_FLAGS) authlap.obj e:\bc4\lib\16bit\wildargs.obj
+               tdstrip -s authlap.exe
+
+buildall:      all
+

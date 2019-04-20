@@ -1,0 +1,32 @@
+!if !$d(CPPWIN_INC)
+!error CPPWIN_INC env variable not set!
+!endif
+
+!include "$(CPPWIN_INC)\makefile.cmn"
+
+TARGET =       stdfopen
+
+.cpp.obj:
+               $(CPP) @&&!
+                    $(CPPFLAGS_CMN) -UWINVER -v $(CPPFLAGS) -H=$(TARGET).pch -DSTRICT $<
+!
+
+OBJ =          stdfopen.obj
+OBJ_LIB =      +-stdfopen.obj
+HDR =          stdfopen.hpp
+
+all:           $(TARGET).$(LIBTYPE)
+
+turboc.cfg:    makefile
+               echo -II:\INCLUDE        >  turboc.cfg 
+               echo -LI:\LIB            >> turboc.cfg
+               echo -I$(INCLUDE_PATH)   >> turboc.cfg
+
+stdfopen.obj:  stdfopen.cpp $(HDR) version.ipp
+
+$(TARGET).$(LIBTYPE): turboc.cfg $(OBJ) makefile
+               $(LIB) $(TARGET).$(LIBTYPE) @&&!
+                    $(OBJ_LIB)
+!
+               if exist *.bak del *.bak
+

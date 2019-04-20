@@ -1,0 +1,116 @@
+#include <windows.h>
+#include "GPeditor.h"
+#include "version.ipp"
+
+#include <fileopen.rc>
+#include "GPeditor.dlg"
+
+ICON                ICON      GPeditor.ico
+ICON_F1_NO          ICON      f1no.ico
+ICON_F2_NO          ICON      f2no.ico
+ICON_F3_NO          ICON      f3no.ico
+ICON_F4_NO          ICON      f4no.ico
+ICON_F5_NO          ICON      f5no.ico
+ICON_F6_NO          ICON      f6no.ico
+ICON_F1_YES         ICON      f1yes.ico
+ICON_F2_YES         ICON      f2yes.ico
+ICON_F3_YES         ICON      f3yes.ico
+ICON_F4_YES         ICON      f4yes.ico
+ICON_F5_YES         ICON      f5yes.ico
+ICON_F6_YES         ICON      f6yes.ico
+
+BITMAP_F1CAR        BITMAP    F1car.bmp
+BITMAP_F1CAR_SMALL  BITMAP    smallcar.bmp
+BITMAP_HELMET       BITMAP    helmet.bmp
+
+CURSOR_PALETTE      CURSOR    palette.cur
+CURSOR_SPRAYCAN     CURSOR    spraycan.cur
+CURSOR_TEAMCAR      CURSOR    teamcar.cur
+
+MAIN_MENU MENU 
+BEGIN
+	POPUP "&Fichier"
+	BEGIN
+		MENUITEM "&Ouvrir fichier EXE...",      IDM_FILE_OPEN_GAME_EXE
+		MENUITEM "&Mettre à jour fichier EXE...",    IDM_FILE_UPDATE_GAME_EXE
+		MENUITEM SEPARATOR
+		MENUITEM "O&uvrir fichier de noms",         IDM_FILE_OPEN_NAMES
+		MENUITEM SEPARATOR
+	     POPUP "&DTA"
+	     BEGIN
+     		MENUITEM "&Importer...",        IDM_FILE_IMPORT_DTA
+     		MENUITEM "&Exporter...",        IDM_FILE_EXPORT_DTA
+          END
+		MENUITEM SEPARATOR
+		MENUITEM "&Quitter",                  IDM_EXIT
+	END
+
+	POPUP "&Voiture"
+	BEGIN
+		MENUITEM "&Nouvelle",                   IDM_DESIGN_NEW
+		MENUITEM "&Ouvrir...",               IDM_DESIGN_LOAD
+		MENUITEM "&Sauvegarder...",               IDM_DESIGN_SAVE
+	END
+
+	POPUP "&Casque"
+	BEGIN
+		MENUITEM "&Nouveau...",                   IDM_HELMET_NEW
+		MENUITEM "&Ouvrir...",               IDM_HELMET_LOAD
+		MENUITEM "&Sauvegarder...",               IDM_HELMET_SAVE
+	END
+
+	POPUP "&Performance"
+	BEGIN
+		MENUITEM "&Voitures...",               IDM_PERFORMANCE_CAR
+		MENUITEM "P&ilotes...",            IDM_PERFORMANCE_DRIVER
+		MENUITEM "&Conduite assistée...",       IDM_PERFORMANCE_DRIVING_AIDS
+     END
+
+	POPUP "&Fenêtres"
+	BEGIN
+		MENUITEM "Éditeur des &voitures",            IDM_CAR_EDITOR
+		MENUITEM "Éditeur des &casques",         IDM_HELMET_EDITOR
+     END
+
+	POPUP "&Aide"
+	BEGIN
+		MENUITEM "&Contenu",              IDM_HELP_CONTENTS
+		MENUITEM "C&omment se servir de l'aide...",    IDM_HELP_USE
+		MENUITEM SEPARATOR
+		MENUITEM "À &propos de GP Editor...",    IDM_ABOUT
+     END
+END
+
+STRINGTABLE
+BEGIN
+     IDT_YOU_NEED_A_MOUSE          "Ce programme requiert l'usage d'une souris."
+     IDT_OPEN_GAME_EXE_DLG_TITLE   "GP Editor - Ouvrir fichier EXE du jeu"
+     IDT_INVALID_GAME_EXE          "'%s' n'est pas une version valide ou connue du fichier EXE du jeu."
+     IDT_UNABLE_TO_OPEN            "Impossible d'ouvrir '%s'"
+     IDT_UNKNOWN_GAME_VERSION      "Je ne reconnais pas ce fichier comme étant une version valide du fichier EXE du jeu. Devrais-je aller voir le fichier de plus près?"
+     IDT_ENSURE_GAME_EXE_BACKED_UP "Important: assurez-vous d'avoir fait une copie de secours du fichier EXE du jeu. Voulez-vous continuer à le mettre à jour?"
+     IDT_WRITE_FAILED              "Impossible d'écrire à '%s'"
+     IDT_READ_FAILED               "Impossible de lire de '%s'"
+     IDT_SUCCESSFULLY_UPDATED      "Le fichier EXE du jeu a été mis à jour."
+     IDT_OPEN_NAMES_DLG_TITLE      "GP Editor - Ouvrir le fichier de noms"
+     IDT_OPEN_CAR_DESIGN_DLG_TITLE "GP Editor - Charger une conception de voiture"
+     IDT_SAVE_CAR_DESIGN_DLG_TITLE "GP Editor - Sauvegarder une conception de voiture"
+     IDT_OVERWRITE_EXISTING_FILE   "Voulez-vous effacer le fichier '%s' existant?"
+     IDT_ABOUT_GAME_EXE_VERSION    "Fichier EXE du jeu: %s  (Offset:%06lxH)"
+     IDT_OPEN_HELMET_DLG_TITLE     "GP Editor - Charger un casque"
+     IDT_SAVE_HELMET_DLG_TITLE     "GP Editor - Sauvegarder un casque"
+     IDT_NOT_F1_HELMET_FILE        "'%s' n'est pas un fichier de casques F1."
+     IDT_NOT_F1_DESIGN_FILE        "'%s' n'est pas un fichier de conception de voiture F1."
+     IDT_IMPORT_DTA_DLG_TITLE      "GP Editor - Importer le fichier DTA (version f1ed)"
+     IDT_EXPORT_DTA_DLG_TITLE      "GP Editor - Exporter le fichier DTA (version f1ed)"
+     IDT_INVALID_DTA_FILE          "'%s' n'est pas un fichier DTA version 1.2 ou 1.3."
+END
+
+STRINGTABLE
+BEGIN
+     IDT_OUT_OF_MEMORY             "Mémoire épuisée. Veuillez fermer une autre application Windows et réessayer."
+     IDT_UNABLE_TO_REGISTER_CLASS  "Impossible d'enregistrer la classe Windows. Conflit de noms réservés."
+     IDT_UNABLE_TO_LOAD_BITMAP     "Impossible de charger le graphique. Mémoire épuisée? Veuillez fermer une autre application Windows et réessayer."
+     IDT_UNABLE_TO_CREATE_PALETTE  "Impossible de créer la palette de couleurs. Mémoire épuisée? Veuillez fermer une autre application Windows et réessayer."
+END
+

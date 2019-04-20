@@ -1,0 +1,16 @@
+##
+## GPDEBUG
+##
+
+SHIP      =    gpdbg
+
+all:           $(SHIP).zip
+
+gpdebug.exe:   gpdebug.c
+               bcc -Os gpdebug.c          
+
+gpdbg.zip:     gpdebug.exe makefile readme.txt
+               if exist $(SHIP).zip del $(SHIP).zip
+               pkzip $(SHIP).zip      readme.txt
+               pkzip $(SHIP).zip      gpdebug.exe
+

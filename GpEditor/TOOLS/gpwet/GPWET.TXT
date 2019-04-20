@@ -1,0 +1,72 @@
+GpWet V1.1 17-Dec-95                             T.Kellaway (CIS:100331,2330)
+
+Grand Prix/World Circuit Wet Race Probability Patch.
+
+Introduction
+------------
+GpWet patches GP.EXE (USA/English/French/German/Italian V1.05) and modifies
+the probability of a wet race.
+
+Normally there is a 6.25% chance of a wet race. Using GpWet you can set the
+probability anywhere from always wet (100%) to always dry (0%).
+
+Note that GpWet changes the probability of a normal non-championship or
+championship season race, it doesn't modify a quick race (as there is
+an option in the quick race menu for selecting a wet/dry race).
+
+Installation
+------------
+Copy GPWET.EXE to the directory where GP.EXE is (e.g. C:\GPRIX).
+
+
+Usage
+-----
+GpWet {-o | -p} [-?h] [GP.EXE]
+       -o     Restore original probability (6.25%).
+       -p     Patch new probability (0 - 100).
+       -h?    This usage message.
+
+To patch a 100% probability of a wet race:
+
+     GPWET -p100
+
+To patch a 0% probability of a wet race (always dry):
+
+     GPWET -p0
+
+To restore the game default:
+
+     GPWET -o
+
+This restores the original GP.EXE code. Note that the actual default is
+6.25% percent so use -o (not -p6) to restore the default.
+
+To determine the current value don't specify any options:
+
+     GPWET
+
+The current wet race probability will be displayed.
+
+Change History
+--------------
+V1.0 09/12/95    Initial release.
+V1.1 17/12/95    Overrides "no wet race" hint in game track files (Phoenix).
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version 
+you are using and the version of the game EXE) to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+
+This is *not* an MPS product. If you have problems with the game then try 
+it without this program.
+
+

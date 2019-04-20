@@ -1,0 +1,13 @@
+GPEDITOR V4.1 New Features
+--------------------------
+
+1)   Italian version of GP.EXE now supported.
+
+2)   Added 95 seasons names and colours.
+
+3)   Automatic language selection bug fixed, dialog prompt should now appear
+     the very first time it is run.w
+
+4)   Fixed bug where an export GPE operation wouldn't save the current colours
+     unless an "Update Game EXE" had been performed first.
+

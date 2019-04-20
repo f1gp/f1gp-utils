@@ -1,6 +1,6 @@
 /*
 ** File   : gplaptim.h
-** Author : TK 
+** Author : TK
 ** Date   : 23/04/94
 **
 ** $Header:   F:/TK/GPLAPTIM/VCS/GPLAPTIM.H__   1.7   09 Oct 1995 22:28:20   tk  $
@@ -10,10 +10,6 @@
 
 #ifndef   gplaptim_h
 #define   gplaptim_h
-
-#pragma pack(push, _AFX_PACKING)
-
-#pragma pack(1)
 
 /*---------------------------------------------------------------------------
 ** Includes
@@ -256,20 +252,6 @@ typedef struct {
      uchar     st_driver[24];
 } SPLIT_TIME_RECORD;
 
-//
-// All record types
-//
-typedef union {
-	LAP_RECORD		lr;
-	AUTH_RECORD		ar;
-	AUTH_RACE_RECORD	arr;
-	DATE_RECORD		dr;
-	SETUP_RECORD		sr;
-	PIT_IN_RECORD		pi;
-	PIT_OUT_RECORD		po;
-	SPLIT_TIME_RECORD	st;
-} ALL_RECORDS;
-
 /*---------------------------------------------------------------------------
 ** Data
 */
@@ -278,9 +260,9 @@ typedef union {
 ** Functions
 */
 
-#pragma pack(pop, _AFX_PACKING)
 
 #endif    /* gplaptim_h */
 /*---------------------------------------------------------------------------
 ** End of File
 */
+

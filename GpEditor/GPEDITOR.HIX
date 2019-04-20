@@ -1,0 +1,36 @@
+[OPTIONS]
+TITLE=Grand Prix Editor Help
+COMPRESS=true
+icon=gpedhelp.ico
+
+[FILES]
+GPeditor.rtf
+
+[CONFIG]
+BrowseButtons()
+
+[WINDOWS]
+main=,,0,,(255,0,0)
+
+[BITMAPS]
+palette.bmp
+spraycan.bmp
+teamcar.bmp
+tbaids.bmp
+tbcar.bmp
+tbcarnum.bmp
+tbcarprf.bmp
+tbdrvprf.bmp
+tbhelmet.bmp
+tbhelp.bmp
+tbnames.bmp
+tbnew.bmp
+tbopen.bmp
+tbsave.bmp
+tbaig.bmp
+tbpower.bmp
+f1sa.bmp
+
+[MAP]
+#include <helpids.h>
+

@@ -1,0 +1,38 @@
+!if !$d(CPPWIN_INC)
+!error CPPWIN_INC env variable not set!
+!endif
+
+!include "$(CPPWIN_INC)\makefile.cmn"
+
+TARGET =       drawtool
+
+.cpp.obj:
+               $(CPP) @&&!
+                    $(CPPFLAGS_CMN) $(CPPFLAGS) -H=$(TARGET).pch -DSTRICT $<
+!
+
+OBJ =          drwbrush.obj drwdesel.obj drwdrw.obj drwfont.obj drwnewtl.obj\
+               drwpen.obj drwselec.obj drwbmp.obj
+OBJ_LIB =      +drwbrush.obj +drwdesel.obj +drwdrw.obj +drwfont.obj +drwnewtl.obj\
+               +drwpen.obj +drwselec.obj +drwbmp.obj
+HDR =          drawtool.hpp
+SRC =          drwbrush.cpp drwdesel.cpp drwdrw.cpp drwfont.cpp drwnewtl.cpp\
+               drwpen.cpp drwselec.cpp drwbmp.cpp
+
+all:           $(TARGET).$(LIBTYPE)
+
+turboc.cfg:    makefile
+               echo -II:\INCLUDE        >  turboc.cfg 
+               echo -LI:\LIB            >> turboc.cfg
+               echo -I$(INCLUDE_PATH)   >> turboc.cfg
+
+drwdrw.obj:    drwdrw.cpp $(HDR) version.ipp
+
+$(SRC):        $(HDR)
+
+$(TARGET).$(LIBTYPE): turboc.cfg $(OBJ) makefile
+               $(LIB) $(TARGET).$(LIBTYPE) @&&!
+                    $(OBJ_LIB)
+!
+               if exist *.bak del *.bak
+

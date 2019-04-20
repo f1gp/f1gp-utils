@@ -1,0 +1,64 @@
+QTYRES V1.1 23-Jun-95                           T.Kellaway (CIS:100331,2330)
+
+Grand Prix/World Circuit Qualifying Tyres Patch.
+
+Introduction
+------------
+QTYRES patches GP.EXE (USA/English/French/German/Italian V1.05) and modifies
+the way the game handles qualifying tyres (Q's). 
+
+Normally Q's can only be used in a qualifying session. QTYRES permits
+Q's to be used in any type of session (except a race). 
+
+The main reason for writing QTYRES was to permit Q's to be used in a
+PRACTICE session (where you were previously restricted to D's).
+
+QTYRES also removes the 4 set limit on Q's in a qualifying session (it
+is now 64). Note that the AI cars can use more than 4 sets as well in
+a 120min qualifying session, but in practice I've never seen this.
+
+
+Installation
+------------
+Copy QTYRES.EXE to the directory where GP.EXE is (e.g. C:\GPRIX).
+
+
+Usage
+-----
+Usage: Qtyres {-o | -p} [GP.EXE]
+       -o   Restore Original code.
+       -p   Patch new qualifying code.
+
+To patch the new code use:
+
+     QTYRES -p
+
+"Patch Completed OK. Q-tyres now enabled." will be displayed if OK.
+If GP.EXE has already been patched before then "Qtyres: Patched already!"
+will be displayed.
+
+You can remove the patch by using:
+
+     QTYRES -o
+
+This restores the original GP.EXE code.
+
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version 
+you are using and the version of the game EXE) to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+
+This is *not* an MPS product. If you have problems with the game then try 
+it without this program.
+
+

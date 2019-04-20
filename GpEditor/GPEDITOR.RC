@@ -1,0 +1,364 @@
+#include <windows.h>
+#include "GPeditor.h"
+#include "version.ipp"
+
+#include "GPeditor.dlg"
+
+#define E           IDO_ENGLISH
+#define F           IDO_FRENCH
+#define G           IDO_GERMAN
+
+ICON                ICON      GPeditor.ico
+ICON_F1_NO          ICON      f1no.ico
+ICON_F2_NO          ICON      f2no.ico
+ICON_F3_NO          ICON      f3no.ico
+ICON_F4_NO          ICON      f4no.ico
+ICON_F5_NO          ICON      f5no.ico
+ICON_F6_NO          ICON      f6no.ico
+ICON_F1_YES         ICON      f1yes.ico
+ICON_F2_YES         ICON      f2yes.ico
+ICON_F3_YES         ICON      f3yes.ico
+ICON_F4_YES         ICON      f4yes.ico
+ICON_F5_YES         ICON      f5yes.ico
+ICON_F6_YES         ICON      f6yes.ico
+ICON_FLAG_E         ICON      flag_e.ico
+ICON_FLAG_F         ICON      flag_f.ico
+ICON_FLAG_G         ICON      flag_g.ico
+ICON_F1SA           ICON      f1sa.ico
+
+BITMAP_F1CAR        BITMAP    F1car.bmp
+BITMAP_F1CAR_SMALL  BITMAP    smallcar.bmp
+BITMAP_HELMET       BITMAP    helmet.bmp
+IDR_TOOLBAR         BITMAP    toolbar.bmp
+
+CURSOR_PALETTE      CURSOR    palette.cur
+CURSOR_SPRAYCAN     CURSOR    spraycan.cur
+CURSOR_TEAMCAR      CURSOR    teamcar.cur
+
+MENU_ENGLISH MENU 
+BEGIN
+	POPUP "&File"
+	BEGIN
+		MENUITEM "&Open Game EXE...",                IDM_FILE_OPEN_GAME_EXE
+		MENUITEM "&Update Game EXE...",              IDM_FILE_UPDATE_GAME_EXE
+		MENUITEM SEPARATOR
+		MENUITEM "Open &Names...",                   IDM_FILE_OPEN_NAMES
+		MENUITEM "&Save Names...",                   IDM_FILE_SAVE_NAMES
+		MENUITEM SEPARATOR
+     	MENUITEM "&Import...",                       IDM_FILE_IMPORT_GPE
+     	MENUITEM "&Export...",                       IDM_FILE_EXPORT_GPE
+		MENUITEM SEPARATOR
+		MENUITEM "&Language...",                     IDM_LANGUAGE
+		MENUITEM "E&xit",                            IDM_EXIT
+	END
+
+	POPUP "&Edit"
+	BEGIN
+		MENUITEM "&New",                             IDM_DESIGN_NEW
+		MENUITEM "&Load...",                         IDM_DESIGN_LOAD
+		MENUITEM "&Save...",                         IDM_DESIGN_SAVE
+	END
+
+	POPUP "&Options"
+	BEGIN
+		MENUITEM "Driving &Aids...",                 IDM_PERFORMANCE_DRIVING_AIDS
+		MENUITEM SEPARATOR
+		MENUITEM "Car N&umbers...",                  IDM_PERFORMANCE_CAR_NUMBERS
+		MENUITEM "&Car Performance...",              IDM_PERFORMANCE_CAR
+		MENUITEM "&Driver Performance...",           IDM_PERFORMANCE_DRIVER
+		MENUITEM SEPARATOR
+		MENUITEM "&Names...",                        IDM_NAMES
+		MENUITEM SEPARATOR
+		MENUITEM "AI Car &Grip...",                  IDM_AI_CAR_GRIP
+		MENUITEM "&Player's Car Performance...",     IDM_PLAYERS_CAR_PERFORMANCE
+     END
+
+	POPUP "&Window"
+	BEGIN
+		MENUITEM "&Car Editor",                      IDM_CAR_EDITOR
+		MENUITEM "&Helmet Editor",                   IDM_HELMET_EDITOR
+     END
+
+	POPUP "&Help"
+	BEGIN
+		MENUITEM "&Contents",                        IDM_HELP_CONTENTS
+		MENUITEM "&How to Use Help...",              IDM_HELP_USE
+		MENUITEM SEPARATOR
+		MENUITEM "&About GP Editor...",              IDM_ABOUT
+     END
+END
+
+MENU_FRENCH MENU 
+BEGIN
+	POPUP "&Fichier"
+	BEGIN
+		MENUITEM "&Ouvrir fichier EXE...",           IDM_FILE_OPEN_GAME_EXE
+		MENUITEM "&Mettre à jour fichier EXE...",    IDM_FILE_UPDATE_GAME_EXE
+		MENUITEM SEPARATOR
+		MENUITEM "Ouvrir fichier de &noms...",       IDM_FILE_OPEN_NAMES
+		MENUITEM "&Sauvegarder noms...",             IDM_FILE_SAVE_NAMES
+		MENUITEM SEPARATOR
+     	MENUITEM "&Importer...",                     IDM_FILE_IMPORT_GPE
+     	MENUITEM "&Exporter...",                     IDM_FILE_EXPORT_GPE
+		MENUITEM SEPARATOR
+		MENUITEM "&Langue...",                       IDM_LANGUAGE
+		MENUITEM "&Quitter",                         IDM_EXIT
+	END
+
+	POPUP "&Édition"
+	BEGIN
+		MENUITEM "&Créer",                           IDM_DESIGN_NEW
+		MENUITEM "&Ouvrir...",                       IDM_DESIGN_LOAD
+		MENUITEM "&Sauvegarder...",                  IDM_DESIGN_SAVE
+	END
+
+	POPUP "&Options"
+	BEGIN
+		MENUITEM "&Conduite assistée...",            IDM_PERFORMANCE_DRIVING_AIDS
+		MENUITEM SEPARATOR
+		MENUITEM "&Numéro des voitures...",          IDM_PERFORMANCE_CAR_NUMBERS
+		MENUITEM "Performance de la &voiture...",    IDM_PERFORMANCE_CAR
+		MENUITEM "Performance du &pilote...",        IDM_PERFORMANCE_DRIVER
+		MENUITEM SEPARATOR
+		MENUITEM "N&oms...",                         IDM_NAMES
+		MENUITEM SEPARATOR
+          MENUITEM "&Adhérence des autres voitures...",IDM_AI_CAR_GRIP
+          MENUITEM "Performance de la voiture du &Joueur...", IDM_PLAYERS_CAR_PERFORMANCE
+     END
+
+	POPUP "&Fenêtres"
+	BEGIN
+		MENUITEM "Éditeur des &voitures",            IDM_CAR_EDITOR
+		MENUITEM "Éditeur des &casques",             IDM_HELMET_EDITOR
+     END
+
+	POPUP "&Aide"
+	BEGIN
+		MENUITEM "&Contenu",                         IDM_HELP_CONTENTS
+		MENUITEM "C&omment se servir de l'aide...",  IDM_HELP_USE
+		MENUITEM SEPARATOR
+		MENUITEM "À &propos de GP Editor...",        IDM_ABOUT
+     END
+END
+
+MENU_GERMAN MENU 
+BEGIN
+     POPUP "&Datei"
+     BEGIN
+          MENUITEM "&Neu",                             IDM_DESIGN_NEW
+          MENUITEM "Ö&ffnen...",                       IDM_DESIGN_LOAD
+          MENUITEM "&Speichern...",                    IDM_DESIGN_SAVE
+		MENUITEM SEPARATOR
+          MENUITEM "Öffnen von &GP.EXE...",            IDM_FILE_OPEN_GAME_EXE
+          MENUITEM "&Aktualisieren von GP.EXE...",     IDM_FILE_UPDATE_GAME_EXE
+          MENUITEM SEPARATOR
+          MENUITEM "Öffnen einer &Namensdatei...",     IDM_FILE_OPEN_NAMES
+		MENUITEM "S&peichern Namensdatei...",        IDM_FILE_SAVE_NAMES
+          MENUITEM SEPARATOR
+     	MENUITEM "&Importieren...",                  IDM_FILE_IMPORT_GPE
+     	MENUITEM "&Exportieren...",                  IDM_FILE_EXPORT_GPE
+          MENUITEM SEPARATOR
+		MENUITEM "Sp&rache...",                      IDM_LANGUAGE
+          MENUITEM "&Beenden",                         IDM_EXIT
+     END
+
+     POPUP "&Bearbeiten"
+     BEGIN
+          MENUITEM "Fahr&hilfen...",                   IDM_PERFORMANCE_DRIVING_AIDS
+          MENUITEM SEPARATOR
+          MENUITEM "Fahrer&nummern...",                IDM_PERFORMANCE_CAR_NUMBERS
+          MENUITEM "&Fahrzeugleistung...",             IDM_PERFORMANCE_CAR
+          MENUITEM "Fahrer&einstufung...",             IDM_PERFORMANCE_DRIVER
+		MENUITEM SEPARATOR
+		MENUITEM "N&amen...",                        IDM_NAMES
+		MENUITEM SEPARATOR
+		MENUITEM "AI Reifen&haftung...",             IDM_AI_CAR_GRIP
+          MENUITEM "&Leistung des Spielerwagens...",   IDM_PLAYERS_CAR_PERFORMANCE
+     END
+
+     POPUP "&Fenster"
+     BEGIN
+          MENUITEM "&Fahrzeug Editor",                 IDM_CAR_EDITOR
+          MENUITEM "&Helm Editor",                     IDM_HELMET_EDITOR
+     END
+
+     POPUP "&Hilfe"
+     BEGIN
+          MENUITEM "&Inhalt",                          IDM_HELP_CONTENTS
+          MENUITEM "&Hilfe benutzen",                  IDM_HELP_USE
+          MENUITEM SEPARATOR
+          MENUITEM "Inf&o...",                         IDM_ABOUT
+     END
+END
+
+STRINGTABLE
+BEGIN
+     E + IDT_APP_NAME                  "Grand Prix Editor"
+     F + IDT_APP_NAME                  "Éditeur de Grand Prix"
+     G + IDT_APP_NAME                  "Editor für F1 Grand Prix"
+
+     E + IDT_YOU_NEED_A_MOUSE          "You need a mouse to use this program."
+     F + IDT_YOU_NEED_A_MOUSE          "Ce programme requiert l'usage d'une souris."
+     G + IDT_YOU_NEED_A_MOUSE          "Sie benötigen eine Maus zur Benutzung dieses Programms."
+
+     E + IDT_OPEN_GAME_EXE_DLG_TITLE   "GP Editor - Open Game EXE"
+     F + IDT_OPEN_GAME_EXE_DLG_TITLE   "Éditeur de Grand Prix - Ouvrir fichier EXE du jeu"
+     G + IDT_OPEN_GAME_EXE_DLG_TITLE   "GP Editor - Öffnen von GP.EXE"
+
+     E + IDT_INVALID_GAME_EXE          "'%s' is not a valid or known version of the game EXE."
+     F + IDT_INVALID_GAME_EXE          "'%s' n'est pas une version valide ou connue du fichier EXE du jeu."
+     G + IDT_INVALID_GAME_EXE          "'%s' ist keine gültige oder bekannte Version der Programmdatei."
+
+     E + IDT_UNABLE_TO_OPEN            "Unable to open '%s'"
+     F + IDT_UNABLE_TO_OPEN            "Impossible d'ouvrir '%s'"
+     G + IDT_UNABLE_TO_OPEN            "Fehler beim Öffnen von '%s'"
+
+     E + IDT_UNKNOWN_GAME_VERSION      "I don't recognise this as a known version of the game EXE. Shall I have a more detailed look at the file?"
+     F + IDT_UNKNOWN_GAME_VERSION      "Je ne reconnais pas ce fichier comme étant une version valide du fichier EXE du jeu. Devrais-je aller voir le fichier de plus près?"
+     G + IDT_UNKNOWN_GAME_VERSION      "Diese Version von F1GP wurde beim ersten Versuch nicht erkannt. Soll das Programm eine genauere Analyse starten?"
+
+     E + IDT_ENSURE_GAME_EXE_BACKED_UP "Important: Ensure that you have backed up your original copy of the game EXE. Do you wish to continue with the update?"
+     F + IDT_ENSURE_GAME_EXE_BACKED_UP "Important: assurez-vous d'avoir fait une copie de secours du fichier EXE du jeu. Voulez-vous continuer à le mettre à jour?"
+     G + IDT_ENSURE_GAME_EXE_BACKED_UP "Achtung: Sie sollten eine Sicherheitskopie von GP.EXE angefertigt haben. Soll mit der Aktualisierung fortgefahren werden?"
+
+     E + IDT_WRITE_FAILED              "Failed to write to '%s'"
+     F + IDT_WRITE_FAILED              "Impossible d'écrire à '%s'"
+     G + IDT_WRITE_FAILED              "Fehler beim Schreiben von '%s'"
+
+     E + IDT_READ_FAILED               "Read from '%s' failed."
+     F + IDT_READ_FAILED               "Impossible de lire de '%s'"
+     G + IDT_READ_FAILED               "Fehler beim Lesen von '%s'"
+
+     E + IDT_SUCCESSFULLY_UPDATED      "Successfully updated game EXE."
+     F + IDT_SUCCESSFULLY_UPDATED      "Le fichier EXE du jeu a été mis à jour."
+     G + IDT_SUCCESSFULLY_UPDATED      "Aktualisierung von GP.EXE konnte erfolgreich durchgeführt werden."
+
+     E + IDT_OPEN_NAMES_DLG_TITLE      "GP Editor - Open Names"
+     F + IDT_OPEN_NAMES_DLG_TITLE      "Éditeur de Grand Prix - Ouvrir le fichier de noms"
+     G + IDT_OPEN_NAMES_DLG_TITLE      "GP Editor - Öffnen einer Namendatei"
+
+     E + IDT_SAVE_NAMES_DLG_TITLE       "GP Editor - Save Names"
+     F + IDT_SAVE_NAMES_DLG_TITLE       "Éditeur de Grand Prix - Sauvegarder le fichier de noms"
+     G + IDT_SAVE_NAMES_DLG_TITLE       "GP Editor - Speichern einer Namensdatei"
+
+     E + IDT_OPEN_CAR_DESIGN_DLG_TITLE "GP Editor - Load Car"
+     F + IDT_OPEN_CAR_DESIGN_DLG_TITLE "Éditeur de Grand Prix - Charger une conception de voiture"
+     G + IDT_OPEN_CAR_DESIGN_DLG_TITLE "GP Editor - Laden einer Autoschablone"
+
+     E + IDT_SAVE_CAR_DESIGN_DLG_TITLE "GP Editor - Save Car"
+     F + IDT_SAVE_CAR_DESIGN_DLG_TITLE "Éditeur de Grand Prix - Sauvegarder une conception de voiture"
+     G + IDT_SAVE_CAR_DESIGN_DLG_TITLE "GP Editor - Speichern einer Autoschablone"
+
+     E + IDT_OVERWRITE_EXISTING_FILE   "Overwrite existing '%s' ?"
+     F + IDT_OVERWRITE_EXISTING_FILE   "Voulez-vous effacer le fichier '%s' existant?"
+     G + IDT_OVERWRITE_EXISTING_FILE   "Soll die Datei '%s' überschrieben werden?"
+
+     E + IDT_ABOUT_GAME_EXE_VERSION    "Game EXE: %s  (Offset:%06lxH)"
+     F + IDT_ABOUT_GAME_EXE_VERSION    "Fichier EXE du jeu: %s  (Offset:%06lxH)"
+     G + IDT_ABOUT_GAME_EXE_VERSION    "GP.EXE: %s  (Offset:%06lxH)"
+
+     E + IDT_OPEN_HELMET_DLG_TITLE     "GP Editor - Load Helmet"
+     F + IDT_OPEN_HELMET_DLG_TITLE     "Éditeur de Grand Prix - Charger un casque"
+     G + IDT_OPEN_HELMET_DLG_TITLE     "GP Editor - Laden einer Helmschablone"
+
+     E + IDT_SAVE_HELMET_DLG_TITLE     "GP Editor - Save Helmet"
+     F + IDT_SAVE_HELMET_DLG_TITLE     "Éditeur de Grand Prix - Sauvegarder un casque"
+     G + IDT_SAVE_HELMET_DLG_TITLE     "GP Editor - Speichern einer Helmschablone"
+
+     E + IDT_NOT_F1_HELMET_FILE        "'%s' is not an F1 helmet file."
+     F + IDT_NOT_F1_HELMET_FILE        "'%s' n'est pas un fichier de casques F1."
+     G + IDT_NOT_F1_HELMET_FILE        "'%s' ist keine Helmdatei."
+
+     E + IDT_NOT_F1_DESIGN_FILE        "'%s' is not an F1 car file."
+     F + IDT_NOT_F1_DESIGN_FILE        "'%s' n'est pas un fichier de conception de voiture F1."
+     G + IDT_NOT_F1_DESIGN_FILE        "'%s' ist keine Autodatei."
+
+     E + IDT_IMPORT_GPE_DLG_TITLE      "GP Editor - Import GPE"
+     F + IDT_IMPORT_GPE_DLG_TITLE      "Éditeur de Grand Prix - Importer un fichier GPE"
+     G + IDT_IMPORT_GPE_DLG_TITLE      "GP Editor - Importieren aus .GPE"
+
+     E + IDT_EXPORT_GPE_DLG_TITLE      "GP Editor - Export GPE"
+     F + IDT_EXPORT_GPE_DLG_TITLE      "Éditeur de Grand Prix - Exporter un fichier GPE"
+     G + IDT_EXPORT_GPE_DLG_TITLE      "GP Editor - Exportieren nach .GPE"
+
+     E + IDT_INVALID_GPE_FILE          "'%s' is not a GPE file."
+     F + IDT_INVALID_GPE_FILE          "'%s' n'est pas un fichier GPE."
+     G + IDT_INVALID_GPE_FILE          "'%s' ist keine GPE Datei."
+
+     E + IDT_LANGUAGE                   "Language"
+     F + IDT_LANGUAGE                   "Langue"
+     G + IDT_LANGUAGE                   "Sprache"
+
+     E + IDT_CANCEL                     "Cancel"
+     F + IDT_CANCEL                     "Annuler"
+     G + IDT_CANCEL                     "Abbrechen"
+
+     E + IDT_CAR                        "Car"
+     F + IDT_CAR                        "Voiture"
+     G + IDT_CAR                        "Auto"
+
+     E + IDT_HELMET                     "Helmet"
+     F + IDT_HELMET                     "Casque"
+     G + IDT_HELMET                     "Helm"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_EXE   "Game EXE (*.EXE)|*.EXE|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_EXE   "Fichier EXE (*.EXE)|*.EXE|Tous Fichiers (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_EXE   "Programmdatei  (*.EXE)|*.EXE|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_GPE   "GpEditor Files (*.GPE)|*.GPE|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_GPE   "Fich. GpEditor (*.GPE)|*.GPE|Tous Fichiers (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_GPE   "GpEditor Datei (*.GPE)|*.GPE|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_NAM   "Names Files (*.NAM)|*.NAM|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_NAM   "Fichiers noms (*.NAM)|*.NAM|Tous Fichiers (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_NAM   "Namen Datei (*.NAM)|*.NAM|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_CAR   "Car Designs (*.CAR)|*.CAR|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_CAR   "Voitures (*.CAR)|*.CAR|Tous Fichiers (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_CAR   "Autoschablone (*.CAR)|*.CAR|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_HEL   "Helmet Designs (*.HEL)|*.HEL|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_HEL   "Casques (*.HEL)|*.HEL| (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_HEL   "Helmschablone (*.HEL)|*.HEL|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_COMDLG_FILE_TEMPLATE_TXT   "Text File (*.TXT)|*.TXT|All Files (*.*)|*.*|"
+     F + IDT_COMDLG_FILE_TEMPLATE_TXT   "Fichier Texte (*.TXT)|*.TXT|Tous Fichiers (*.*)|*.*|"
+     G + IDT_COMDLG_FILE_TEMPLATE_TXT   "Textdatei (*.TXT)|*.TXT|Alle Dateien (*.*)|*.*|"
+
+     E + IDT_EUROPEAN                   "European"
+     F + IDT_EUROPEAN                   "Européenne"
+     G + IDT_EUROPEAN                   "Europäisch"
+     
+     E + IDT_DRIVER                     "Driver"
+     F + IDT_DRIVER                     "Pilote"
+     G + IDT_DRIVER                     "Fahrer"
+     
+     E + IDT_TEAM                       "Team"
+     F + IDT_TEAM                       "Équipe"
+     G + IDT_TEAM                       "Team"
+
+     E + IDT_GPE_SAVE_COMMENT_DLG_TITLE "GP Editor - GPE Comment"
+     F + IDT_GPE_SAVE_COMMENT_DLG_TITLE "Éditeur de Grand Prix - Commentaire - Fichier GPE"
+     G + IDT_GPE_SAVE_COMMENT_DLG_TITLE "GP Editor - GPE Kommentar"
+END
+
+STRINGTABLE
+BEGIN
+     E + IDT_OUT_OF_MEMORY             "Out of memory. Close another Windows application and try again."
+     F + IDT_OUT_OF_MEMORY             "Mémoire épuisée. Veuillez fermer une autre application Windows et réessayer."
+     G + IDT_OUT_OF_MEMORY             "Speichermangel. Schließen Sie bitte eine andere Anwendung und versuchen Sie es erneut."
+
+     E + IDT_UNABLE_TO_REGISTER_CLASS  "Unable to register Windows class."
+     F + IDT_UNABLE_TO_REGISTER_CLASS  "Impossible d'enregistrer la classe Windows. Conflit de noms réservés."
+     G + IDT_UNABLE_TO_REGISTER_CLASS  "Das neue Fenster kann nicht geoeffnet werden, da eine andere Anwendung den Fensternamen schon belegt."
+
+     E + IDT_UNABLE_TO_LOAD_BITMAP     "Unable to load bitmap. Low memory? Close another Windows application and try again."
+     F + IDT_UNABLE_TO_LOAD_BITMAP     "Impossible de charger le graphique. Mémoire épuisée? Veuillez fermer une autre application Windows et réessayer."
+     G + IDT_UNABLE_TO_LOAD_BITMAP     "Bilddatei kann nicht geladen werden. Speichermangel? Schließen Sie bitte eine andere Anwendung und versuchen Sie es erneut." 
+
+     E + IDT_UNABLE_TO_CREATE_PALETTE  "Unable to create colour palette. Low memory? Close another Windows application and try again."
+     F + IDT_UNABLE_TO_CREATE_PALETTE  "Impossible de créer la palette de couleurs. Mémoire épuisée? Veuillez fermer une autre application Windows et réessayer."
+     G + IDT_UNABLE_TO_CREATE_PALETTE  "Palette kann nicht angelegt werden. Speichermangel? Schließen Sie bitte eine andere Anwendung und versuchen Sie es erneut."  
+END
+
+

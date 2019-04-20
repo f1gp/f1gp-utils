@@ -1,0 +1,95 @@
+V6.1 04/Apr/96                            Trevor Kellaway (CIS:100331,2330)
+
+          Grand Prix/World Circuit Lap Time Authenticator.
+
+****************************************************************************
+*** IMPORTANT: Restricted Distribution - Only to F1SA Commissionairs.    ***
+***                                                                      ***
+*** To reduce the chance of someone reverse engineering the checksum     ***
+*** algorithm used please don't distribute this EXE to anyone else.      ***
+****************************************************************************
+
+The lap time authenticator checks the authentication records produced
+by the GPLAPTIM TSR (in binary) and exported to ASCII text by either
+GPLAP or GPLAPW.
+
+     Usage: AUTHLAP (filename) [filename] [...]
+
+Multiple filenames may be specified, wildcards (e.g., *.TXT) may also
+be used.
+
+AUTHLAP will read any ASCII text file and automatically detects the
+special authentication strings (AUTH1: and AUTH2:). Thus to check a
+submitted time just save the forum message as a file and then run
+AUTHLAP on it.
+
+E.g. for a saved file LAP.TXT which contains:
+
+     Subj:  F1SA Hot-Lap             Racing Circuits
+       To:  Paul D'Ascensio          76040,33
+     From:  Trevor Kellaway [UK]     100331,2330
+
+     Silverstone, Great Britain
+     1:18.309 Trevor Kellaway BHP:716 AIG:4 Ace,S,T 9-Oct-95 10:19pm
+     AUTH1:[0372E5310100CC0204C004191316090ACB0754726576]
+     AUTH2:[6F72204B656C6C617761790000000000000000002286]
+
+Then "AUTHLAP LAP.TXT" will produce:
+
+     AuthLap V6.1 4th Apr 96
+     Silverstone - Great Britain  9-Oct-95 22:19:25 - Qualifying
+     1:18.309 Trevor Kellaway BHP:716 AIG:4 Ace,S,T
+     Authentication code OK
+
+All of the information displayed by AUTHLAP is recovered from the AUTH1:
+and AUTH2: fields, thus you should use the time displayed by AUTHLAP not
+the one displayed in the original message (as the user could have edited
+this one and it's there only so others can see the details of the lap).
+
+If the authentication code is incorrect then "Authentication code FAILED!"
+will be displayed after the entry.
+
+V4.1 and later of GPLAPTIM support checking of a number of illegal game
+settings. If either any of these are detected then following is displayed:
+
+     Authentication code OK, but:
+          Illegal Wings
+          Illegal Tyres
+          Game Save/Reload or Pause >30s.
+          Game Save/Reload or Pause >10s.
+          Illegal BHP (reloaded save game with illegal BHP).
+          Illegal use of Grass.
+          Illegal Damage Limits.
+
+If a version of GPLAPTIM prior to V4.1 was used then the following is
+displayed:
+
+  "Authentication code OK (old style record, no checks for illegal wings/tyres)"
+
+Or if prior to V5.0 then:
+
+  "Authentication code OK (V4.1 record, only checks for illegal wings/tyres)"
+
+Or if prior to V6.0 then:
+
+  "Authentication code OK (V5.0 record, no checks for illegal damage)"
+
+V6.0 of GPLAPTIM adds detection of non-standard damage limit values. This
+version also adds a new elapsed race time authentication record which is
+logged at 50% and 100% of a full race distance, this is to aid authentication
+of race results.
+
+V6.1 is functionally the same as V6.0, the version number has just been
+increased to keep in step with GpLapTim.
+
+Note that the user may try and fool you by supplying a valid authentication
+record *but* editing the plaintext time in the original message. You should
+ensure that the time displayed by AUTHLAP is the *same* as the one in the
+original positing. Even better, when compiling the hot laps charts use the
+output of AUTHLAP instead of the submitted plaintext times.
+
+Multiple authentication entries may be present in a single file, thus a
+player can submit more than one time per forum message. Free form ASCII
+text may be mixed between entries so hopefully you will only have to save
+the message and run AUTHLAP on it to check the details.
+

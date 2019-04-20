@@ -1,0 +1,39 @@
+SetNames V1.0 30/Jul/94 - Set Grand Prix names for a saved game.
+Copyright (c) T.Kellaway (CIS:100331,2330) 1994 - All Rights Reserved.
+
+Usage: SetNames (name file) (saved game)
+
+SetNames takes an MPS style name file (*.NAM) and uses this to update the
+specified saved game file (normally a *.SAV or *.RPL).
+
+The driver's and team names are normally stored in the saved game file.
+This means that if you start a championship season you can't modify the
+names again. This program allows you to modify the names by updating the
+saved game file with names from a standard name file.
+
+To change the names in the middle of a season start GP, load you saved
+game. Now abort the season. Edit the names file as required. Save the
+new names file. Now run SetNames. 
+
+For example, assume you have SEASON.NAM and SEASON.SAV:
+
+     SETNAMES SEASON.NAM SEASON.SAV.
+
+Make sure you have a backup of the saved game just in case something
+goes horribly wrong.
+
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version 
+you are using and the version of the game EXE) to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+

@@ -1,0 +1,14 @@
+Title   : Grand Prix/World Circuit Yellow Flags Patch (IBM)
+Keywords: GRAND PRIX WORLD CIRCUIT F1SA F1GP GP WC YELLOW FLAGS
+
+GpFlags (V2.1) patches GP.EXE (USA/European/Italian V1.05) and
+modifies the way the game handles yellow flags. Normally yellow flags
+are shown after a car has remained stationary for 20s. GpFlags
+modifies this so that yellow flags are shown after 1s. GpFlags also
+modifies the delay for removing a wrecked car from 15s to 30s. You can
+override the default values that GpFlags uses.
+
+Freeware contributed by the author Trevor Kellaway (CIS:100331,2330). This
+is *not* an MPS product. Requires PKUNZIP v2.04g to decompress.
+
+

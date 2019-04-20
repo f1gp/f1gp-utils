@@ -1,0 +1,15 @@
+                     What's New in GPLAPTIM V6.1
+                     ===========================
+GPLAPTIM.COM
+------------
+Support for Spanish V1.05 of GP.EXE added.
+
+GPLAPW.EXE
+----------
+Authentication records which used the grass are now displayed with a red
+cross on the icon.
+
+     Enjoy!
+
+
+

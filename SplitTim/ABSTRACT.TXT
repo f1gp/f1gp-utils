@@ -1,0 +1,15 @@
+Title   : Split Section Timer for MPS Grand Prix (IBM)
+Keywords: SPLIT SECTION TIMER TSR RACING FREEWARE F1GP WC IBM WORLD CIRCUIT
+
+SPLITTIM is a small TSR which modifies the behaviour of GP.EXE. It
+adds split section times to all GP circuits. Each circuit is divided
+into four sections, as you pass each section the display on your
+car's dash will show you your split (intermediate) time. The split
+time is held on the display then the timer will return to its normal
+mode of counting.
+
+Freeware contributed by the author Trevor Kellaway (CIS:100331,2330).
+
+This is not an MPS product. Requires PKUNZIP 2.04g to decompress.
+
+

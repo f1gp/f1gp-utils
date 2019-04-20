@@ -1,0 +1,115 @@
+#include <windows.h>
+#include "GPeditor.h"
+#include "version.ipp"
+
+#include <fileopen.rc>
+#include "GPeditor.dlg"
+
+ICON                ICON      GPeditor.ico
+ICON_F1_NO          ICON      f1no.ico
+ICON_F2_NO          ICON      f2no.ico
+ICON_F3_NO          ICON      f3no.ico
+ICON_F4_NO          ICON      f4no.ico
+ICON_F5_NO          ICON      f5no.ico
+ICON_F6_NO          ICON      f6no.ico
+ICON_F1_YES         ICON      f1yes.ico
+ICON_F2_YES         ICON      f2yes.ico
+ICON_F3_YES         ICON      f3yes.ico
+ICON_F4_YES         ICON      f4yes.ico
+ICON_F5_YES         ICON      f5yes.ico
+ICON_F6_YES         ICON      f6yes.ico
+
+BITMAP_F1CAR        BITMAP    F1car.bmp
+BITMAP_F1CAR_SMALL  BITMAP    smallcar.bmp
+BITMAP_HELMET       BITMAP    helmet.bmp
+
+CURSOR_PALETTE      CURSOR    palette.cur
+CURSOR_SPRAYCAN     CURSOR    spraycan.cur
+CURSOR_TEAMCAR      CURSOR    teamcar.cur
+
+MAIN_MENU MENU 
+BEGIN
+        POPUP "&Datei"
+        BEGIN
+                MENUITEM "ô&ffnen von GP.EXE...",      IDM_FILE_OPEN_GAME_EXE
+                MENUITEM "&Aktualisieren von GP.EXE...",    IDM_FILE_UPDATE_GAME_EXE
+                MENUITEM SEPARATOR
+                MENUITEM "ôff&nen einer Namensdatei...",         IDM_FILE_OPEN_NAMES
+                MENUITEM SEPARATOR
+             POPUP "F&1ED .DTA"
+             BEGIN
+                MENUITEM "&Importieren...",        IDM_FILE_IMPORT_DTA
+                MENUITEM "&Exportieren...",        IDM_FILE_EXPORT_DTA
+          END
+                MENUITEM SEPARATOR
+                MENUITEM "&ZurÅck",                  IDM_EXIT
+        END
+
+        POPUP "&Auto"
+        BEGIN
+                MENUITEM "&Neu",                   IDM_DESIGN_NEW
+                MENUITEM "&Laden...",               IDM_DESIGN_LOAD
+                MENUITEM "&Speichern...",               IDM_DESIGN_SAVE
+        END
+
+        POPUP "He&lm"
+        BEGIN
+                MENUITEM "&Neu",                   IDM_HELMET_NEW
+                MENUITEM "&Laden...",               IDM_HELMET_LOAD
+                MENUITEM "&Speichern...",               IDM_HELMET_SAVE
+        END
+
+        POPUP "&Einstufung"
+        BEGIN
+                MENUITEM "&Autos...",               IDM_PERFORMANCE_CAR
+                MENUITEM "&Fahrer...",            IDM_PERFORMANCE_DRIVER
+                MENUITEM "Fahr&hilfen...",       IDM_PERFORMANCE_DRIVING_AIDS
+     END
+
+        POPUP "&Fenster"
+        BEGIN
+                MENUITEM "&Fahrzeug Editor",            IDM_CAR_EDITOR
+                MENUITEM "&Helm Editor",         IDM_HELMET_EDITOR
+     END
+
+        POPUP "&Hilfe"
+        BEGIN
+                MENUITEM "&Inhalt",              IDM_HELP_CONTENTS
+                MENUITEM "&Benutzung der Hilfe...",    IDM_HELP_USE
+                MENUITEM SEPARATOR
+                MENUITEM "&öber GP Editor...",    IDM_ABOUT
+     END
+END
+
+STRINGTABLE
+BEGIN
+     IDT_YOU_NEED_A_MOUSE          "Sie benîtigen eine Maus zur Benutzung dieses Programms."
+     IDT_OPEN_GAME_EXE_DLG_TITLE   "GP Editor - ôffnen von GP.EXE"
+     IDT_INVALID_GAME_EXE          "'%s' ist keine gÅltige oder bekannte Version der Programmdatei."
+     IDT_UNABLE_TO_OPEN            "Fehler beim ôffnen von '%s'"
+     IDT_UNKNOWN_GAME_VERSION      "Diese Version von F1GP wurde beim ersten Versuch nicht erkannt. Soll das Programm eine genauere Analyse starten?"
+     IDT_ENSURE_GAME_EXE_BACKED_UP "Achtung: Sie sollten eine Sicherheitskopie von GP.EXE angefertigt haben. Soll mit der Aktualisierung fortgefahren werden?"
+     IDT_WRITE_FAILED              "Fehler beim Schreiben von '%s'"
+     IDT_READ_FAILED               "fehler beim Lesen von '%s'"
+     IDT_SUCCESSFULLY_UPDATED      "Aktualisierung von GP.EXE konnte erfolgreich durchgefÅhrt werden."
+     IDT_OPEN_NAMES_DLG_TITLE      "GP Editor - ôffnen einer Namendatei"
+     IDT_OPEN_CAR_DESIGN_DLG_TITLE "GP Editor - Laden einer Autoschablone"
+     IDT_SAVE_CAR_DESIGN_DLG_TITLE "GP Editor - Speichern einer Autoschablone"
+     IDT_OVERWRITE_EXISTING_FILE   "Soll die Datei '%s' Åberschrieben werden?"
+     IDT_ABOUT_GAME_EXE_VERSION    "GP.EXE: %s  (Offset:%06lxH)"
+     IDT_OPEN_HELMET_DLG_TITLE     "GP Editor - Laden einer Helmschablone"
+     IDT_SAVE_HELMET_DLG_TITLE     "GP Editor - Speichern einer Helmschablone"
+     IDT_NOT_F1_HELMET_FILE        "'%s' ist keine Helmdatei."
+     IDT_NOT_F1_DESIGN_FILE        "'%s' ist keine Autodatei."
+     IDT_IMPORT_DTA_DLG_TITLE      "GP Editor - Importieren aus .DTA"
+     IDT_EXPORT_DTA_DLG_TITLE      "GP Editor - Exportieren nach .DTA"
+     IDT_INVALID_DTA_FILE          "'%s' ist keine F1ED V1.2 oder V1.3 DTA Datei."
+END
+
+STRINGTABLE
+BEGIN
+     IDT_OUT_OF_MEMORY             "Speichermangel. Schlie·en Sie bitte eine andere Anwendung und versuchen Sie es erneut."
+     IDT_UNABLE_TO_REGISTER_CLASS  "Unable to register Windows class."
+     IDT_UNABLE_TO_LOAD_BITMAP     "Bilddatei kann nicht geladen werden. Speichermangel? Schlie·en Sie bitte eine andere Anwendung und versuchen Sie es erneut." 
+     IDT_UNABLE_TO_CREATE_PALETTE  "Palette kann nicht angelegt werden. Speichermangel? Schlie·en Sie bitte eine andere Anwendung und versuchen Sie es erneut."  
+END

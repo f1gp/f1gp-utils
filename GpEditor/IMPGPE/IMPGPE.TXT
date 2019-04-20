@@ -1,0 +1,57 @@
+ImpGPE V4.1 23rd June 1995                   Trevor Kellaway (CIS:100331,2330)
+
+
+ImpGPE is a DOS command line program which takes a GPeditor style GPE file
+and applies all the patch information to GP.EXE.
+
+ImpGPE is intended as a simple replacement for GPeditor's "Import - GPE"
+function for those people who can't (or don't want to) run Windows.
+
+     Usage: ImpGPE (GPE filename) [Output Names filename] [GP.EXE]
+
+For example:
+
+     ImpGPE F1SA.GPE F1SA.NAM GP.EXE
+
+The above line reads the patch data from F1SA.GPE and applies the patches to
+GP.EXE. If F1SA.GPE also contains the drivers/teams/engines names a game
+compatible names file is written to F1SA.NAM. Only the input GPE filename
+need be specified, GPE.NAM will be used as the default filename for the names
+files, and GP.EXE as the default for the game.
+
+The patch information comprises all the car and helmet colours, the car
+performance information, the driver performance information, the driver aids,
+AI car grip and player's car power.
+
+The Import file may also contain a comment. If this is the case the comment
+will be displayed along with the date/time the file was created and which
+version of GPeditor was used to create it.
+
+Note that there is no way to paint your own car colour with ImpGPE.  Use
+GP.EXE "Driver Selection" command to setup your own name in the F1SA.NAM
+file.
+
+ImpGPE will also allow you to use any of the driving aids at any skill level.
+
+Make sure you have taken a backup copy of GP.EXE just in case things go
+wrong. Note that if you miss out the name file *and* specify GP.EXE then
+it will overwrite your GP.EXE file with the name information, probably not
+what you intended! <g>
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version 
+of IMPGPE you are using [run it without any options to see the version])
+to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+
+This is *not* an MPS product.
+

@@ -1,0 +1,106 @@
+GpFlags V2.1 31-Dec-95                           T.Kellaway (CIS:100331,2330)
+
+Grand Prix/World Circuit Yellow Flags Patch.
+
+Introduction
+------------
+GpFlags patches GP.EXE (USA/English/French/German/Italian V1.05) and modifies
+the way the game handles yellow flags.
+
+Normally yellow flags are shown after a car has remained stationary for 20s.
+GpFlags modifies this so that yellow flags are shown after 5s.
+
+GpFlags also modifies the time delay for removing a wrecked car from 15s to a
+more realistic 30s.
+
+You can override the default values that GpFlags uses.
+
+Installation
+------------
+Copy GPFLAGS.EXE to the directory where GP.EXE is (e.g. C:\GPRIX).
+
+
+Usage
+-----
+Usage: GpFlags {-o | {-p [-fN -cN]}} [-?h] [GP.EXE]
+       -o     Restore original code.
+       -p     Patch new code (default -f5 -c30).
+         -fN  Yellow flags delay (1 to 60).
+         -cN  Car removal delay (10 to 60).
+
+To patch the new code use:
+
+     GPFLAGS -p
+
+"Patch Completed OK." will be displayed if OK.
+
+You can remove the patch by using:
+
+     GPFLAGS -o
+
+This restores the original GP.EXE code.
+
+To patch your own values of 3s flags delay and 45s car removal use:
+
+     GPFLAGS -p -f3 -c45
+
+Note: Due to the way the game stores the delays the largest delay possible
+is 60s.
+
+Warning: Setting flags delay too low can remove you from the race when pitting
+------------------------------------------------------------------------------
+Whilst a car is on the track the game uses two timers, one (T1) is the initial
+time before the yellow flags are waved, and the second (T2) the amount of time
+before the car is removed from the race.
+
+T1 is triggered by the game detecting that the speed of the car has dropped
+below 10mph, T1 then expires, the yellow flags come out and T2 is started,
+when T2 expires the car is removed from the track. If the car starts to move
+above 10mph both T1 and T2 are canceled.
+
+GpFlags allows you to change both the T1 and T2 delay periods.
+
+Unfortunately the game uses T1 when the car is in the pit lane. If you drop
+below 10mph whilst in the pit lane (but you aren't stationary in your pit)
+then T1 is started, if T1 then expires your car is removed directly from the
+race (i.e., it doesn't start T2 before removing you from the race).
+
+It has become common for people to set T1 to 1s and T2 30s. If you drive into
+the pits slowly it is possible for your speed to drop below 10mph for longer
+than the T1 period and you will be removed from the race, this is especially
+true of those people using auto-brakes (F2).
+
+There isn't an easy modification to the patch to stop this happening so all I
+can suggest is that people increase the value of T1 to a suitable value (3s?
+5s?) where this situation won't arise. As people should now be aware what
+causes this they will at least know they should try and avoid dropping below
+10mph for too long whilst in the pit lane.
+
+The default value has been increased to 5s but you can still set it back down
+to 1s if you haven't experienced this problen.
+
+Change History
+--------------
+V1.0   18-Jun-95  First bash.
+V1.1   23-Jun-95  Added filename argument on command line.
+V2.0   11-Nov-95  Added variable delay arguments.
+V2.1   31-Dec-95  Increased default first delay to 5s.
+
+Further Info
+------------
+Please send any suggestions, comments, or bug reports (include the version
+you are using and the version of the game EXE) to the author at:
+
+CompuServe:    100331,2330
+Internet:      100331.2330@compuserve.com
+
+This program may be freely copied and distributed, as long as it is not
+modified in any way, no fee is charged and this file is always included.
+This program is provided "as is" with no warranties expressed or implied.
+The author will not be held responsible for any losses incurred, either
+directly or indirectly by the use of this program.
+
+This is *not* an MPS product. If you have problems with the game then try
+it without this program.
+
+

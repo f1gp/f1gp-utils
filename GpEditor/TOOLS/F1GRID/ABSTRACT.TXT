@@ -1,0 +1,7 @@
+F1Grid V1.0 allows you to setup the entire grid for a race in the Microprose
+F1 Grand Prix (World Circuit) simulator (US & European V1.05). F1Grid allows
+you to edit the car positions for a saved qualifying session.
+
+Freeware contributed by the author Trevor Kellaway (CIS:100331,2330). This
+is not an MPS product. Requires PKUNZIP 2.04g to decompress.
+

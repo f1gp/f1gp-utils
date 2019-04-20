@@ -1,0 +1,38 @@
+##
+## Lap Time Logger TSR for MPS GP.EXE
+##
+
+CC             =    bcc
+CC_FLAGS       =    -v -c -y -O2 -1 -u+ -w
+ASM            =    tasm
+ASM_FLAGS      =    -Ml -zd -zi
+LINK           =    tlink /l /m /s /c /Tde
+EXE2BIN        =    exe2bin
+H2ASH          =    h2ash
+
+.asm.obj:      
+               $(ASM) $< $(ASM_FLAGS),,;
+
+.c.obj:      
+               $(CC) $(CC_FLAGS) $< 
+
+all:           gplaptim.com
+
+gplaptim.ash:  ../gplaptim.h
+               $(H2ASH) ../gplaptim.h
+
+gplaptim.obj:  gplaptim.asm gplaptim.ash
+
+parse.obj:     parse.c
+
+gplaptim.exe:  gplaptim.obj parse.obj
+               $(LINK) gplaptim parse;
+
+gplaptim.com:  gplaptim.exe makefile
+               $(EXE2BIN) gplaptim.exe gplaptim.com
+               del gplaptim.exe
+               crypt g:\gpu.exe gplaptim.com
+               msym gplaptim
+          
+buildall:      all
+

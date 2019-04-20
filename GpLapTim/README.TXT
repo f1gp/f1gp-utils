@@ -6,7 +6,7 @@ GPLAPTIM logs the times for *all* the cars to disk as they cross the start/
 finish line (in the MicroProse Grand Prix/World Circuit simulation game). It
 also adds a split section timer giving you three intermediate times for laps.
 
-GPLAPTIM has been tested with V1.05 of the European, US, Italian and Spanish 
+GPLAPTIM has been tested with V1.05 of the European, US, Italian and Spanish
 versions of GP.EXE. This version of GPLAPTIM now includes the functionality
 of the SPLITTIM utility so you *shouldn't* load SPLITTIM anymore otherwise
 the logging of your split points to the .LOG may not happen.
@@ -99,21 +99,21 @@ Qualifying example:
 
 Pos Car Lap     Driver               Lap Time  Best Lap   Race Time
 -----------------------------------------------------------------------------
- -  #24   2 Michele Alboreto         -:--.--- -:--.---   
- -  #34   2 Bertrand Gachot          -:--.--- -:--.---   
- -  #19   2 Erik Comas               -:--.--- -:--.---   
- -  #4    2 Mark Blundell            -:--.--- -:--.---   
- -  #6    2 Jos Verstappen           -:--.--- -:--.---   
- -  #26   2 Olivier Panis            -:--.--- -:--.---   
- -  #23   2 Pierluigi Martini        -:--.--- -:--.---   
+ -  #24   2 Michele Alboreto         -:--.--- -:--.---
+ -  #34   2 Bertrand Gachot          -:--.--- -:--.---
+ -  #19   2 Erik Comas               -:--.--- -:--.---
+ -  #4    2 Mark Blundell            -:--.--- -:--.---
+ -  #6    2 Jos Verstappen           -:--.--- -:--.---
+ -  #26   2 Olivier Panis            -:--.--- -:--.---
+ -  #23   2 Pierluigi Martini        -:--.--- -:--.---
 Q 1 #24   3 Michele Alboreto         1:23.966 1:23.966!FQ
 Q 1 #19   3 Erik Comas               1:21.995 1:21.995!FQ
-Q 2 #4    3 Mark Blundell            1:22.999 1:22.999!  
-Q 2 #6    3 Jos Verstappen           1:22.949 1:22.949!  
-Q 6 #34   3 Bertrand Gachot          1:25.349 1:25.349!  
+Q 2 #4    3 Mark Blundell            1:22.999 1:22.999!
+Q 2 #6    3 Jos Verstappen           1:22.949 1:22.949!
+Q 6 #34   3 Bertrand Gachot          1:25.349 1:25.349!
 
 For qualifying a 'Q' is shown in the position field along with the current
-grid position for the driver. thus Alboreto got pole then Comas took it. 
+grid position for the driver. thus Alboreto got pole then Comas took it.
 For practive a 'T' (training) is show in the position field, for pre-race
 practice 'P' and for free practice 'F' is used.
 
@@ -125,7 +125,7 @@ start of the first flying lap.
 "FQ" is displayed if this is the fastest qualifying time for the session,
 and hence the pole time.
 
-"DNQ" is displayed in the position field if the driver's current time 
+"DNQ" is displayed in the position field if the driver's current time
 wouldn't get onto the 26 car grid.
 
 A '*' is displayed in front of the car number for the human player's car.
@@ -179,7 +179,7 @@ A '*' is displayed in front of the car number for the human player's car.
 A '#' is displayed in front of the car number for the computers AI cars.
 
 Tips
----- 
+----
 Add GPLAPTIM.COM to your AUTOEXEC.BAT file. Note that GPLAPTIM.COM will
 create its GPLAPTIM.LOG file in the directory where you first load
 GPLAPTIM.COM (if you don't use the -f option to specify a pathname). Also
@@ -242,14 +242,14 @@ Use the GPLAP "-w" option to cause GPLAP to wait forever for new entries
 in the GPLAPTIM.LOG file. Press <Esc> to terminate GPLAP.
 
 GPLAP is multi-tasker friendly and will release CPU cycles when it has
-nothing to do. GPLAPTIM.COM and GPLAP both support file sharing of 
+nothing to do. GPLAPTIM.COM and GPLAP both support file sharing of
 GPLAPTIM.LOG, so both programs accessing the same file at the same time
 is possible.
 
 Bugs/Features
 -------------
 If you have a slow hard disk the game will pause very slightly as entries
-are written to the disk. 
+are written to the disk.
 
 The best solution is to use a RAM disk as the output for the log file, use
 the -f option to specify the pathname. The RAM disk should have at least
@@ -266,7 +266,7 @@ solution.
 
 Further Info
 ------------
-Please send any suggestions, comments, or bug reports (include the version 
+Please send any suggestions, comments, or bug reports (include the version
 of GPLAPTIM you are using and the version of the game EXE) to the author at:
 
 CompuServe:    100331,2330
@@ -278,7 +278,7 @@ This program is provided "as is" with no warranties expressed or implied.
 The author will not be held responsible for any losses incurred, either
 directly or indirectly by the use of this program.
 
-This is *not* an MPS product. If you have problems with the game then try 
+This is *not* an MPS product. If you have problems with the game then try
 it without this program loaded.
 
 

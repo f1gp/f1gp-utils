@@ -1,0 +1,27 @@
+LinkRpl V1.0 12/04/94 - Grand Prix/World Circuit Reply Modifier.
+Copyright (c) T.Kellaway (CIS:100331,2330) 1994 - All Rights Reserved.
+
+LINKRPL.EXE takes an MPS GP *linked* replay file and converts it to a
+replay viewable on a non-linked (i.e. standalone) machine.
+
+Note that only the players' car on which the replay was saved will be
+correctly displayed; the other machines player's car will carry on
+driving at the same speed in the same direction and will probably crash.
+
+This means that this program is only suitable for displaying replays
+where one of the two driver's cars are involved; i.e., you *can't* use
+it to display incidents involving both cars :-(
+
+This is because the game obtains the information about the other linked
+player's car from the other linked machine's replay file. It might be
+possible with further work to write software which would combine the two
+replay files but this will probably involve a fair amount of work.
+
+To use LINKRPL *copy* the replay file you wish to modify, then run:
+
+     LINKRPL FILENAME.RPL
+
+Note that the modified file will *only* be viewable on a single machine
+now. So backup the file if you ever want to view it in linked mode!
+
+

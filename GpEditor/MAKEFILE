@@ -1,0 +1,156 @@
+##
+## Windows Application Makefile - GPeditor
+##
+
+!if !$d(CPPWIN_VER)
+!error CPPWIN_VER env variable not set! (e.g. 'v1.4')
+!endif
+!if !$d(CPPWIN_DRV)
+!error CPPWIN_DRV env variable not set! (e.g. 'F:')
+!endif
+!if !$d(CPP_DRV)
+!error CPP_DRV env variable not set! (e.g. 'I:')
+!endif
+
+MEM_MODEL      = l
+TARGET         = GPeditor
+SHIP           = GPedit
+VERSION        = 4.1
+
+ROOT_PATH      = $(CPPWIN_DRV)\cppwin\$(CPPWIN_VER)
+INCLUDE_PATH   = toolbar;stdfopen;drawtool;$(ROOT_PATH)\include;$(CPP_DRV)\include
+LIB_PATH       = toolbar;stdfopen;drawtool;$(ROOT_PATH)\lib\;$(CPP_DRV)\lib\
+
+CPP            = bcc 
+CPPFLAGS       = -DDEBUG=0 -Qx -2 -O1 -c -m$(MEM_MODEL) -WE -v -N -H=$(TARGET).pch -DWINVER=0x030a -DSTRICT
+LINK           = tlink /yx /Tw /n /c /C- /s /L$(LIB_PATH) /v /A:16
+RC             = rc -x -r -i$(INCLUDE_PATH)
+RCBIND         = rc -31 -t
+
+.cpp.obj:
+               @$(CPP) @&&!
+                    $(CPPFLAGS) $<
+!
+
+.rc.res:
+               if exist *.rws del *.rws
+               $(RC) $<
+
+OBJ =          GPeditor.obj palette.obj drawarea.obj drawhelm.obj \
+               cntrlbar.obj teams.obj gamexe.obj about.obj carperf.obj \
+               drvperf.obj execheck.obj drvaids.obj carnum.obj \
+               gpe.obj lang.obj names.obj init.obj evthndlr.obj design.obj \
+               utils.obj grip.obj player.obj
+HDR =          GPeditor.hpp GPeditor.h version.ipp
+
+all:           $(TARGET).exe $(TARGET).hlp
+
+$(TARGET).res: $(TARGET).rc $(TARGET).h $(TARGET).dlg $(TARGET).ico \
+               F1car.bmp spraycan.cur palette.cur teamcar.cur smallcar.bmp \
+               helmet.bmp version.ipp \
+               f1yes.ico f2yes.ico f3yes.ico f4yes.ico f5yes.ico f6yes.ico \
+               f1no.ico f2no.ico f3no.ico f4no.ico f5no.ico f6no.ico \
+               flag_e.ico flag_f.ico flag_g.ico f1sa.ico toolbar.bmp
+
+palette.obj:   palette.cpp palette.hpp GPeditor.hpp GPeditor.h
+
+drawarea.obj:  drawarea.cpp drawarea.hpp GPeditor.hpp GPeditor.h
+
+drawhelm.obj:  drawhelm.cpp drawhelm.hpp GPeditor.hpp GPeditor.h
+
+cntrlbar.obj:  cntrlbar.cpp cntrlbar.hpp GPeditor.hpp GPeditor.h
+
+teams.obj:     teams.cpp teams.hpp GPeditor.hpp GPeditor.h
+
+gamexe.obj:    gamexe.cpp GPeditor.hpp GPeditor.h cntrlbar.hpp \
+               drawarea.hpp drawhelm.hpp palette.hpp teams.hpp
+
+about.obj:     about.cpp GPeditor.hpp GPeditor.h
+
+carperf.obj:   carperf.cpp GPeditor.hpp GPeditor.h helpids.h
+
+drvperf.obj:   drvperf.cpp GPeditor.hpp GPeditor.h helpids.h
+
+execheck.obj:  execheck.cpp execheck.hpp
+
+gpe.obj:       gpe.cpp GPeditor.hpp GPeditor.h cntrlbar.hpp drawarea.hpp \
+               teams.hpp drawhelm.hpp gpe.hpp version.ipp
+
+drvaids.obj:   drvaids.cpp GPeditor.hpp GPeditor.h
+
+carnum.obj:    carnum.cpp GPeditor.hpp GPeditor.h
+
+lang.obj:      lang.cpp GPeditor.hpp GPeditor.h
+
+names.obj:     names.cpp GPeditor.hpp GPeditor.h cntrlbar.hpp
+
+init.obj:      init.cpp GPeditor.hpp GPeditor.h palette.i \
+               cntrlbar.hpp drawarea.hpp drawhelm.hpp palette.hpp teams.hpp \
+               version.ipp
+
+evthndlr.obj:  evthndlr.cpp GPeditor.hpp GPeditor.h \
+               cntrlbar.hpp drawarea.hpp drawhelm.hpp palette.hpp teams.hpp
+
+design.obj:    design.cpp GPeditor.hpp GPeditor.h \
+               cntrlbar.hpp drawarea.hpp drawhelm.hpp palette.hpp teams.hpp
+
+utils.obj:     utils.cpp GPeditor.hpp GPeditor.h
+
+grip.obj:      grip.cpp GPeditor.hpp GPeditor.h
+
+player.obj:    player.cpp GPeditor.hpp GPeditor.h
+
+$(TARGET).obj: $(TARGET).cpp $(HDR) version.ipp \
+               palette.hpp drawarea.hpp cntrlbar.hpp teams.hpp execheck.hpp \
+               drawhelm.hpp
+
+turboc.cfg:    makefile
+               @echo -I$(INCLUDE_PATH) > turboc.cfg
+               
+$(TARGET).exe: turboc.cfg $(OBJ) $(TARGET).res $(TARGET).def winrun.exe \
+               makefile
+               if exist $(TARGET).tds del $(TARGET).tds
+               $(LINK) @&&!
+                    c0w$(MEM_MODEL) $(OBJ), $(TARGET),,\
+                    stdfopen.llb drawtool.llb toolbar.llb cppwin.llb cw$(MEM_MODEL) c$(MEM_MODEL) import,\
+                    $(TARGET)
+!
+               $(RCBIND) $(TARGET).res
+               tdstrip -s $(TARGET).exe
+               exesumck $(TARGET).exe
+
+$(TARGET).hlp: $(TARGET).hix $(TARGET).rtf helpids.h \
+               tbaids.bmp tbaig.bmp tbcar.bmp tbcarnum.bmp tbcarprf.bmp \
+               tbdrvprf.bmp tbhelmet.bmp tbhelp.bmp tbnames.bmp \
+               tbnew.bmp tbopen.bmp tbpower.bmp tbsave.bmp f1sa.bmp
+               if exist $(TARGET).ph del $(TARGET).ph
+               hc31 $(TARGET).hix
+
+ship:          
+               stampver -t -v$(VERSION) $(TARGET).exe $(TARGET).hlp
+               pkzip $(SHIP).zip      readme.txt
+               pkzip $(SHIP).zip      whatsnew.txt
+               pkzip $(SHIP).zip      gpeditor.exe
+               pkzip $(SHIP).zip      gpeditor.hlp
+               pkzip $(SHIP).zip      ctl3d.dll
+               pkzip -raP $(SHIP).zip designs\*.nam
+               pkzip -raP $(SHIP).zip designs\*.car
+               pkzip -raP $(SHIP).zip designs\*.hel
+               pkzip -raP $(SHIP).zip designs\*.gpe
+               pkzip -raP $(SHIP).zip gpeinfo\gpeinfo.exe
+               pkzip -raP $(SHIP).zip gpeinfo\gpeinfo.txt
+               pkzip -raP $(SHIP).zip impgpe\impgpe.exe
+               pkzip -raP $(SHIP).zip impgpe\impgpe.txt
+               pkzip $(SHIP) -z <<!
+
+******************************************************************
+***
+*** GPEDITOR.EXE V$(VERSION)
+***
+*** GPeditor (c) Copyright 1994 T.Kellaway - All rights reserved.
+***
+*** Note: Use 'pkunzip -d gpedit.zip' to restore the directory structure.
+***
+******************************************************************
+!
+
