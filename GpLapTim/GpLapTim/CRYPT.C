@@ -1,11 +1,11 @@
 /*
 ** File   : crypt.c
-** Author : TK 
+** Author : TK
 ** Date   : 11/04/94
 **
 ** $Header:   F:/tk/gplaptim/gplaptim/vcs/crypt.c__   1.2   02 Jul 1995 16:44:18   tk  $
 **
-** 
+**
 */
 
 /*---------------------------------------------------------------------------
@@ -20,12 +20,15 @@
 ** Defines and Macros
 */
 
-#define VERSION     "V1.0 11/04/94"
+#define VERSION     "V2.0 23/04/2019"
 
 #define TRUE        1
 #define FALSE       0
 
-#define KEY_INDEX   (0x3577UL + 0x0066UL)
+//#define KEY_INDEX   (0x3577UL + 0x0066UL)
+
+// unpacked GP105EU EXE
+#define KEY_INDEX   (0x3407UL + 0x0066UL)
 
 /*---------------------------------------------------------------------------
 ** Typedefs
@@ -130,7 +133,7 @@ main(
           for (pos_key = KEY_INDEX; pos_start < pos_end; pos_start++) {
                (void) fseek(fp_key, pos_key, SEEK_SET);
                (void) fseek(fp_dst, pos_start, SEEK_SET);
-               
+
                (void) fread(&v, 1, 1, fp_dst);
                (void) fread(&k, 1, 1, fp_key);
 
