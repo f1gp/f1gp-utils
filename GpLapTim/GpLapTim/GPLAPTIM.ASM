@@ -182,6 +182,9 @@ game_hp         label   dword
 game_hp_off     dw      ?
 game_hp_seg     dw      ?
 
+gp_end_of_lap_off dd    0
+gp_init_car_grip  dd    0
+
                 public  _player_only_flag
 _player_only_flag db    0
 
@@ -214,6 +217,8 @@ hook_aig_code_seg       dw      ?
                         db      90h
 hook_aig_code_end:
 HOOK3_LENGTH    equ     (hook_aig_code_end - hook_aig_code_start)
+hook_aig_dest           dd      0
+hook_aig_alt_start      db      61h, 7h, 1Fh, 0CBh, 90h
 
 hook_st_code_start:
 hook_st_code           db      09ah
@@ -230,6 +235,28 @@ hook_bhp_code_off       dw      ?
 hook_bhp_code_seg       dw      ?
 hook_bhp_code_end:
 HOOK6_LENGTH    equ     (hook_bhp_code_end - hook_bhp_code_start)
+
+hook_bhp2_code_start:
+hook_bhp2_code           db      09ah
+hook_bhp2_code_off       dw      ?
+hook_bhp2_code_seg       dw      ?
+hook_bhp2_code_end:
+HOOK8_LENGTH    equ     (hook_bhp2_code_end - hook_bhp2_code_start)
+
+hook_hsa_code_start:
+hook_hsa_code           db      09ah
+hook_hsa_code_off       dw      ?
+hook_hsa_code_seg       dw      ?
+hook_hsa_code_end:
+HOOK9_LENGTH    equ     (hook_hsa_code_end - hook_hsa_code_start)
+
+hook_hsc_code_start:
+hook_hsc_code           db      09ah
+hook_hsc_code_off       dw      ?
+hook_hsc_code_seg       dw      ?
+hook_hsc_code_end:
+HOOK10_LENGTH   equ     (hook_hsc_code_end - hook_hsc_code_start)
+
 
 ;**
 ;** Note: Log record and Auth record *must* be adjacent!
@@ -274,13 +301,15 @@ dif_seg         dw      ?
 func1_off       dw      ?
 func2_off       dw      ?
 
-                public  _split1, _split2, _split3, _freeze_time
+                public  _split1, _split2, _split3, _freeze_time, _ccplayer_power
 splits:
 _split1         dw      25
 _split2         dw      50
 _split3         dw      75
 
 _freeze_time    dw      10000
+_ccplayer_power dw      4000h
+
 track_divs      dw      ?
 last_value      dw      0
 
@@ -562,8 +591,7 @@ hook_both:
         mov     game_hp_off, di
         mov     cx, HOOK_LENGTH
 hook_next_lap_code:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code
 
         ;**
@@ -605,8 +633,7 @@ do_us1: sub     di, 2 + HOOK1_USA_LSW
 hook_both1:
         mov     cx, HOOK1_LENGTH
 hook_next_lap_code1:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code1
 
         ;**
@@ -648,8 +675,7 @@ do_us2: sub     di, 2 + HOOK2_USA_LSW
 hook_both2:
         mov     cx, HOOK2_LENGTH
 hook_next_lap_code2:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code2
 
         ;**
@@ -689,10 +715,11 @@ do_us3: sub     di, 2 + HOOK3_USA_LSW
         mov     es, ax
 
 hook_both3:
+        mov     WORD PTR hook_aig_dest, di
+        mov     WORD PTR hook_aig_dest+2, es
         mov     cx, HOOK3_LENGTH
 hook_next_lap_code3:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code3
 
         ;**
@@ -757,8 +784,7 @@ hook_both4:
         mov     es, ax
         mov     cx, HOOK4_LENGTH
 hook_next_lap_code4a:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code4a
         pop     es
         pop     ds
@@ -766,8 +792,7 @@ hook_next_lap_code4a:
         pop     si
         mov     cx, HOOK4_LENGTH
 hook_next_lap_code4:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code4
 
         ;**
@@ -820,8 +845,7 @@ do_us5: sub     di, 2 + HOOK5_USA_LSW
 hook_both5:
         mov     cx, HOOK5_LENGTH
 hook_next_lap_code5:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code5
 
         ;**
@@ -863,8 +887,7 @@ do_us6: sub     di, 2 + HOOK6_USA_LSW
 hook_both6:
         mov     cx, HOOK6_LENGTH
 hook_next_lap_code6:
-        lodsb
-        stosb
+        movsb
         loop    hook_next_lap_code6
 
         ;**
@@ -912,6 +935,87 @@ hook_both7:
         add     si, 2
         mov     ax, es:[di]
         mov     ds:[si], ax
+
+        ;**
+        ;** CCPlayers BHP.
+        ;**
+        mov     si, OFFSET cs:hook_bhp2_code
+        mov     di, sp
+        les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2) + 2]
+        cmp     game_usa, 1
+        jz      do_us8
+        cmp     game_ita, 1
+        jz      do_it8
+        cmp     game_spa, 1
+        jz      do_sp8
+
+        sub     di, 2 + HOOK8_EUR_LSW
+        mov     ax, es
+        sub     ax, HOOK8_EUR_MSW
+        mov     es, ax
+        jmp     hook_both8
+do_it8:
+        sub     di, 2 + HOOK8_ITA_LSW
+        mov     ax, es
+        sub     ax, HOOK8_ITA_MSW
+        mov     es, ax
+        jmp     hook_both8
+do_sp8:
+        sub     di, 2 + HOOK8_SPA_LSW
+        mov     ax, es
+        sub     ax, HOOK8_SPA_MSW
+        mov     es, ax
+        jmp     hook_both8
+do_us8:
+        sub     di, 2 + HOOK8_USA_LSW
+        mov     ax, es
+        sub     ax, HOOK8_USA_MSW
+        mov     es, ax
+hook_both8:
+        mov     cx, HOOK8_LENGTH
+hook_loop8:
+        movsb
+        loop    hook_loop8
+
+
+        ;**
+        ;** Hotseat go to automatic.
+        ;**
+        mov     si, OFFSET cs:hook_hsa_code
+        mov     di, sp
+        les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2) + 2]
+        sub     di, 2 + HOOK9_ALL_LSW   ; all versions have same offset
+        mov     ax, es
+        sub     ax, HOOK9_ALL_MSW
+        mov     es, ax
+        mov     cx, HOOK9_LENGTH
+hook_loop9:
+        movsb
+        loop    hook_loop9
+
+        mov     di, sp
+        les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2) + 2]
+        sub     di, 2 + HOOK9A_ALL_LSW   ; all versions have same offset
+        mov     ax, es
+        sub     ax, HOOK9A_ALL_MSW
+        mov     WORD PTR cs:gp_init_car_grip, di
+        mov     WORD PTR cs:gp_init_car_grip+2, ax
+
+
+        ;**
+        ;** Hotseat go to control.
+        ;**
+        mov     si, OFFSET cs:hook_hsc_code
+        mov     di, sp
+        les     di, ss:[di + ((PUSHA_SIZE + push_end - push_start) * 2) + 2]
+        sub     di, 2 + HOOK10_ALL_LSW   ; all versions have same offset
+        mov     ax, es
+        sub     ax, HOOK10_ALL_MSW
+        mov     es, ax
+        mov     cx, HOOK10_LENGTH
+hook_loop10:
+        movsb
+        loop    hook_loop10
 
         ret
 
@@ -1251,20 +1355,123 @@ HOOK3_SPA_LSW   equ     6fe9h
 
         public  hook_aig
 hook_aig:
+        push    ds
+        push    es
+        pusha
+
+        ; read bActivePlayerCarID
+        mov     dx, ACT_PLAYER_SEG
+        mov     ax, ACT_PLAYER_OFF
+        push    ds
+        push    cs
+        pop     ds
+        call    get_sg_byte
+        pop     ds
+        mov     dl, al
+
         ;**
-        ;** Check to see if player's car?
+        ;** Check to see if player's car under player's control.
         ;** If it is then ensure standard braking value, not enhanced AIG.
         ;**
-        test    BYTE PTR [si+0ach], 80h
+        mov     al, BYTE PTR [si+0ach]
+        test    al, 80h
         jz      not_players_aig
+
+        cmp     al, dl
+        jne     not_players_aig
+
         mov     WORD PTR [si+0beh], 4000h
+
 not_players_aig:
+        popa
+        pop     es
+        pop     ds
         ;**
         ;** Original code.
         ;**
         mov     di, [bp+1222h]
         shl     di, 1
         retf
+
+
+HOOK9_ALL_MSW   equ     6000h
+HOOK9_ALL_LSW   equ     (0bcech - 0d83ch)
+
+
+HOOK9A_ALL_MSW  equ     6000h
+HOOK9A_ALL_LSW  equ     (0bcech - 04c87h)
+
+
+        public hook_hsa
+hook_hsa:
+        ;** Set CCPlayer grip to CC grip
+        push    ds
+        push    es
+        push    si
+        push    di
+        push    cx
+        push    dx
+
+        push    ds
+        push    es
+        push    si
+
+        push    cs
+        pop     ds
+
+        ; skip pitstop strategy code
+        les     di, hook_aig_dest
+        mov     byte ptr es:[di-53h], 0ebh  ; JNS -> JMP
+        ; skip all code in InitCarGrip right after grip is set (same location as hook_aig)
+        mov     si, offset hook_aig_alt_start
+        mov     cx, 5
+hsa1:
+        movsb
+        loop    hsa1
+
+        pop     si
+        pop     es
+        pop     ds
+
+        ; call patched InitCarGrip
+        call    [cs:gp_init_car_grip]
+
+        push    cs
+        pop     ds
+
+        ; restore original pitstop strategy code
+        les     di, hook_aig_dest
+        mov     byte ptr es:[di-53h], 79h
+        ; restore original hook_aig
+        mov     si, offset hook_aig_code_start
+        mov     cx, 5
+hsa2:
+        movsb
+        loop    hsa2
+
+        pop     dx
+        pop     cx
+        pop     di
+        pop     si
+        pop     es
+        pop     ds
+        ; original code
+        add     BYTE PTR [si + 0bdh], 1
+        retf
+
+
+HOOK10_ALL_MSW   equ     6000h
+HOOK10_ALL_LSW   equ     (0bcech - 0d8edh)
+
+        public hook_hsc
+hook_hsc:
+        ;** set Player grip to 1
+        mov     [si+0beh], 4000h
+        ; original code
+        mov     byte ptr [bp+192h], 0FFh
+        retf
+
+
 
 ;*****************************************************************************
 ;** Purpose: BHP.
@@ -1297,6 +1504,26 @@ hook_bhp:
         ;** Do nothing as our patch removes the players randomisation.
         ;**
         retf
+
+
+HOOK8_EUR_MSW   equ     6000h
+HOOK8_EUR_LSW   equ     (0bcech - 4B9bh)
+;HOOK8_EUR_LSW   equ     (0bcech - 4b96h)   ; use this one to keep the randomization of CCPlayer car power
+
+HOOK8_ITA_MSW   equ     6000h
+HOOK8_ITA_LSW   equ     7111h
+
+HOOK8_USA_MSW   equ     6000h
+HOOK8_USA_LSW   equ     70fch
+
+HOOK8_SPA_MSW   equ     6000h
+HOOK8_SPA_LSW   equ     7130h
+
+        public  hook_bhp2
+hook_bhp2:
+        mov     cx, cs:_ccplayer_power
+        retf
+
 
 ;*****************************************************************************
 ;** Purpose: Split Timer.
@@ -1728,6 +1955,8 @@ GAME_MODE_SEG   equ     2b95h
 GAME_MODE_OFF   equ     000ah
 CAR_SETUP_SEG   equ     2b99h
 CAR_SETUP_OFF   equ     0006h
+ACT_PLAYER_SEG  equ     (1e5eh - 1f7h + 357h + 296h)
+ACT_PLAYER_OFF  equ     0001h
 
         public  hook_lap
 hook_lap:
@@ -1947,14 +2176,19 @@ best_lap:
         mov     al, lr.lr_game_mode
         mov     ar.ar_game_mode, al
 
-        les     bx, game_hp
-        add     bx, BHP_OFFSET
-        mov     ax, es:[bx]
+        ;les     bx, game_hp
+        ;add     bx, BHP_OFFSET
+        ;mov     ax, es:[bx]
+        les     si, game_si
+        mov     ax, es:[si + 0a8h]
+
         sub     ax, 632
         xor     dx, dx
         mov     cx, 22
         div     cx
         mov     ar.ar_bhp, ax
+
+        ; todo: log [si+0beh] too?
 
         les     bx, game_hp
         add     bx, AIG_OFFSET
@@ -2022,8 +2256,7 @@ new_aig_mod:
         mov     di, OFFSET ar.ar_driver
         mov     cx, 24
 copy_auth_driver:
-        lodsb
-        stosb
+        movsb
         loop    copy_auth_driver
 
         ;**
@@ -2206,8 +2439,7 @@ end_of_race:
         mov     si, OFFSET ar
         mov     di, OFFSET rr
         mov     cx, RECORD_LEN
-eor1:   lodsb
-        stosb
+eor1:   movsb
         loop    eor1
 
         mov     al, rr.rr_record_type
@@ -2564,8 +2796,7 @@ copy_drivers_name proc near
         mov     ds, cs:game_ss
 
         mov     cx, 24
-cdn1:   lodsb
-        stosb
+cdn1:   movsb
         loop    cdn1
 
         pop     ds
@@ -3023,6 +3254,18 @@ name_q_ok:
         mov     bx, OFFSET cs:hook_bhp_code_off
         mov     [bx], OFFSET cs:hook_bhp
         mov     ax, cs
+        mov     [bx+2], ax
+
+        mov     bx, OFFSET hook_bhp2_code_off
+        mov     word ptr [bx], OFFSET hook_bhp2
+        mov     [bx+2], ax
+
+        mov     bx, OFFSET hook_hsa_code_off
+        mov     word ptr [bx], OFFSET hook_hsa
+        mov     [bx+2], ax
+
+        mov     bx, OFFSET hook_hsc_code_off
+        mov     word ptr [bx], OFFSET hook_hsc
         mov     [bx+2], ax
 
         ;**

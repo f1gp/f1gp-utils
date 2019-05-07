@@ -32,9 +32,18 @@
 **                  Authentication records not logged for linked player.
 **                  Added new 50% and 100% race time and FL authentication.
 ** V6.1 04/03/96	Added support for Spanish GP.EXE.
+** V7.0 07/05/2019	Set player grip to 1 only if it is the active Player (not CC controlled).
+**                      CCPlayer will use the regular AIG value instead.
+**                  When car control goes automatic (CCPlayer) or to control (Player),
+**                     the grip will be set accordingly.
+**                  The CCPlayer BHP can be set from the commandline using option -w, (e.g. -w800).
+**                      Default value is 716.
+**                      Randomization of this value will be disabled, just like for Player BHP.
+**                  The BHP logged in the authentication record is taken from the actual value of the car,
+**                      to make sure it shows the right value for CCPLayer.
 */
 
-#define VERSION     "V6.1 4th Apr 1996"
+#define VERSION     "V7.0 8th May 2019"
 
 /*---------------------------------------------------------------------------
 ** Includes
@@ -80,10 +89,12 @@ extern short   split1;
 extern short   split2;
 extern short   split3;
 extern short   freeze_time;
+extern short   ccplayer_power;
 
 static char    title_msg[] = "@(#)"
                              "GpLapTim " VERSION " - Grand Prix/World Circuit Lap Time Logger.\n"
-                             "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n\n";
+                             "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n"
+                             "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Functions
@@ -157,6 +168,14 @@ parse(
                          freeze_time *= 1000;
                     }
                }
+               else if (*cmd_line == 'w') {
+                    ccplayer_power = atoi(cmd_line + 1);
+                    if (ccplayer_power < 1 || ccplayer_power > 1460) {
+                        display_msg("GpLapTim: -w BHP must be between 1 and 1460\n");
+                        return FALSE;
+                    }
+                    ccplayer_power = ccplayer_power * 22 + 632;
+               }
                else if (*cmd_line == '?' || *cmd_line == 'h') {
                     Usage();
                     return FALSE;
@@ -178,8 +197,9 @@ Usage(
      void
 ) {
      display_msg(   "\n"
-                    "Usage: gplaptim [-h?]  [-aN -bN -cN -s] [-p] [-u] [-f(filename)]\n"
+                    "Usage: gplaptim [-h?]  [-aN -bN -cN -s] [-p] [-wN] [-u] [-f(filename)]\n"
                     "       -f(name)  Specify log filename's location.\n"
+                    "       -wN       Set BHP for CC player during hotseat (default 716).\n"
                     "       -p        Log player's times only.\n"
                     "\n"
                     "       -aN       1st split time percentage (default 25%).\n"

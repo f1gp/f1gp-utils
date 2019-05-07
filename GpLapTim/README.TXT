@@ -1,4 +1,5 @@
-GpTimLog V6.1 4th Apr 1996                  Trevor Kellaway (CIS:100331,2330)
+GpLapTim V6.1 4th Apr 1996                  Trevor Kellaway (CIS:100331,2330)
+GpLapTim V7.0 8th May 2019                       Rene Smit (sdidit@gmail.com)
 
 Grand Prix/World Circuit Lap Time Logger.
 
@@ -41,8 +42,9 @@ entries appended to it every time a car crosses the start/finished line.
 
 Quit GP.EXE, run GPLAP (or GPLAPW) to view the packed GPLAPTIM.LOG file.
 
-Usage: GPLAPTIM [-h?]  [-aN -bN -cN -s] [-p] [-u] [-f(filename)]
+Usage: GPLAPTIM [-h?]  [-aN -bN -cN -s] [-p] [-wN] [-u] [-f(filename)]
        -f(name)  Specify log filename's location.
+       -wN       Set BHP for CC player during hotseat (default 716).
        -p        Log player's times only.
        -aN       1st split time percentage (default 25%).
        -bN       2nd split time percentage (default 50%).
@@ -264,6 +266,29 @@ Other things that help are keeping the GPLAPTIM.LOG file as small as
 possible. Running SMARTDRV with write-behind caching enabled is another
 solution.
 
+Changes in 7.x
+--------------
+Version 7.0 adds some changes for hotseat mode:
+
+1. Set player grip to 1 only if it is the active player (not computer
+controlled). CC player will use the regular AIG value instead.
+
+2. When car control goes automatic (CC player) or to control (player), the
+grip will be set accordingly.
+
+3. The CC player BHP can be set from the commandline using option -w, e.g.:
+
+    gplaptim -w800
+
+    Default value is 716. The range is 1 to 1460 BHP.
+    Randomization of this value will be disabled, just like for player BHP.
+
+4. The BHP logged in the authentication record and shown by GPLap will be
+the value for either CC pLayer or player, whoever is in control at the time
+the car passes the s/f line.
+
+Thanks to Hrvoje Stimac for suggestions and testing.
+
 Further Info
 ------------
 Please send any suggestions, comments, or bug reports (include the version
@@ -271,6 +296,12 @@ of GPLAPTIM you are using and the version of the game EXE) to the author at:
 
 CompuServe:    100331,2330
 Internet:      100331.2330@compuserve.com
+
+For the 7.x version:
+
+Email:         sdidit@gmail.com
+WWW:           https://sites.google.com/view/f1gpwc/home
+Forum:         https://groups.google.com/forum/#!forum/f1gpwc
 
 This program may be freely copied and distributed, as long as it is not
 modified in any way, no fee is charged and this file is always included.
