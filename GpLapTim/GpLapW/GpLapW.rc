@@ -1,0 +1,517 @@
+//Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""res\\GpLapW.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "\r\n"
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "#include ""afxres.rc""  \011// Standard components\r\n"
+    "#include ""afxprint.rc""\011// printing/print preview resources\r\n"
+    "\0"
+END
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+IDR_MAINFRAME           ICON    DISCARDABLE     "res\\GpLapW.ico"
+IDR_GPLAPWTYPE          ICON    DISCARDABLE     "res\\GpLapdoc.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP  MOVEABLE PURE   "res\\toolbar.bmp"
+PICTURE1U               BITMAP  DISCARDABLE     "res\\SENNABW.bmp"
+IDR_BMP_FL              BITMAP  DISCARDABLE     "res\\FL.BMP"
+IDR_BMP_FL_MASK         BITMAP  DISCARDABLE     "res\\FLMASK.BMP"
+IDR_BMP_Q1              BITMAP  DISCARDABLE     "res\\Q1.BMP"
+IDR_BMP_Q1_MASK         BITMAP  DISCARDABLE     "res\\Q1MASK.BMP"
+IDR_BMP_BL              BITMAP  DISCARDABLE     "res\\BL.BMP"
+IDR_BMP_BL_MASK         BITMAP  DISCARDABLE     "res\\BLMASK.BMP"
+IDR_BMP_P1_FL           BITMAP  DISCARDABLE     "res\\P1FL.BMP"
+IDR_BMP_P1_MASK         BITMAP  DISCARDABLE     "res\\P1MASK.BMP"
+IDR_BMP_P1_BL           BITMAP  DISCARDABLE     "res\\P1BL.BMP"
+IDR_BMP_P1              BITMAP  DISCARDABLE     "res\\P1.BMP"
+IDR_BMP_RW              BITMAP  DISCARDABLE     "res\\RW.BMP"
+IDR_BMP_RW_MASK         BITMAP  DISCARDABLE     "res\\RWMASK.BMP"
+IDR_BMP_AUTH            BITMAP  DISCARDABLE     "res\\AUTH.BMP"
+IDR_BMP_AUTH_MASK       BITMAP  DISCARDABLE     "res\\AUTHMASK.BMP"
+IDR_BMP_AUTH_RACE       BITMAP  DISCARDABLE     "res\\AUTHRACE.BMP"
+IDR_BMP_AUTH_GRASS      BITMAP  DISCARDABLE     "res\\authgras.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM SEPARATOR
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About GpLapW...",            ID_APP_ABOUT
+    END
+END
+
+IDR_GPLAPWTYPE MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open...\tCtrl+O",            ID_FILE_OPEN
+        MENUITEM "&Close",                      ID_FILE_CLOSE
+        MENUITEM "Save &As...\tCtrl+S",         ID_FILE_SAVE_AS
+        MENUITEM SEPARATOR
+        MENUITEM "&Print...\tCtrl+P",           ID_FILE_PRINT
+        MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
+        MENUITEM "P&rint Setup...",             ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        POPUP "&Authentication"
+        BEGIN
+            MENUITEM "To &Text File...",            ID_FILE_AUTHENTICATION_TOTEXTFILE
+
+            MENUITEM "To &Clipboard",               ID_FILE_AUTHENTICATION_TOCLIPBOARD
+
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "Recent File",                 ID_FILE_MRU_FILE1, GRAYED
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       ID_APP_EXIT
+    END
+    POPUP "&Edit"
+    BEGIN
+        MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY
+    END
+    POPUP "&Font"
+    BEGIN
+        MENUITEM "&Select...",                  ID_FONT_SELECT
+        MENUITEM "&Restore Default",            ID_FONT_RESTOREDEFAULT
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "&Toolbar",                    ID_VIEW_TOOLBAR
+        MENUITEM "&Status Bar",                 ID_VIEW_STATUS_BAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Practice",                   ID_VIEW_PRACTICE
+        MENUITEM "&Qualifying",                 ID_VIEW_QUALIFYING
+        MENUITEM "&Race",                       ID_VIEW_RACE
+        MENUITEM SEPARATOR
+        MENUITEM "&Computer's Cars",            ID_VIEW_COMPUTERSCARS
+        MENUITEM "&Player's Car",               ID_VIEW_PLAYERSCAR
+        MENUITEM "&Leader",                     ID_VIEW_LEADER
+        MENUITEM SEPARATOR
+        MENUITEM "&Fastest Laps",               ID_VIEW_FASTESTLAPS
+        MENUITEM "&Best Laps",                  ID_VIEW_BESTLAPS
+        MENUITEM "&Authentication Records",     ID_VIEW_AUTHENTICATIONRECORDS
+
+        MENUITEM SEPARATOR
+        MENUITEM "&Display Average Speeds",     ID_VIEW_DISPLAYAVERAGESPEEDS
+        MENUITEM "&MPH (or KPH)",               ID_VIEW_MPHORKPH
+        MENUITEM "&Elapsed Race Time",          ID_VIEW_ELAPSEDRACETIME
+        MENUITEM SEPARATOR
+        MENUITEM "Car &Setup",                  ID_VIEW_CARSETUP
+        MENUITEM "&Pit Stops",                  ID_VIEW_PITSTOPS
+    END
+    POPUP "&Drivers"
+    BEGIN
+        MENUITEM "&Driver Filter...",           ID_DRIVERS_DRIVERFILTER
+    END
+    POPUP "&Info"
+    BEGIN
+        MENUITEM "&Total Laps...",              ID_INFO_TOTALLAPS
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_WINDOW_NEW
+        MENUITEM "&Cascade",                    ID_WINDOW_CASCADE
+        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
+        MENUITEM "Tile &Vertically",            ID_WINDOW_TILE_VERT
+        MENUITEM "&Arrange Icons",              ID_WINDOW_ARRANGE
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About GpLapW...",            ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS PRELOAD MOVEABLE PURE 
+BEGIN
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE_AS,        VIRTKEY, CONTROL, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  34, 22, 177, 158
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About GpLapW"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,6,10,165,50
+    CTEXT           "Log Viewer - V10.0",IDC_STATIC,11,40,155,8,NOT WS_GROUP
+    CTEXT           "Grand Prix Lap Time",IDC_STATIC,11,25,155,8,NOT 
+                    WS_GROUP
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,6,65,165,60
+    CTEXT           "Author: Trevor Kellaway",IDC_STATIC,11,70,155,8,NOT 
+                    WS_GROUP
+    CTEXT           "CompuServe (CIS): 100331,2330",IDC_STATIC,11,85,155,8,
+                    NOT WS_GROUP
+    CTEXT           "Internet: 100331.2330@compuserve.com",IDC_STATIC,11,95,
+                    155,8,NOT WS_GROUP
+    CTEXT           "Copyright \251 1994-1995 - All rights reserved",
+                    IDC_STATIC,11,110,155,8,NOT WS_GROUP
+    DEFPUSHBUTTON   "OK",IDOK,69,135,40,14,WS_GROUP
+    ICON            IDR_MAINFRAME,IDC_STATIC,15,25,18,20
+    ICON            IDR_GPLAPWTYPE,IDC_STATIC,145,25,18,20
+END
+
+IDD_SPLASH DIALOG DISCARDABLE  0, 0, 341, 130
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "GpLapW"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "",IDC_BIGICON,"Button",BS_OWNERDRAW | WS_DISABLED,20,10,
+                    38,40
+    CTEXT           "Grand Prix Lap Time",IDC_STATIC,70,20,85,8,NOT WS_GROUP
+    CTEXT           "Author: Trevor Kellaway",IDC_STATIC,15,70,150,8,NOT 
+                    WS_GROUP
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,5,65,165,60
+    CONTROL         "PICTURE1",IDC_PICTURE1,"Button",BS_OWNERDRAW,185,10,140,
+                    100
+    CTEXT           "CompuServe (CIS): 100331,2330",IDC_STATIC,10,85,150,8,
+                    NOT WS_GROUP
+    CTEXT           "Internet: 100331.2330@compuserve.com",IDC_STATIC,15,95,
+                    150,8,NOT WS_GROUP
+    CTEXT           "Copyright \251 1994-1995 - All rights reserved",
+                    IDC_STATIC,10,110,155,8,NOT WS_GROUP
+    CTEXT           "Log Viewer - V10.0",IDC_STATIC,70,35,85,8,NOT WS_GROUP
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,5,5,165,55
+    CONTROL         "",IDC_STATIC,"Static",SS_BLACKFRAME,175,5,160,120
+    CTEXT           "Ayrton Senna",IDC_STATIC,180,115,150,8,NOT WS_GROUP
+END
+
+IDD_DRIVER_FILTER DIALOG DISCARDABLE  0, 0, 261, 188
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Driver Filter"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_DF_LIST_EXCLUDED,10,20,90,140,LBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    PUSHBUTTON      "&Include ->",IDC_DF_INCLUDE,105,30,50,14
+    PUSHBUTTON      "&Exclude <-",IDC_DF_EXCLUDE,105,55,50,14
+    PUSHBUTTON      "&All ->>",IDC_DF_ALL,105,95,50,14
+    PUSHBUTTON      "&None <<-",IDC_DF_NONE,105,120,50,14
+    LISTBOX         IDC_DF_LIST_INCLUDED,160,20,90,140,LBS_SORT | WS_VSCROLL | 
+                    WS_TABSTOP
+    DEFPUSHBUTTON   "OK",IDOK,140,165,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,195,165,50,14
+    LTEXT           "Included Drivers",IDC_STATIC,160,10,90,7
+    LTEXT           "Excluded Drivers",IDC_STATIC,10,10,90,7
+END
+
+IDD_TOTAL_LAPS DIALOG DISCARDABLE  0, 0, 131, 143
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Total Laps"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,41,115,50,14
+    LTEXT           "Practice:",IDC_STATIC,15,10,65,8
+    LTEXT           "<Practice>",IDC_TL_PRACTICE,85,10,40,8
+    LTEXT           "Free Practice:",IDC_STATIC,15,25,65,8
+    LTEXT           "<FreePractice>",IDC_TL_FREE_PRACTICE,85,25,40,8
+    LTEXT           "Qualifying:",IDC_STATIC,15,40,65,8
+    LTEXT           "<Qualifying>",IDC_TL_QUALIFYING,85,40,40,8
+    LTEXT           "Pre-race Practice:",IDC_STATIC,15,55,65,8
+    LTEXT           "<Pre-race>",IDC_TL_PRE_RACE_PRACTICE,85,55,40,8
+    LTEXT           "Race:",IDC_STATIC,15,70,65,8
+    LTEXT           "<Race>",IDC_TL_RACE,85,70,40,8
+    LTEXT           "Total Laps:",IDC_STATIC,15,95,65,8
+    LTEXT           "<TotalLaps>",IDC_TL_TOTAL_LAPS,85,95,40,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 10,0,0,1
+ PRODUCTVERSION 10,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Grand Prix Lap Timer Viewer\0"
+            VALUE "CompanyName", "\0"
+            VALUE "FileDescription", "Grand Prix Lap Timer Viewer\0"
+            VALUE "FileVersion", "10, 0, 0, 1\0"
+            VALUE "InternalName", "GPLAPW\0"
+            VALUE "LegalCopyright", "Copyright \251 1995 Trevor Kellaway\0"
+            VALUE "OriginalFilename", "GPLAPW.EXE\0"
+            VALUE "ProductName", "GPLAPW Application\0"
+            VALUE "ProductVersion", "10, 0, 0, 1\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    IDR_MAINFRAME           "GpLapW"
+    IDR_GPLAPWTYPE          "\nGpLapW\nGpLapW\nGP Log files (*.log)\n.log\nGpLapW.Document\nGpLapW Document"
+    IDS_SAVE_FILES_TEMPLATE "GP Log file (*.log)|*.log|Text file (*.txt)|*.txt|All files (*.*)|*.*||"
+    IDS_SAVE_TXT_FILE_TEMPLATE 
+                            "Text files (*.txt)|*.txt|All files (*.*)|*.*||"
+END
+
+STRINGTABLE PRELOAD DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "GpLapW"
+    AFX_IDS_IDLEMESSAGE     "Ready"
+    IDS_COPY_NO_MEM         "Not enough free memory is available. Try using 'Save As' instead."
+    IDS_COPY_TOO_MUCH_DATA  "Too much data to copy to clipboard. Try using 'Save As' instead."
+    IDS_TIP_DBLCLICK_AUTH_ENTRIES 
+                            "Shortcut tip: Double click an authentication entry to copy it to the clipboard."
+    IDS_AUTH_NO_SELECTED_ENTRY 
+                            "You must select a specific authentication entry when copying to the clipboard."
+    IDS_SAVE_AS_LOG_QUERY   """Save as a LOG file? (if you select No it will be saved as a text file)."""
+    IDS_QUERY_WRITE_ALL_AUTH 
+                            "You haven't selected a specific authentication entry, do you wish to save all entries?"
+    IDS_APPEND_TO_FILE_QUERY "Append to existing file?"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_INDICATOR_EXT        "EXT"
+    ID_INDICATOR_CAPS       "CAP"
+    ID_INDICATOR_NUM        "NUM"
+    ID_INDICATOR_SCRL       "SCRL"
+    ID_INDICATOR_OVR        "OVR"
+    ID_INDICATOR_REC        "REC"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_NEW             "Create a new document\nNew"
+    ID_FILE_OPEN            "Open an existing document\nOpen"
+    ID_FILE_CLOSE           "Close the active document\nClose"
+    ID_FILE_SAVE            "Save the active document\nSave"
+    ID_FILE_SAVE_AS         "Save a filtered copy of the active document with a new name\nSave As"
+    ID_FILE_PAGE_SETUP      "Change the printing options\nPage Setup"
+    ID_FILE_PRINT_SETUP     "Change the printer and printing options\nPrint Setup"
+    ID_FILE_PRINT           "Print the active document\nPrint"
+    ID_FILE_PRINT_PREVIEW   "Display full pages\nPrint Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_APP_ABOUT            "Display program information, version number and copyright\nAbout"
+    ID_APP_EXIT             "Quit the application; prompts to save documents\nExit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FILE_MRU_FILE1       "Open this document"
+    ID_FILE_MRU_FILE2       "Open this document"
+    ID_FILE_MRU_FILE3       "Open this document"
+    ID_FILE_MRU_FILE4       "Open this document"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_NEXT_PANE            "Switch to the next window pane\nNext Pane"
+    ID_PREV_PANE            "Switch back to the previous window pane\nPrevious Pane"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_WINDOW_NEW           "Open another window for the active document\nNew Window"
+    ID_WINDOW_ARRANGE       "Arrange icons at the bottom of the window\nArrange Icons"
+    ID_WINDOW_CASCADE       "Arrange windows so they overlap\nCascade Windows"
+    ID_WINDOW_TILE_HORZ     "Arrange windows as non-overlapping tiles\nTile Windows"
+    ID_WINDOW_TILE_VERT     "Arrange windows as non-overlapping tiles\nTile Windows"
+    ID_WINDOW_SPLIT         "Split the active window into panes\nSplit"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_EDIT_CLEAR           "Erase the selection\nErase"
+    ID_EDIT_CLEAR_ALL       "Erase everything\nErase All"
+    ID_EDIT_COPY            "Copy the selection and put it on the Clipboard\nCopy"
+    ID_EDIT_CUT             "Cut the selection and put it on the Clipboard\nCut"
+    ID_EDIT_FIND            "Find the specified text\nFind"
+    ID_EDIT_PASTE           "Insert Clipboard contents\nPaste"
+    ID_EDIT_REPEAT          "Repeat the last action\nRepeat"
+    ID_EDIT_REPLACE         "Replace specific text with different text\nReplace"
+    ID_EDIT_SELECT_ALL      "Select the entire document\nSelect All"
+    ID_EDIT_UNDO            "Undo the last action\nUndo"
+    ID_EDIT_REDO            "Redo the previously undone action\nRedo"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_TOOLBAR         "Show or hide the toolbar\nToggle ToolBar"
+    ID_VIEW_STATUS_BAR      "Show or hide the status bar\nToggle StatusBar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCSIZE          "Change the window size"
+    AFX_IDS_SCMOVE          "Change the window position"
+    AFX_IDS_SCMINIMIZE      "Reduce the window to an icon"
+    AFX_IDS_SCMAXIMIZE      "Enlarge the window to full size"
+    AFX_IDS_SCNEXTWINDOW    "Switch to the next document window"
+    AFX_IDS_SCPREVWINDOW    "Switch to the previous document window"
+    AFX_IDS_SCCLOSE         "Close the active window and prompts to save the documents"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_SCRESTORE       "Restore the window to normal size"
+    AFX_IDS_SCTASKLIST      "Activate Task List"
+    AFX_IDS_MDICHILD        "Activate this window"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "Close print preview mode\nCancel Preview"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_FONT_SELECT          "Change the window font"
+    ID_FONT_RESTOREDEFAULT  "Restore the window font to the default style"
+    ID_VIEW_PRACTICE        "View entries from a practice session\nView Practice"
+    ID_VIEW_QUALIFYING      "View entries from a qualifying session\nView Qualifying"
+    ID_VIEW_RACE            "View entries from a race session\nView Race"
+    ID_VIEW_COMPUTERSCARS   "View the computer car entries\nView Computer Cars"
+    ID_VIEW_PLAYERSCAR      "View the player's car entries\nView Player's Car"
+    ID_VIEW_LEADER          "View the leader's entries\nView Leader"
+    ID_VIEW_FASTESTLAPS     "View the fastest lap time entries (FL)\nFastest Laps"
+    ID_VIEW_BESTLAPS        "View the best lap time entries (!)\nBest Laps"
+    ID_VIEW_AUTHENTICATIONRECORDS 
+                            "View the fastest lap and race authentication entries\nView Authentication"
+    ID_VIEW_DISPLAYAVERAGESPEEDS "View the average lap speed"
+    ID_VIEW_MPHORKPH        "Select the average lap speed units, either MPH or KPH"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_VIEW_ELAPSEDRACETIME "Show the elapsed race time (rather than the gap behind the leader)\nElapsed Race Time"
+    ID_VIEW_CARSETUP        "Display the car setup\nCar Setup"
+    ID_VIEW_PITSTOPS        "Display pit stop entries\nPit Stops"
+    ID_DRIVERS_DRIVERFILTER "Include/exclude drivers from the displayed log\nDriver Filter"
+    ID_INFO_TOTALLAPS       "Display the total number of laps for the log\nTotal Laps"
+    ID_FILE_AUTHENTICATION_TOCLIPBOARD 
+                            "Paste the a selected authentication entry into the clipboard"
+    ID_FILE_AUTHENTICATION_TOTEXTFILE 
+                            "Save authentication record(s) to a text file"
+END
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#include "res\GpLapW.rc2"  // non-Microsoft Visual C++ edited resources
+
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+#include "afxres.rc"  	// Standard components
+#include "afxprint.rc"	// printing/print preview resources
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

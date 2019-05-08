@@ -1,0 +1,31 @@
+##
+## GpLap
+##
+
+CC             =    bcc
+CC_FLAGS       =    -c -v -1 -Os -I.. -I..\laputl
+ASM            =    tasm
+ASM_FLAGS      =    -Ml
+LINK           =    bcc
+LINK_FLAGS     =    -M -v -L..\laputl
+
+.asm.obj:      
+               $(ASM) $< $(ASM_FLAGS),,;
+
+.c.obj:      
+               $(CC) $(CC_FLAGS) $< 
+
+all:           gplap.exe
+
+gplaptim.obj:  gplaptim.asm gplaptim.ash
+
+vdm.obj:       vdm.asm
+
+gplap.obj:     gplap.c vdm.h
+
+gplap.exe:     gplap.obj vdm.obj makefile
+               $(LINK) $(LINK_FLAGS) gplap.obj vdm.obj laputl.lib
+               tdstrip -s gplap.exe
+
+buildall:      all
+

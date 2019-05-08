@@ -2,5 +2,5 @@
 set GPLAPVER=gplap
 if exist %GPLAPVER%.zip del %GPLAPVER%.zip
 pkzip %GPLAPVER%.zip readme.txt whatsnew.txt gplaptim\gplaptim.com gplap\gplap.exe 
-pkzip %GPLAPVER%.zip gplapw\gplapw.exe gplapw\gplapw.hlp ctl3d.dll
+pkzip %GPLAPVER%.zip gplapw\gplapw.exe gplapw\gplapw.hlp gplapw\gplapw.gid ctl3d.dll
 
