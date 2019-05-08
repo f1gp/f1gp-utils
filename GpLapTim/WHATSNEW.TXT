@@ -1,3 +1,31 @@
+                     What's New in GPLAPTIM V7.0
+                     ===========================
+GPLAPTIM.COM
+------------
+Improvements for hotseat mode:
+
+1. Set player grip to 1 only if it is the active player (not computer
+   controlled). CC player will use the regular AIG value instead.
+
+2. When car control goes to automatic (CC player) or to control (player),
+   the grip will be set accordingly.
+
+3. The CC player BHP can be set from the commandline using option -w,
+   e.g. to set it to 800 BHP:
+
+   GPLAPTIM -w800
+
+   Default value is 716. The range is 1 to 1460 BHP.
+   Randomization of this value will be disabled, just like for player BHP.
+
+4. The BHP logged in the authentication record and shown by GPLap will be
+   the value for either CC player or player, whoever is in control at the
+   time the car passes the s/f line.
+
+Thanks to Hrvoje Stimac for suggestions and testing.
+
+
+
                      What's New in GPLAPTIM V6.1
                      ===========================
 GPLAPTIM.COM

@@ -266,29 +266,6 @@ Other things that help are keeping the GPLAPTIM.LOG file as small as
 possible. Running SMARTDRV with write-behind caching enabled is another
 solution.
 
-Changes in 7.x
---------------
-Version 7.0 adds some changes for hotseat mode:
-
-1. Set player grip to 1 only if it is the active player (not computer
-controlled). CC player will use the regular AIG value instead.
-
-2. When car control goes automatic (CC player) or to control (player), the
-grip will be set accordingly.
-
-3. The CC player BHP can be set from the commandline using option -w, e.g.:
-
-    gplaptim -w800
-
-    Default value is 716. The range is 1 to 1460 BHP.
-    Randomization of this value will be disabled, just like for player BHP.
-
-4. The BHP logged in the authentication record and shown by GPLap will be
-the value for either CC pLayer or player, whoever is in control at the time
-the car passes the s/f line.
-
-Thanks to Hrvoje Stimac for suggestions and testing.
-
 Further Info
 ------------
 Please send any suggestions, comments, or bug reports (include the version
