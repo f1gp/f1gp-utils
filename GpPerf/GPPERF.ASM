@@ -980,10 +980,14 @@ hs6:    mov     dl, BAR_COLOUR_WARN
         xor     ax, ax
         mov     al, [si+0b2h]
         and     al, 07h
-        shl     ax, 1
-        mov     bx, OFFSET TSR_CODE:tyres
+        cmp     al, 5
+        jle     hs7
+        mov     al, 5
+hs7:
+        shl     ax, 4
+        mov     bx, 299bh ; arTyreGripTable with 8 words for each compound
         add     bx, ax
-        mov     ax, cs:[bx]
+        mov     ax, ds:[bx] ; this is the game's DS (seg003)
         sub     ax, [si+46h]
         jns     hs2
         neg     ax
@@ -1019,8 +1023,6 @@ hs5:    pop     ax
 hook_seg_orig:
         db      HOOK_SEG_LENGTH dup(0)
         retf
-
-tyres:  dw      3a40h, 3b40h, 3c40h, 3d00h, 3e80h, 3900h, 3900h
 
 TSR_CODE        ends
 
