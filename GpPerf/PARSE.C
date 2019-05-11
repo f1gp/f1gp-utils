@@ -51,7 +51,8 @@ short atoi(register const char far *p);
 char title_msg[] =
      "@(#)"
      "GpPerf " VERSION " - Grand Prix/World Circuit Car Performance.\n"
-     "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n\n";
+     "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n"
+     "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Functions

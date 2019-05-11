@@ -1,9 +1,10 @@
 GpPerf V3.1 25-Oct-95                        Trevor Kellaway (CIS:100331,2330)
+GpPerf V4.0 12-May-2019                           Rene Smit (sdidit@gmail.com)
 
               Grand Prix/World Circuit Car Performance
               ========================================
 
-GPPERF (V3.0) is a new engine management unit (EMU) for the MPS F1 Grand Prix
+GPPERF is a new engine management unit (EMU) for the MPS F1 Grand Prix
 (World Circuit) simulator (US & European V1.05).
 
 The EMU contains a black box data recorder which can record (to disk) the
@@ -391,6 +392,10 @@ V3.0 15-Oct-95      Fixed timing variation bug in game.
                     Display of tyre grip added.
                     Updated SHOWPERF for display of steering, accel & braking.
 
+V4.0 12-May-2019    Made the yellow grip bar fill up twice as slow, because
+                    on some circuits the maximum was beyond the bar's range.
+                    Use the game's tyre grip table as a base for the grip bar.
+
 Further Info
 ------------
 Please send any suggestions, comments, or bug reports (include the version
@@ -398,6 +403,12 @@ of GPPERF you are using) to the author Trevor Kellaway at:
 
 CompuServe:    100331,2330
 Internet:      100331.2330@compuserve.com
+
+For the 4.x version:
+
+Email:         sdidit@gmail.com
+WWW:           https://sites.google.com/view/f1gpwc/home
+Forum:         https://groups.google.com/forum/#!forum/f1gpwc
 
 This program may be freely copied and distributed, as long as it is not
 modified in any way, no fee is charged and this file is always included.
