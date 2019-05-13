@@ -18,9 +18,11 @@
 **                  Updated SHOWPERF for display of steering, accel & braking.
 ** V3.1 25-Oct-95   Corrected missing readme text file info and Usage message.
 **
-** V4.0 12-May-2019 Made the yellow grip bar fill up twice as slow.
+** V4.0 13-May-2019 Made the yellow grip bar fill up twice as slow, because
+**                  on some circuits the maximum was beyond the bar's range.
 **                  Use the game's tyre grip table as a base for the grip bar.
+**                  Made grip bar work also in wet conditions.
 */
 
-#define VERSION          "V4.0 12-May-2019"
+#define VERSION          "V4.0 13-May-2019"
 

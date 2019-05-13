@@ -978,23 +978,26 @@ hs1:    push    es
 
 hs6:    mov     dl, BAR_COLOUR_WARN
         xor     ax, ax
-        mov     al, [si+0b2h]
+        mov     al, [si+0b2h]           ; tyre compound
         and     al, 07h
-        cmp     al, 5
+        cmp     al, 5                   ; range 0-5 (A/B/C/D/Q/W)
         jle     hs7
         mov     al, 5
 hs7:
-        shl     ax, 4
-        mov     bx, 299bh ; arTyreGripTable with 8 words for each compound
-        add     bx, ax
-        mov     ax, ds:[bx] ; this is the game's DS (seg003)
-        sub     ax, [si+46h]
+        shl     ax, 4                   ; 8 words for each compound
+        mov     bx, 299bh               ; arTyreGripTable offset
+        add     bx, word ptr ss:[122eh] ; dry/wet offset (0 or 60h)
+        add     bx, ax                  ; tyre compound offset
+        mov     ax, ds:[bx]             ; this is the game's DS (seg003)
+        sub     ax, [si+46h]            ; tyre grip
         jns     hs2
+
         neg     ax
         shr     ax, 1
         mov     dl, BAR_COLOUR_GOOD
         jmp     hs3
-hs2:    shr     ax, 3
+hs2:
+        shr     ax, 3
 hs3:    cmp     ax, BAR_NUM_SEGS
         jle     hs4
         mov     ax, BAR_NUM_SEGS

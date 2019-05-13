@@ -392,9 +392,10 @@ V3.0 15-Oct-95      Fixed timing variation bug in game.
                     Display of tyre grip added.
                     Updated SHOWPERF for display of steering, accel & braking.
 
-V4.0 12-May-2019    Made the yellow grip bar fill up twice as slow, because
+V4.0 13-May-2019    Made the yellow grip bar fill up twice as slow, because
                     on some circuits the maximum was beyond the bar's range.
                     Use the game's tyre grip table as a base for the grip bar.
+                    Made grip bar work also in wet conditions.
 
 Further Info
 ------------
