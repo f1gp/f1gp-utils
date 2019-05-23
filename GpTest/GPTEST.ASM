@@ -10,6 +10,7 @@
 ;**
 
                         include segments.inc
+                        include render.inc
                         include gpdef.inc
                         include gptest.inc
                         include gptest.ash
@@ -24,30 +25,6 @@
 TICK_TIME_MS            equ     18                      ; Approx ms of a tick
 DELAY_TIME              equ     (500 / TICK_TIME_MS)    ; Time to display hook msg
 
-LED_COLIDX              equ     0
-LED_ROWIDX              equ     1
-LED_COLSUB              equ     2
-LED_ROWSUB              equ     3
-LED_TRANSPARENT         equ     10
-LED_COLOR_BG            equ     11
-LED_COLOR_FG            equ     12
-
-COLOR_BLACK             equ     0
-COLOR_LGRAY             equ     1
-COLOR_RED               equ     2
-COLOR_YELLOW            equ     3
-COLOR_LGREEN            equ     4
-COLOR_PURPLE            equ     5
-COLOR_LBLUE             equ     6
-COLOR_GRAY              equ     7
-COLOR_WHITE             equ     8
-COLOR_LRED              equ     9
-COLOR_DGRAY             equ     10
-COLOR_GREEN             equ     11
-COLOR_L2GRAY            equ     12
-COLOR_L3GRAY            equ     13
-COLOR_GRGREEN           equ     18
-COLOR_CPGREEN           equ     153
 
 
 ;*****************************************************************************
@@ -111,11 +88,7 @@ game_ds                 dw      ?
 game_ss                 dw      ?
 
 gp_car_base_weight      dd      ?
-gp_hex2bcd              dd      ?
-gp_lcd_init             dd      ?
-gp_render_char          dd      ?
 gp_sel_car_ptr          dd      ?
-gp_led_pos_ptr          dd      ?
 gp_sestime_left         dd      ?
 gp_rnd1                 dd      ?
 gp_rnd2                 dd      ?
@@ -939,154 +912,6 @@ TSR_CODE                ends
 
 
 ;*****************************************************************************
-;** Purpose:    Render a cockpit character at a specific location.
-;**
-;** Notes  :    BL = character to render
-;**             column pixel offset = (AL & 7Fh) * 7 + (CL & 7)
-;**             row                 = (AL & 80h) ? bottom row : top row
-;**
-;**             e.g. bottom left -> AL = 128, CL = 0
-;**             number of columns = 88 (7 pixels each)
-
-TSR_CODE                segment
-
-render_cockpit_char     proc    near
-                        push    es
-                        push    si
-                        les     di, cs:gp_led_pos_ptr
-                        mov     BYTE PTR es:[di + LED_TRANSPARENT], 0
-                        mov     BYTE PTR es:[di + LED_COLOR_FG], COLOR_BLACK
-                        mov     BYTE PTR es:[di + LED_COLOR_BG], COLOR_CPGREEN
-                        pop     si
-                        pop     es
-                        call    cs:[gp_lcd_init]
-                        mov     al, bl
-                        call    cs:[gp_render_char]
-                        ret
-render_cockpit_char     endp
-
-TSR_CODE                ends
-
-
-;*****************************************************************************
-;** Purpose:    Prepare to render text at a specific location.
-;**
-;** Notes  :    AL = row index
-;**             AH = row sub index
-;**             CL = column index (negative aligns right)
-;**             CH = column sub index
-;**             BL = 0: bg opaque, 80h: bg transparent
-;**             DL = fg color
-;**             DH = bg color (unused if bg transparent)
-
-TSR_CODE                segment
-
-lcd_init                proc    near
-                        cmp     cl, 0
-                        jge     __left
-                        add     cl, 45
-__left:
-                        push    es
-                        push    si
-                        les     di, cs:gp_led_pos_ptr
-                        mov     BYTE PTR es:[di + LED_ROWIDX], al
-                        mov     BYTE PTR es:[di + LED_ROWSUB], ah
-                        mov     BYTE PTR es:[di + LED_COLIDX], cl
-                        mov     BYTE PTR es:[di + LED_COLSUB], ch
-                        mov     BYTE PTR es:[di + LED_TRANSPARENT], bl
-                        mov     BYTE PTR es:[di + LED_COLOR_FG], dl
-                        cmp     bl, 80h
-                        jz      __end
-                        mov     BYTE PTR es:[di + LED_COLOR_BG], dh
-__end:
-                        pop     si
-                        pop     es
-                        ret
-lcd_init                endp
-
-
-;** Notes  :    BX = number to render
-render_hex_word         proc    near
-                        mov     al, bh
-                        shr     al, 4
-                        call    render_nibble
-
-                        mov     al, bh
-                        and     al, 0Fh
-                        call    render_nibble
-
-                        mov     al, bl
-                        shr     al, 4
-                        call    render_nibble
-
-                        mov     al, bl
-                        and     al, 0Fh
-                        call    render_nibble
-                        ret
-render_hex_word         endp
-
-
-;** Notes  :    BL = number to render
-render_hex_byte         proc    near
-                        mov     al, bl
-                        shr     al, 4
-                        call    render_nibble
-
-                        mov     al, bl
-                        and     al, 0Fh
-                        call    render_nibble
-                        ret
-render_hex_byte         endp
-
-
-;** Notes  :    BX = number to render
-render_dec_word         proc    near
-                        push    dx
-                        push    ax
-                        xor     dx, dx
-                        mov     ax, bx
-                        call    cs:[gp_hex2bcd]
-                        mov     bx, ax
-                        pop     ax
-                        pop     dx
-                        call    render_hex_word
-                        ret
-render_dec_word         endp
-
-
-;** Notes  :    BL = number to render
-render_dec_byte         proc    near
-                        push    dx
-                        push    ax
-                        xor     dx, dx
-                        xor     ax, ax
-                        mov     al, bl
-                        call    cs:[gp_hex2bcd]
-                        mov     bx, ax
-                        pop     ax
-                        pop     dx
-                        call    render_hex_byte
-                        ret
-render_dec_byte         endp
-
-
-;** Notes  :    AL = digit to render
-render_nibble           proc    near
-                        cmp     al, 10
-                        jb      __num
-                        add     al, 'A' - 10
-                        jmp     __render
-__num:
-                        add     al, '0'
-__render:
-                        call    cs:[gp_render_char]
-                        ret
-render_nibble           endp
-
-TSR_CODE                ends
-
-
-;*****************************************************************************
 ;** Purpose:    Show user that we've hooked in OK.
 ;**
 ;** Returns:    Nothing.
@@ -1293,16 +1118,7 @@ hook_frame              endp
 render_data             proc    near
                         pusha
                         push    es
-
-                        ; backup led render state
-                        les     di, cs:gp_led_pos_ptr
-                        xor     ax, ax
-                        mov     al, BYTE PTR es:[di + LED_TRANSPARENT]
-                        push    ax
-                        mov     al, BYTE PTR es:[di + LED_COLOR_FG]
-                        push    ax
-                        mov     al, BYTE PTR es:[di + LED_COLOR_BG]
-                        push    ax
+                        call    save_led_render_state
 
                         call    render_session_timer
 
@@ -1336,18 +1152,12 @@ render_data             proc    near
                         ; bottom right
                         call    render_actual_tyre_compound
 __end:
-                        ; restore led render state
-                        les     di, cs:gp_led_pos_ptr
-                        pop     ax
-                        mov     BYTE PTR es:[di + LED_COLOR_BG], al
-                        pop     ax
-                        mov     BYTE PTR es:[di + LED_COLOR_FG], al
-                        pop     ax
-                        mov     BYTE PTR es:[di + LED_TRANSPARENT], al
+                        call    restore_led_render_state
                         pop     es
                         popa
                         ret
 render_data             endp
+
 
 render_session_timer    proc    near
                         mov     ax, 0

@@ -15,7 +15,7 @@ CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR  -zRTSR
 ##
 ## Note: endres.obj *must* be last!
 ##
-OBJS           =    gptest.obj install.obj int08.obj int11.obj \
+OBJS           =    gptest.obj render.obj install.obj int08.obj int11.obj \
                     parse.obj \
                     endres.obj
 
@@ -31,7 +31,9 @@ gptest.ash:    gptest.h
                sed -e /GLOBAL/d gptest.tmp > gptest.ash
                if exist gptest.tmp del gptest.tmp
 
-gptest.obj:    gptest.asm segments.inc gptest.inc gptest.ash
+gptest.obj:    gptest.asm segments.inc render.inc gptest.inc gptest.ash
+
+render.obj:    render.asm render.inc
 
 install.obj:   install.asm segments.inc gptest.inc
 

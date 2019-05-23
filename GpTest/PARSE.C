@@ -45,7 +45,7 @@ short atoi(register const char far *p);
 char title_msg[] =
     "@(#)"
     "GpTest " VERSION " - Grand Prix/World Circuit Testing Support Tool.\n"
-    "Copyright (c) Rene Smit 2018 - All Rights Reserved.\n\n";
+    "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Functions
