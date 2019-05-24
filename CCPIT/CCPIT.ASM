@@ -69,27 +69,25 @@ pFirstCar       label   dword
 pFirstCarOff    dw      0d1bh
 pFirstCarSeg    dw      ?
 
-SG_REPLAY_STOR  equ     0C9Bh   ; start of 128 unused bytes before car structs (included in replay and save game)
+SG_DRIVER_NAM   equ     0c57ah  ; start of driver names
+SG_REPLAY_STOR  equ     0c9bh   ; start of 128 unused bytes before car structs (included in replay and save game)
 
                 public  pSaveGame1
 pSaveGame1      label   dword
-pSaveGame1Off   dw      SG_REPLAY_STOR + (2 * 24)
+pSaveGame1Off   dw      SG_DRIVER_NAM + (38 * 24)
 pSaveGame1Seg   dw      ?
 
                 public  pSaveGame2
 pSaveGame2      label   dword
-pSaveGame2Off   dw      SG_REPLAY_STOR + (3 * 24)
+pSaveGame2Off   dw      SG_DRIVER_NAM + (39 * 24)
 pSaveGame2Seg   dw      ?
 
-                public  pSaveGame3
-pSaveGame3      label   dword
-pSaveGame3Off   dw      SG_REPLAY_STOR + (0 * 24)
-pSaveGame3Seg   dw      ?
+                public  pReplayState
+pReplayState    label   dword
+pReplayStateOff dw      SG_REPLAY_STOR
+pReplayStateSeg dw      ?
 
-                public  pSaveGame4
-pSaveGame4      label   dword
-pSaveGame4Off   dw      SG_REPLAY_STOR + (1 * 24)
-pSaveGame4Seg   dw      ?
+
 
 ;*****************************************************************************
 ;**
@@ -814,8 +812,7 @@ save_games_ds proc near
         mov     cs:pFirstCarSeg, ds
         mov     cs:pSaveGame1Seg, ds
         mov     cs:pSaveGame2Seg, ds
-        mov     cs:pSaveGame3Seg, ds
-        mov     cs:pSaveGame4Seg, ds
+        mov     cs:pReplayStateSeg, ds
         ret
 
 save_games_ds endp
