@@ -1,4 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
+CCPIT V4.0 25th May 2019                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -22,11 +23,8 @@ roughly 45% race distance.
 CCPIT allows you to configure how many stops the CC make and when they
 make them. CCPIT allows you to define two groups of cars which have
 different pit strategies. For each group you can specify the number of
-cars in the group, how many stops they will make, and at what percentage
-race distance they should stop at.
-
-CCPIT also allows you to specify which tyre compound the CC should use
-at the start of the race and at subsequent pit stops.
+cars in the group, the tyre compound they should use, how many stops they will
+make, and at what percentage race distance they should stop at.
 
 CCPIT now also supports local multi-player games (when you select
 more than one active driver in F1GP's "Driver/Team Selection" menu).
@@ -53,19 +51,21 @@ Usage: ccpit [-h?] [-u] [-pN] [-r] [-m] [-t] {-g -cN -lN [-lN] [-lN]} {...}
        -h,-?     This help message.
        -u        Unload TSR.
 
-       -pN       Max. number cars in pits at one time (default 13).
+       -pN       Max. number cars in pits at one time (default 10).
        -r        Randomise group allocation on grid (default grid order).
 
        -g        Pit group.
+        -t?      Specify tyres where ? is one of ABCD (for this group).
         -cN      Stop N cars (for this group).
         -lN      Trigger cars to stop at race percentage N (for this group).
 
        -t?       Specify tyres for all computer cars where ? is one of ABCD.
        -m        Enable local multi-player mode (player's car called to pit).
 
-For the top 15 cars to pit at 30% and 60%, next 8 cars at 45% & the rest 0:
+For the top 15 cars use compound D and to pit at 30% and 60%, next 8 cars to
+use compound C and pit at 45%, & the rest to use compound B without pit stops:
 
-       ccpit -g -c15 -l30 -l60  -g -c8 -l45
+       ccpit -tB  -g -tD -c15 -l30 -l60  -g -tC -c8 -l45
 
 If you start CCPIT with no parameters it defaults to:
 
@@ -211,10 +211,10 @@ they may choose to cancel this, or request to come in at any other time.
 
 CC Tyre Compounds
 -----------------
-By default F1GP will start most of the CC on C and B compound tyres, and
-subsequent pit stops will . You can modify this behaviour by using the "-t"
-option. E.g., to force all the CC to start the race on Ds use "'-tD",
-subsequent CC pit stops will also use the specified tyres (Ds in this case).
+F1GP normally lets the CC cars use C and B compound tyres. You can modify this
+behaviour by using the "-t" option. E.g., to force all the CC to start the
+race on Ds use "'-tD", subsequent CC pit stops will also use the specified
+tyres (Ds in this case). This can also be specified for each pit group.
 
 Player's Tyre Compound
 ----------------------
@@ -253,7 +253,9 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V3.1 31/01/2019  Added support for replays. Not compatible with old save games.
+V4.0 24/05/2019  Added support for replays.
+                 Added support for specific tyre compound per pit group.
+                 Not compatible with old save games.
 
 Further Info
 ------------
@@ -263,6 +265,12 @@ Trevor Kellaway at:
 
 CompuServe:    100331,2330
 Internet:      100331.2330@compuserve.com
+
+For the 4.x version:
+
+Email:         sdidit@gmail.com
+WWW:           https://sites.google.com/view/f1gpwc/home
+Forum:         https://groups.google.com/forum/#!forum/f1gpwc
 
 This program may be freely copied and distributed, as long as it is not
 modified in any way, no fee is charged and this file is always included.

@@ -102,9 +102,29 @@ parse(
                     if (pit_group < MAX_GROUPS) {
                          pg = &tmp_pit_groups[pit_group++];
                          pg->num_cars = 0;
+                         pg->tyres = 0;
                     }
                     else {
                          display_msg("ccpit: Too many -g pit groups defined.\n");
+                         return FALSE;
+                    }
+               }
+               else if (*cmd_line == 't') {
+                    ++cmd_line;
+                    if (*cmd_line >= 'A' && *cmd_line <= 'D') {
+                        if (pit_group == 0) {
+                            tmp_tyres = *cmd_line;
+                        }
+                        else if (pg->tyres == 0){
+                            pg->tyres = *cmd_line;
+                        }
+                        else {
+                            display_msg("ccpit: Tyres can be specified only once per group.\n");
+                            return FALSE;
+                        }
+                    }
+                    else {
+                         display_msg("ccpit: Tyres must be one 'A', 'B', 'C', or 'D'.\n");
                          return FALSE;
                     }
                }
@@ -159,16 +179,6 @@ parse(
                     return TRUE;
 
                }
-               else if (*cmd_line == 't') {
-                    ++cmd_line;
-                    if (*cmd_line >= 'A' && *cmd_line <= 'D') {
-                         tmp_tyres = *cmd_line;
-                    }
-                    else {
-                         display_msg("ccpit: Tyres must be one 'A', 'B', 'C', or 'D'.\n");
-                         return FALSE;
-                    }
-               }
                else if (*cmd_line == 'm') {
                     tmp_multiplayer = TRUE;
                }
@@ -217,10 +227,11 @@ Usage(
                     "       -h,-?     This help message.\n"
                     "       -u        Unload TSR.\n"
                     "\n"
-                    "       -pN       Max. number cars in pits at one time (default 13).\n"
+                    "       -pN       Max. number cars in pits at one time (default 10).\n"
                     "       -r        Randomise group allocation on grid (default grid order).\n"
                     "\n"
                     "       -g        Pit group.\n"
+                    "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
                     "        -cN      Stop N cars (for this group).\n"
                     "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
                     "\n"

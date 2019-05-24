@@ -386,6 +386,7 @@ wrt_msg endp
 
         public  terminate
 terminate:
+        mov     al, 5   ; abnormal termination, use non-zero exit code
         mov     ah, 4ch
         int     DOS
 

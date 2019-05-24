@@ -33,7 +33,7 @@
 #define MAGIC1SG2                  0x00303423L    /* "#40" */
 #define MAGIC1SG3                  0x00373323L    /* "#37" */
 #define MAGIC1SG4                  0x00383323L    /* "#38" */
-#define MAGIC2                     0x55ab
+#define MAGIC2                     0x55ac
 
 /*
 ** Car Data structure SI indexes.
@@ -59,15 +59,15 @@ typedef unsigned char    byte;
 typedef unsigned short   word;
 
 /*
-** Must keep this structure size * MAX_GROUPS <= 20 bytes.
-** Currently: (1 + 1 + 1 + 3 + 3) * 2 = 18 bytes.
+** Must keep this structure size * MAX_GROUPS <= 18 bytes.
+** Currently: (1 + 1 + 1 + 1 + 3) * 2 = 14 bytes.
 */
 typedef struct {
      byte      current_index;
      byte      max_index;
      byte      num_cars;
+     byte      tyres;
      byte      percent[MAX_PITS_PER_GROUP];
-     byte      laps[MAX_PITS_PER_GROUP];
 } PIT_GROUP;
 
 /*

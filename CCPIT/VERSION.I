@@ -6,8 +6,9 @@
 ** V1.0 31/06/94    Added tracking of last pit.
 ** V2.0 30/08/94    Fixed "pit request" not being cleared bug.
 ** V3.0 29/10/94    Added tyre handling and multi-player support.
-** V3.1 31/01/19    Added support for replays.
+** V4.0 24/05/19    Added support for replays.
+**                  Added support for specific tyre compound per pit group.
 */
 
-#define VERSION     "V3.1 31/Jan/2019"
+#define VERSION     "V4.0.0 24/May/2019"
 
