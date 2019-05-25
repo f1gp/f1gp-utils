@@ -57,6 +57,7 @@ typedef unsigned char    bool;
 typedef unsigned char    byte;
 typedef unsigned short   word;
 
+
 /*
 ** Must keep this structure size <= 18 bytes.
 */
@@ -65,7 +66,8 @@ typedef struct {
     byte      num_cars;                           /*  1 byte  */
     byte      tyres;                              /*  1 byte  */
     byte      percent[MAX_PITS_PER_GROUP];        /* 12 bytes */
-} PIT_GROUP;                                      /* 15 bytes */
+    byte      pit_tyres[MAX_PITS_PER_GROUP / 4];  /*  3 bytes */
+} PIT_GROUP;                                      /* 18 bytes */
 
 typedef struct {
     byte      current_index;                      /*  1 byte  */
@@ -77,9 +79,9 @@ typedef struct {
 */
 typedef struct {
     long      magic1;                             /*  4 bytes */
-    PIT_GROUP pit_group;                          /* 15 bytes */
+    PIT_GROUP pit_group;                          /* 18 bytes */
     word      magic2;                             /*  2 bytes */
-} SAVE_GAME1;                                     /* 21 bytes */
+} SAVE_GAME1;                                     /* 24 bytes */
 
 /*
 ** Keep this structure size <= 24 bytes.
@@ -151,7 +153,9 @@ extern char         near *msg_text;
 ** Functions
 */
 
-byte rnd(void);
+extern byte rnd(void);
+extern byte get_group_pit_tyre(PIT_GROUP far *pg, byte index);
+extern void set_group_pit_tyre(PIT_GROUP far *pg, byte index, byte tyre);
 
 #endif    /* ccpit_h */
 /*---------------------------------------------------------------------------

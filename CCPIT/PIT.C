@@ -35,6 +35,7 @@ byte get_seed_group_value(unsigned short index);
 void put_seed_group_value(unsigned short index, byte value);
 byte get_last_pitstop_value(unsigned short index);
 void put_last_pitstop_value(unsigned short index, byte value);
+byte get_group_tyre(PIT_GROUP far *pg, int group_index, byte default_tyre);
 
 /*---------------------------------------------------------------------------
 ** Data
@@ -231,7 +232,7 @@ OntoJacks(
             car_index /= sizeof(pCar->si);
 
             /*
-             ** Ensure "pit request" bit is reset, as GP.EXE only resets it
+            ** Ensure "pit request" bit is reset, as GP.EXE only resets it
             ** if the current number of laps is greater than its pit stop
             ** threshold.
             */
@@ -239,8 +240,8 @@ OntoJacks(
 
             /*
             ** Store unscheduled pit stops.
-             */
-             if ((get_last_pitstop_value(car_index) & 0x80) == 0x00) {
+            */
+            if ((get_last_pitstop_value(car_index) & 0x80) == 0x00) {
                 /*
                 ** If less than 40% of the race distance remains then
                 ** schedule a single stop at 40% of the remaining distance.
@@ -314,9 +315,7 @@ TyreChange(
             if (group != 0) {
                 sg1 = get_group_container(group - 1);
                 if (sg1 != 0) {
-                    if (sg1->pit_group.tyres != 0) {
-                        tyre = sg1->pit_group.tyres - 'A';
-                    }
+                    tyre = get_group_tyre(&sg1->pit_group, group - 1, tyre);
                 }
             }
         }
@@ -442,6 +441,50 @@ put_last_pitstop_value(
     byte           value
 ) {
     pReplayState->last_pitstop[index] = value;
+}
+
+byte
+get_group_tyre(
+    PIT_GROUP far *pg,
+    int group_index,
+    byte default_tyre
+) {
+    byte tyre;
+    byte index;
+
+    tyre = default_tyre;
+    index = pReplayState->pit_groups[group_index].current_index;
+    if (pg->tyres != 0) {
+        if (index == 0) {
+            /* check default pit group tyre */
+            tyre = pg->tyres - 'A';
+        }
+        else {
+            /* check tyre for current pit stop */
+            tyre = get_group_pit_tyre(pg, index - 1);
+        }
+    }
+    return tyre;
+}
+
+byte
+get_group_pit_tyre(
+    PIT_GROUP far *pg,
+    byte index
+) {
+    return ((pg->pit_tyres[index / 4]) >> ((index % 4) * 2)) & 3;
+}
+
+void
+set_group_pit_tyre(
+    PIT_GROUP far *pg,
+    byte index,
+    byte tyre
+) {
+    byte s = (index % 4) * 2;
+    byte t = (tyre & 3) << s;
+    pg->pit_tyres[index / 4] &= ~(3 << s);
+    pg->pit_tyres[index / 4] |= t;
 }
 
 /*---------------------------------------------------------------------------

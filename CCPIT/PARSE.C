@@ -36,6 +36,7 @@ void wrt_msg(void);
 
 void Usage(void);
 void display_msg(char near *msg);
+void display_int(int v);
 void display_chr(char c);
 short atoi(register const char far *p);
 
@@ -59,6 +60,7 @@ parse(
 ) {
     register PIT_GROUP  *pg = tmp_pit_groups;
     register int        i;
+    int                 j;
     int                 n;
     int                 option_next;
     int                 total_cars     = 0;
@@ -116,11 +118,17 @@ parse(
                     if (pit_group == 0) {
                        tmp_tyres = *cmd_line;
                     }
-                    else if (pg->tyres == 0){
+                    else if (pg->max_index == 0) {
                         pg->tyres = *cmd_line;
+                        for (i = 0; i < MAX_PITS_PER_GROUP; i++) {
+                            set_group_pit_tyre(pg, i, pg->tyres - 'A');
+                        }
+                    }
+                    else if (pg->tyres) {
+                        set_group_pit_tyre(pg, pg->max_index - 1, *cmd_line - 'A');
                     }
                     else {
-                        display_msg("ccpit: Tyres can be specified only once per group.\n");
+                        display_msg("ccpit: Pit stop tyres require default group tyres.\n");
                         return FALSE;
                     }
                 }
@@ -185,7 +193,7 @@ parse(
             }
             else {
                 Usage();
-                 return FALSE;
+                return FALSE;
             }
 
             option_next = FALSE;
@@ -221,6 +229,54 @@ parse(
         tmp_num_groups = pit_group;
     }
 
+    display_msg("Using ");
+    display_int(tmp_num_groups);
+    display_msg(" pit group");
+    if (tmp_num_groups != 1) {
+        display_chr('s');
+    }
+    display_msg("\n");
+    for (i = 0; i < tmp_num_groups; i++) {
+        pg = tmp_pit_groups + i;
+        display_msg(" -> ");
+        display_int(pg->num_cars);
+        display_msg(" car");
+        if (pg->num_cars != 1) {
+            display_chr('s');
+        }
+        if (pg->tyres != 0 || tmp_tyres != 0) {
+            display_msg(" starting on ");
+            display_chr(pg->tyres ? pg->tyres : tmp_tyres);
+            display_msg("'s");
+        }
+        display_msg("\n");
+        for (j = 0; j < MAX_PITS_PER_GROUP; j++) {
+            if (pg->percent[j] == 0) {
+                break;
+            }
+            display_msg("    stopping @ ");
+            display_int(pg->percent[j]);
+            display_chr('%');
+            if (pg->tyres != 0) {
+                display_msg(" for ");
+                display_chr('A' + get_group_pit_tyre(pg, j));
+                display_msg("'s");
+            }
+            else if (tmp_tyres != 0) {
+                display_msg(" for ");
+                display_chr(tmp_tyres);
+                display_msg("'s");
+            }
+            display_msg("\n");
+        }
+    }
+    if (tmp_tyres != 0) {
+        display_msg(" -> remaining cars starting on ");
+        display_chr(tmp_tyres);
+        display_msg("'s");
+    }
+    display_msg("\n");
+
     return TRUE;
 }
 
@@ -228,7 +284,7 @@ void
 Usage(
     void
 ) {
-    display_msg("Usage: ccpit [-h?] [-u] [-pN] [-r] [-m] [-t] {-g -cN -lN [-lN] [-lN]} {...}\n"
+    display_msg("Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...\n"
                 "\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
@@ -236,13 +292,14 @@ Usage(
                 "       -pN       Max. number cars in pits at one time (default 10).\n"
                 "       -r        Randomise group allocation on grid (default grid order).\n"
                 "\n"
-                "       -g        Pit group.\n"
-                "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
-                "        -cN      Stop N cars (for this group).\n"
-                "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
-                "\n"
-                "       -t?       Specify tyres for all computer cars where ? is one of ABCD.\n"
                 "       -m        Enable local multi-player mode (player's car called to pit).\n"
+                "       -t?       Specify tyres for all computer cars where ? is one of ABCD.\n"
+                "\n"
+                "       -g        Pit group.\n"
+                "        -cN      Stop N cars (for this group).\n"
+                "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
+                "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
+                "         -t?     Specify tyres where ? is one of ABCD (for this pit stop).\n"
                 "\n"
                 "For the top 15 cars to pit at 30% and 60%, next 8 cars at 45% & the rest 0:\n"
                 "\n"
@@ -259,6 +316,26 @@ display_msg(
             display_chr('\r');
         }
         display_chr(*msg++);
+    }
+}
+
+void
+display_int(
+    int v
+) {
+    int d;
+    int i;
+    int b = 0;
+    if (v < 0) {
+        display_chr('-');
+        v = -v;
+    }
+    for (i = 0, d = 10000; i < 5; i++, d /= 10) {
+        if (b || v / d) {
+            display_chr('0' + v / d);
+            b = 1;
+        }
+        v = v % d;
     }
 }
 

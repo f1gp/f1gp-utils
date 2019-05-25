@@ -20,11 +20,12 @@ manner. The standard game randomly sets on average 5 cars to pit in a >75%
 race distance (which isn't wet). The game hard codes the pit stop lap at
 roughly 45% race distance.
 
-CCPIT allows you to configure how many stops the CC make and when they
-make them. CCPIT allows you to define two groups of cars which have
-different pit strategies. For each group you can specify the number of
-cars in the group, the tyre compound they should use, how many stops they will
-make, and at what percentage race distance they should stop at.
+CCPIT allows you to configure how many stops the CC make, when they
+make them, and on what tyre compound. CCPIT allows you to define upto ten
+groups of cars which have different pit strategies. For each group you can
+specify the number of cars in the group, how many stops they will make, at
+what percentage race distance they should stop at, and what tyre compound to
+use for each stint.
 
 CCPIT now also supports local multi-player games (when you select
 more than one active driver in F1GP's "Driver/Team Selection" menu).
@@ -46,7 +47,7 @@ will be run if you keep both CCPIT.COM and CCPIT.EXE in the same directory.
 
 Command Line Options
 --------------------
-Usage: ccpit [-h?] [-u] [-pN] [-r] [-m] [-t] {-g -cN -lN [-lN] [-lN]} {...}
+Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...
 
        -h,-?     This help message.
        -u        Unload TSR.
@@ -54,18 +55,20 @@ Usage: ccpit [-h?] [-u] [-pN] [-r] [-m] [-t] {-g -cN -lN [-lN] [-lN]} {...}
        -pN       Max. number cars in pits at one time (default 10).
        -r        Randomise group allocation on grid (default grid order).
 
-       -g        Pit group.
-        -t?      Specify tyres where ? is one of ABCD (for this group).
-        -cN      Stop N cars (for this group).
-        -lN      Trigger cars to stop at race percentage N (for this group).
-
-       -t?       Specify tyres for all computer cars where ? is one of ABCD.
        -m        Enable local multi-player mode (player's car called to pit).
+       -t?       Specify tyres for all computer cars where ? is one of ABCD.
 
-For the top 15 cars use compound D and to pit at 30% and 60%, next 8 cars to
-use compound C and pit at 45%, & the rest to use compound B without pit stops:
+       -g        Pit group.
+        -cN      Stop N cars (for this group).
+        -t?      Specify tyres where ? is one of ABCD (for this group).
+        -lN      Trigger cars to stop at race percentage N (for this group).
+         -t?     Specify tyres where ? is one of ABCD (for this pit stop).
 
-       ccpit -tB  -g -tD -c15 -l30 -l60  -g -tC -c8 -l45
+For the top 15 cars to use compound D and to pit at 30% and 60%, next 8 cars to
+start on compound C and pit at 45% for B's, and the rest to use compound A
+without pit stops:
+
+       ccpit -tA  -g -c15 -tD -l30 -l60  -g -c8 -tC -l45 -tB
 
 If you start CCPIT with no parameters it defaults to:
 
@@ -91,12 +94,12 @@ If you wish to unload CCPIT after finishing playing GP then use "CCPIT -u".
 Pit Groups
 ----------
 A pit group definition should start with a '-g'. A pit group should contain
-the number of cars in the group using the '-c' option.  Up to three pit stop
+the number of cars in the group using the '-c' option.  Up to seven pit stop
 points may be specified using the '-l' option the appropriate number of
 times. Note that the stopping points are specified as a *percentage* of the
 current race distance (they are scaled if you specify less than a 100% race
 distance, less than 75% races won't have any pit stops, neither will wet
-races). Two pit stop groups can be defined.
+races). Upto ten pit stop groups can be defined.
 
 So, for a race where 13 cars stop at 25% and 55%, and 10 cars stop at 45%:
 
@@ -107,6 +110,23 @@ digit one!) stopping points in increasing percentage order, CCPIT won't
 validate this! The total number of cars specified with the '-c' option can't
 exceed 26. If the total number of cars specified is less than 26 then the
 remaining cars will go through the race without stopping.
+
+Tyre Compounds
+--------------
+There are three places a tyre compound can be specified with -t? (where ? is
+one of ABCD):
+
+1) A default tyre compound for all CC cars.
+   Should precede any -g option.
+2) A default tyre compound for a pit group. This will also be the tyre the
+   CC cars in that group will start the race on.
+   This overrides the tyre compound specified at 1).
+   Should follow a -g option and precede any -lN option.
+3) A tyre compound for a pit stop.
+   This overrides the tyre compound specified at 2).
+   Should follow a -lN option.
+
+If 3) is used, then 2) must also be used.
 
 Pitting
 -------
@@ -177,10 +197,13 @@ Saved Games
 -----------
 CCPIT may be used with save games. CCPIT saves its current configuration in
 the saved game file written by the game. The only reliable place CCPIT can
-use for this information is the four driver name fields for the last two
-teams. These teams are normally disabled. It doesn't matter if these teams
-are enabled but if they are you will see the driver names as "#37", "#38",
-"#39" and "#40".
+use for this information is the driver name fields for the last teams.
+How many driver name fields are used depends on the number of pit groups.
+The last driver name field is used for global settings. Then each pit group
+will use a driver name field before it for the pit group settings.
+The last two teams are normally disabled. It doesn't matter if teams with
+settings are enabled but if they are you will see the driver names as "#40",
+"#39", "#38", etc. With 10 pit groups this will continue to "#30".
 
 To save a game use the normal "Save Game" feature of F1GP. When you come to
 restart F1GP and reload a saved game make sure you have started CCPIT
