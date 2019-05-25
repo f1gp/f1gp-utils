@@ -1,6 +1,6 @@
 /*
 ** File   : gplap.c
-** Author : TK 
+** Author : TK
 ** Date   : 27/03/94
 **
 ** $Header:   F:/TK/GPLAPTIM/GPLAP/VCS/GPLAP.C__   1.13   07 Apr 1996 12:40:56   tk  $
@@ -22,9 +22,10 @@
 ** V5.1 02/07/95    Rebuilt with V4.02 Borland C++.
 ** V6.0 07/10/95    Added support for race authentication records.
 ** V6.1 04/04/96    Updated version number to keep in step with GPLAPW.
+** V7.0 25/05/2019  Added watch period parameter, defaults to 0s (was 5s).
 */
 
-#define VERSION     "V6.1 4th Apr 1996"
+#define VERSION     "V7.0 25th May 2019"
 
 /*---------------------------------------------------------------------------
 ** Includes
@@ -61,7 +62,7 @@
 */
 
 static void Usage(void);
-static void ShowLog(char *filename, bool watch_mode);
+static void ShowLog(char *filename, bool watch_mode, int watch_period);
 static void WriteAuthEntries(char *filename);
 static bool IsFilter(LB_ENTRY *le);
 
@@ -73,8 +74,9 @@ static bool IsFilter(LB_ENTRY *le);
 static const char sccsid[] = "@(#)GpLap.exe" "\t" VERSION;
 
 static bool fShowTotalLaps    = FALSE;       // -n
-static bool x_flag            = FALSE;
-static bool w_flag            = FALSE;
+static bool x_flag            = FALSE;       // -x
+static bool w_flag            = FALSE;       // -w
+static int  w_period          = 0;           // -wN
 static bool fShowPractice     = FALSE;       // -t
 static bool fShowQualifying   = FALSE;       // -q
 static bool fShowRace         = FALSE;       // -r
@@ -101,45 +103,54 @@ main(
 ) {
      char *filename = DEFAULT_LOG_FILENAME;
      char option;
+     char *p;
 
      for (--argc, ++argv; argc; argc--, argv++) {
-          if (**argv == '-' || **argv == '/') {
-               while (*++*argv) {
-                    option = (isupper(**argv)) ? tolower(**argv) : **argv;
-                    switch (option) {
-                    case 'n': fShowTotalLaps      = TRUE;   break;
-                    case 'x': x_flag              = TRUE;   break;
-                    case 'w': w_flag              = TRUE;   break;
-                    case 't': fShowPractice       = TRUE;   break;
-                    case 'q': fShowQualifying     = TRUE;   break;
-                    case 'r': fShowRace           = TRUE;   break;
-                    case 'c': fShowComputer       = TRUE;   break;
-                    case 'l': fShowLeader         = TRUE;   break;
-                    case 'p': fShowPlayer         = TRUE;   break;
-                    case 'a': fShowAuth           = TRUE;   break;
-                    case 'f': fShowFastest        = TRUE;   break;
-                    case 'b': fShowBest           = TRUE;   break;
-                    case 's': fShowAvgSpeed       = TRUE;   break;
-                    case 'm': fAvgSpeedMph        = TRUE;   break;
-                    case 'k': fAvgSpeedMph        = FALSE;  break;
-                    case 'e': fElapsed            = TRUE;   break;
-                    case 'g': fShowSetup          = TRUE;   break;
-                    case 'i': fShowPit            = TRUE;   break;
-
+          p = *argv;
+          if (p[0] == '-' || p[0] == '/') {
+               switch (p[1]) {
+                    case 'w':
+                         w_flag = TRUE;
+                         w_period = atoi(p + 2);
+                         break;
                     case 'h':
                     case '?':
                          Usage();
                          break;
-
                     default:
-                         (void) printf("gplap: unknown option '-%c'.\n", **argv);
-                         Usage();
+                         while (*++p) {
+                              option = (isupper(*p)) ? tolower(*p) : *p;
+                              switch (option) {
+                                   case 'n': fShowTotalLaps      = TRUE;   break;
+                                   case 'x': x_flag              = TRUE;   break;
+                                   case 'w': w_flag              = TRUE;   break;
+                                   case 't': fShowPractice       = TRUE;   break;
+                                   case 'q': fShowQualifying     = TRUE;   break;
+                                   case 'r': fShowRace           = TRUE;   break;
+                                   case 'c': fShowComputer       = TRUE;   break;
+                                   case 'l': fShowLeader         = TRUE;   break;
+                                   case 'p': fShowPlayer         = TRUE;   break;
+                                   case 'a': fShowAuth           = TRUE;   break;
+                                   case 'f': fShowFastest        = TRUE;   break;
+                                   case 'b': fShowBest           = TRUE;   break;
+                                   case 's': fShowAvgSpeed       = TRUE;   break;
+                                   case 'm': fAvgSpeedMph        = TRUE;   break;
+                                   case 'k': fAvgSpeedMph        = FALSE;  break;
+                                   case 'e': fElapsed            = TRUE;   break;
+                                   case 'g': fShowSetup          = TRUE;   break;
+                                   case 'i': fShowPit            = TRUE;   break;
+
+                                   default:
+                                       (void) printf("gplap: unknown option '-%c'.\n", *p);
+                                       Usage();
+                                       break;
+                              }
+                         }
                          break;
-                    }
                }
           }
           else {
-               filename = *argv;
+               filename = p;
           }
      }
 
@@ -164,7 +175,7 @@ main(
           WriteAuthEntries(filename);
      }
      else {
-          ShowLog(filename, w_flag);
+          ShowLog(filename, w_flag, w_period);
      }
 
      return 0;
@@ -175,9 +186,10 @@ Usage(
      void
 ) {
      (void) printf("GpLap " VERSION " - Grand Prix/World Circuit Lap Time Logger.\n");
-     (void) printf("Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n\n");
+     (void) printf("Copyright (c) Trevor Kellaway (CIS:100331,2330) 1995 - All Rights Reserved.\n");
+     (void) printf("Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n");
 
-     (void) printf( "Usage: gplap [-tqrcplfbasmkeginxw] [log filename]\n"
+     (void) printf( "Usage: gplap [-tqrcplfbasmkeginx] [-wN] [log filename]\n"
                     "       -?/-h  This usage message.\n"
                     "       -t     Show Practice (Training).\n"
                     "       -q     Show Qualifying.\n"
@@ -196,7 +208,7 @@ Usage(
                     "       -i     Show Pit Stops (In/out).\n"
                     "       -n     Number of laps.\n"
                     "       -x     Write authentication file (AUTHLAP.TXT).\n"
-                    "       -w     Watch log file grow (<Esc> to quit).\n"
+                    "       -w[N]  Watch log file grow each N seconds (<Esc> to quit).\n"
                     "       [...]  Specify another name for GPLAPTIM.LOG.\n"
                );
      exit(1);
@@ -204,8 +216,9 @@ Usage(
 
 static void
 ShowLog(
-     char *filename,                    /* In  Log filename                */
-     bool watch_mode                    /* In  Watch mode                  */
+     char *filename,                    /* In  Log filename                 */
+     bool watch_mode,                   /* In  Watch mode                   */
+     int watch_period                   /* In  Watch mode period in seconds */
 ) {
      LAP_RECORD     lr;
      LB_ENTRY       le;
@@ -292,14 +305,18 @@ ShowLog(
                }
 
                if (watch_mode) {
-                    long t, et;
+                    if (watch_period > 0) {
+                         long t, et;
 
-                    (void) time(&et);
-                    et += 5;
-
-                    for ((void) time(&t); t < et; ) {
+                         (void) time(&et);
+                         et += watch_period;
+                         for ((void) time(&t); t < et; ) {
+                              (void) VDM_release_time_slice();
+                              (void) time(&t);
+                         }
+                    }
+                    else {
                          (void) VDM_release_time_slice();
-                         (void) time(&t);
                     }
                }
           }
@@ -401,7 +418,7 @@ IsFilter(
                }
 
                if ( (fShowFastest && le->fastest_qual_lap) ||
-                    (fShowBest && lr->lr_lap_time == lr->lr_best_time)                    
+                    (fShowBest && lr->lr_lap_time == lr->lr_best_time)
                ) {
                     fAdd = (fAdd || fDoComputer || fDoPlayer);
                }
@@ -416,7 +433,7 @@ IsFilter(
                (IS_PRE_RACE_PRACTICE(lr->lr_game_mode) && fShowPractice)
           ) {
                if ( (fShowFastest && le->fastest_qual_lap) ||
-                    (fShowBest && lr->lr_lap_time == lr->lr_best_time)                    
+                    (fShowBest && lr->lr_lap_time == lr->lr_best_time)
                ) {
                     fAdd = (fAdd || fDoComputer || fDoPlayer);
                }
