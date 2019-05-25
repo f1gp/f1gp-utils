@@ -1,5 +1,5 @@
 GpLapTim V6.1 4th Apr 1996                  Trevor Kellaway (CIS:100331,2330)
-GpLapTim V7.0 8th May 2019                       Rene Smit (sdidit@gmail.com)
+GpLapTim V7.0 25th May 2019                      Rene Smit (sdidit@gmail.com)
 
 Grand Prix/World Circuit Lap Time Logger.
 
@@ -53,7 +53,7 @@ Usage: GPLAPTIM [-h?]  [-aN -bN -cN -s] [-p] [-wN] [-u] [-f(filename)]
        -h,-?     This help message.
        -u        Unload TSR.
 
-Usage: GPLAP [-tqrcplfbasmkeginxw] [log filename]
+Usage: GPLAP [-tqrcplfbasmkeginx] [-wN] [log filename]
        -?/-h  This usage message.
        -t     Show Practice (Training).
        -q     Show Qualifying.
@@ -72,7 +72,7 @@ Usage: GPLAP [-tqrcplfbasmkeginxw] [log filename]
        -i     Show Pit Stops (In/out).
        -n     Number of laps.
        -x     Write authentication file (AUTHLAP.TXT).
-       -w     Watch log file grow (<Esc> to quit).
+       -w[N]  Watch log file grow each N seconds (<Esc> to quit).
        [...]  Specify another name for GPLAPTIM.LOG.
 
 For GPLAPW see the Windows help file included.
@@ -244,9 +244,11 @@ Use the GPLAP "-w" option to cause GPLAP to wait forever for new entries
 in the GPLAPTIM.LOG file. Press <Esc> to terminate GPLAP.
 
 GPLAP is multi-tasker friendly and will release CPU cycles when it has
-nothing to do. GPLAPTIM.COM and GPLAP both support file sharing of
-GPLAPTIM.LOG, so both programs accessing the same file at the same time
-is possible.
+nothing to do. To reduce the number of CPU cycles GPLAP uses, specify
+a watch period with the watch parameter, e.g. -w5 for a period of 5 seconds.
+
+GPLAPTIM.COM and GPLAP both support file sharing of GPLAPTIM.LOG, so both
+programs accessing the same file at the same time is possible.
 
 Bugs/Features
 -------------

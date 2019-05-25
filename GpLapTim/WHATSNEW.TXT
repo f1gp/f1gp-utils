@@ -22,6 +22,13 @@ Improvements for hotseat mode:
    the value for either CC player or player, whoever is in control at the
    time the car passes the s/f line.
 
+GPLAP.EXE
+---------
+1. Added watch period parameter. Defaults to 0 seconds. This used to be
+   hardcoded at 5 seconds. It might have been necessary for Windows 3,
+   but it's not necessary for DOSBox.
+
+
 Thanks to Hrvoje Stimac for suggestions and testing.
 
 

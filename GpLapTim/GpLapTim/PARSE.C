@@ -43,7 +43,7 @@
 **                      to make sure it shows the right value for CCPLayer.
 */
 
-#define VERSION     "V7.0 8th May 2019"
+#define VERSION     "V7.0 25th May 2019"
 
 /*---------------------------------------------------------------------------
 ** Includes
