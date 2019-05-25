@@ -34,6 +34,7 @@
 
 void wrt_msg(void);
 
+void DumpConfig(void);
 void Usage(void);
 void display_msg(char near *msg);
 void display_int(int v);
@@ -60,7 +61,6 @@ parse(
 ) {
     register PIT_GROUP  *pg = tmp_pit_groups;
     register int        i;
-    int                 j;
     int                 n;
     int                 option_next;
     int                 total_cars     = 0;
@@ -229,55 +229,114 @@ parse(
         tmp_num_groups = pit_group;
     }
 
-    display_msg("Using ");
-    display_int(tmp_num_groups);
-    display_msg(" pit group");
-    if (tmp_num_groups != 1) {
-        display_chr('s');
-    }
-    display_msg("\n");
-    for (i = 0; i < tmp_num_groups; i++) {
-        pg = tmp_pit_groups + i;
-        display_msg(" -> ");
-        display_int(pg->num_cars);
-        display_msg(" car");
-        if (pg->num_cars != 1) {
-            display_chr('s');
-        }
-        if (pg->tyres != 0 || tmp_tyres != 0) {
-            display_msg(" starting on ");
-            display_chr(pg->tyres ? pg->tyres : tmp_tyres);
-            display_msg("'s");
-        }
-        display_msg("\n");
-        for (j = 0; j < MAX_PITS_PER_GROUP; j++) {
-            if (pg->percent[j] == 0) {
-                break;
-            }
-            display_msg("    stopping @ ");
-            display_int(pg->percent[j]);
-            display_chr('%');
-            if (pg->tyres != 0) {
-                display_msg(" for ");
-                display_chr('A' + get_group_pit_tyre(pg, j));
-                display_msg("'s");
-            }
-            else if (tmp_tyres != 0) {
-                display_msg(" for ");
-                display_chr(tmp_tyres);
-                display_msg("'s");
-            }
-            display_msg("\n");
-        }
-    }
-    if (tmp_tyres != 0) {
-        display_msg(" -> remaining cars starting on ");
-        display_chr(tmp_tyres);
-        display_msg("'s");
-    }
-    display_msg("\n");
+    DumpConfig();
 
     return TRUE;
+}
+
+void
+dump_count(
+    int count,
+    char near *name,
+    char near *plural
+) {
+    display_int(count);
+    display_chr(' ');
+    display_msg(count == 1 ? name : plural);
+}
+
+void
+dump_num_cars(
+    int num_cars
+) {
+    dump_count(num_cars, "car", "cars");
+}
+
+void
+dump_tyre_compound(
+    char tyre_compound
+) {
+    display_chr(tyre_compound);
+    display_msg("'s");
+}
+
+void
+dump_percentage(
+    int percentage
+) {
+    display_int(percentage);
+    display_chr('%');
+}
+
+void
+DumpConfig(
+    void
+) {
+    register PIT_GROUP *pg;
+    int                 i;
+    int                 j;
+    int                 remaining_cars;
+    int                 g;
+
+    g = 0;
+    remaining_cars = 26;
+    for (i = 0, pg = tmp_pit_groups; i < tmp_num_groups; i++, pg++) {
+        if (pg->num_cars > 0) {
+            ++g;
+            remaining_cars -= pg->num_cars;
+        }
+    }
+    if (remaining_cars > 0) {
+        ++g;
+    }
+
+    display_msg("Using ");
+    dump_count(g, "pit group", "pit groups");
+    display_msg(":\n");
+    for (i = 0, pg = tmp_pit_groups; i < tmp_num_groups; i++, pg++) {
+        if (pg->num_cars > 0) {
+            display_msg(" -> ");
+            dump_num_cars(pg->num_cars);
+            display_msg("\n");
+            if (pg->tyres != 0 || tmp_tyres != 0) {
+                display_msg("    - starting on ");
+                dump_tyre_compound(pg->tyres ? pg->tyres : tmp_tyres);
+                display_msg("\n");
+            }
+            if (pg->percent[0] == 0) {
+                display_msg("    - making no stops\n");
+            }
+            for (j = 0; j < MAX_PITS_PER_GROUP; j++) {
+                if (pg->percent[j] == 0) {
+                    break;
+                }
+                display_msg("    - stopping @ ");
+                dump_percentage(pg->percent[j]);
+                if (pg->tyres != 0 || tmp_tyres != 0) {
+                    display_msg(" for ");
+                    if (pg->tyres != 0) {
+                        dump_tyre_compound('A' + get_group_pit_tyre(pg, j));
+                    }
+                    else {
+                        dump_tyre_compound(tmp_tyres);
+                    }
+                }
+                display_msg("\n");
+            }
+        }
+    }
+    if (remaining_cars > 0) {
+        display_msg(" -> ");
+        dump_num_cars(remaining_cars);
+        display_msg("\n");
+        if (tmp_tyres != 0) {
+            display_msg("    - starting on ");
+            dump_tyre_compound(tmp_tyres);
+            display_msg("\n");
+        }
+        display_msg("    - making no stops\n");
+    }
+    display_msg("\n");
 }
 
 void
