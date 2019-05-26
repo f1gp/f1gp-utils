@@ -34,7 +34,6 @@
 
 void wrt_msg(void);
 
-void DumpConfig(void);
 void Usage(void);
 void display_msg(char near *msg);
 void display_int(int v);
@@ -118,14 +117,14 @@ parse(
                     if (pit_group == 0) {
                        tmp_tyres = *cmd_line;
                     }
-                    else if (pg->max_index == 0) {
+                    else if (pg->num_stops == 0) {
                         pg->tyres = *cmd_line;
                         for (i = 0; i < MAX_PITS_PER_GROUP; i++) {
                             set_group_pit_tyre(pg, i, pg->tyres - 'A');
                         }
                     }
                     else if (pg->tyres) {
-                        set_group_pit_tyre(pg, pg->max_index - 1, *cmd_line - 'A');
+                        set_group_pit_tyre(pg, pg->num_stops - 1, *cmd_line - 'A');
                     }
                     else {
                         display_msg("ccpit: Pit stop tyres require default group tyres.\n");
@@ -168,10 +167,10 @@ parse(
                     return FALSE;
                 }
 
-                if (pg->max_index < MAX_PITS_PER_GROUP) {
+                if (pg->num_stops < MAX_PITS_PER_GROUP) {
                     n = atoi(&cmd_line[1]);
                     if (n >= 5 && n <= 95) {
-                        pg->percent[pg->max_index++] = (byte) n;
+                        pg->percent[pg->num_stops++] = (byte) n;
                     }
                     else {
                         display_msg("ccpit: -l value should be between 5% and 95%.\n");
@@ -208,18 +207,17 @@ parse(
     ** Nothing defined so use defaults.
     */
     if (pit_group == 0) {
-        display_msg("Using defaults: (13 @ 25% & 55%) (13 @ 35% & 65%)  Max In Pit:10\n");
         pg = tmp_pit_groups;
 
         pg->num_cars        = 13;
-        pg->max_index       = 2;
+        pg->num_stops       = 2;
         pg->percent[0]      = 25;
         pg->percent[1]      = 55;
 
         ++pg;
 
         pg->num_cars        = 13;
-        pg->max_index       = 2;
+        pg->num_stops       = 2;
         pg->percent[0]      = 35;
         pg->percent[1]      = 65;
 
@@ -228,8 +226,6 @@ parse(
     else {
         tmp_num_groups = pit_group;
     }
-
-    DumpConfig();
 
     return TRUE;
 }
@@ -269,7 +265,45 @@ dump_percentage(
 }
 
 void
-DumpConfig(
+dump_group_hdr(
+    int num_cars
+) {
+    display_msg(" -> ");
+    dump_num_cars(num_cars);
+    display_msg("\n");
+}
+
+void
+dump_group_item_hdr(
+    char near *hdr
+) {
+    display_msg("    - ");
+    display_msg(hdr);
+}
+
+void
+dump_tyres_start(
+    byte tyres
+) {
+    dump_group_item_hdr("starting on ");
+    dump_tyre_compound(tyres);
+    display_msg("\n");
+}
+
+void
+dump_no_stops(
+    void
+) {
+    dump_group_item_hdr("making no pit stops\n");
+}
+
+
+/*
+** Show parsed pit group configuration.
+** Called from install.asm when parsing successful and ready to be installed.
+*/
+void
+dump_config(
     void
 ) {
     register PIT_GROUP *pg;
@@ -290,27 +324,34 @@ DumpConfig(
         ++g;
     }
 
+    display_msg("Maximum ");
+    dump_num_cars(tmp_max_cars_in_pit);
+    display_msg(" in the pits");
+    display_msg("\n");
+    if (tmp_randomise) {
+        display_msg("Group allocation on grid will be randomised\n");
+    }
+    if (tmp_multiplayer) {
+        display_msg("Local multi-player mode enabled\n");
+    }
+
     display_msg("Using ");
     dump_count(g, "pit group", "pit groups");
     display_msg(":\n");
     for (i = 0, pg = tmp_pit_groups; i < tmp_num_groups; i++, pg++) {
         if (pg->num_cars > 0) {
-            display_msg(" -> ");
-            dump_num_cars(pg->num_cars);
-            display_msg("\n");
+            dump_group_hdr(pg->num_cars);
             if (pg->tyres != 0 || tmp_tyres != 0) {
-                display_msg("    - starting on ");
-                dump_tyre_compound(pg->tyres ? pg->tyres : tmp_tyres);
-                display_msg("\n");
-            }
-            if (pg->percent[0] == 0) {
-                display_msg("    - making no stops\n");
+                dump_tyres_start(pg->tyres ? pg->tyres : tmp_tyres);
             }
             for (j = 0; j < MAX_PITS_PER_GROUP; j++) {
                 if (pg->percent[j] == 0) {
+                    if (j == 0) {
+                        dump_no_stops();
+                    }
                     break;
                 }
-                display_msg("    - stopping @ ");
+                dump_group_item_hdr("pitting @ ");
                 dump_percentage(pg->percent[j]);
                 if (pg->tyres != 0 || tmp_tyres != 0) {
                     display_msg(" for ");
@@ -326,15 +367,11 @@ DumpConfig(
         }
     }
     if (remaining_cars > 0) {
-        display_msg(" -> ");
-        dump_num_cars(remaining_cars);
-        display_msg("\n");
+        dump_group_hdr(remaining_cars);
         if (tmp_tyres != 0) {
-            display_msg("    - starting on ");
-            dump_tyre_compound(tmp_tyres);
-            display_msg("\n");
+            dump_tyres_start(tmp_tyres);
         }
-        display_msg("    - making no stops\n");
+        dump_no_stops();
     }
     display_msg("\n");
 }

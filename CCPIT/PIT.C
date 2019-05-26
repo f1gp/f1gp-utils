@@ -71,18 +71,18 @@ SeedGrid(
     ** Save max num of cars in pit in save game area & patch code.
     ** Save game area is at driver name #40.
     */
-    pSaveGame2->num_groups        = tmp_num_groups;
-    pSaveGame2->max_cars_in_pit   = tmp_max_cars_in_pit;
-    pSaveGame2->randomise         = tmp_randomise;
-    pSaveGame2->tyres             = tmp_tyres;
-    pSaveGame2->multiplayer       = tmp_multiplayer;
-    *hook_nc_value                = tmp_max_cars_in_pit;
+    pSaveGame2->num_groups      = tmp_num_groups;
+    pSaveGame2->max_cars_in_pit = tmp_max_cars_in_pit;
+    pSaveGame2->randomise       = tmp_randomise;
+    pSaveGame2->tyres           = tmp_tyres;
+    pSaveGame2->multiplayer     = tmp_multiplayer;
+    *hook_nc_value              = tmp_max_cars_in_pit;
 
     /*
     ** Ensure all cars are marked as not stopping.
     */
-    pSaveGame2->magic1  = MAGIC1SG2;
-    pSaveGame2->magic2  = MAGIC2;
+    pSaveGame2->magic1 = MAGIC1SG2;
+    pSaveGame2->magic2 = MAGIC2;
     for (i = 0; i < sizeof(pSaveGame2->seed_group); i++) {
          pSaveGame2->seed_group[i] = 0;
     }
@@ -112,7 +112,7 @@ SeedGrid(
         pReplayState->last_pitstop[i] = 0;
     }
     for (i = 0; i < sizeof(pReplayState->pit_groups); i++) {
-        pReplayState->pit_groups[i].current_index = 0;
+        pReplayState->pit_groups[i].current_stop = 0;
     }
     pReplayState->magic = MAGICRS;
 
@@ -155,11 +155,11 @@ StartFinishLineHook(
             sg1 = get_group_container(i);
             if (sg1 != 0) {
                 pg = &sg1->pit_group;
-                if (pgs->current_index < pg->max_index) {
+                if (pgs->current_stop < pg->num_stops) {
                     /*
                     ** Has leader reached current pit lap yet?
                     */
-                    lap = (byte) ((total_laps * pg->percent[pgs->current_index]) / 100) - 1;
+                    lap = (byte) ((total_laps * pg->percent[pgs->current_stop]) / 100) - 1;
                     if (leaders_lap >= lap) {
                         /*
                         ** Mark all cars to pit.
@@ -184,7 +184,7 @@ StartFinishLineHook(
                                 }
                             }
                         }
-                        ++pgs->current_index;
+                        ++pgs->current_stop;
                     }
                 }
             }
@@ -408,9 +408,9 @@ get_seed_group_value(
      unsigned short index
 ) {
     if (index & 1) {
-        return (pSaveGame2->seed_group[(index / 2)] & 0x0f);
+        return (pSaveGame2->seed_group[(index >> 1)] & 0x0f);
     }
-    return ((pSaveGame2->seed_group[(index / 2)] & 0xf0) >> 4);
+    return ((pSaveGame2->seed_group[(index >> 1)] & 0xf0) >> 4);
 }
 
 void
@@ -419,12 +419,12 @@ put_seed_group_value(
     byte value
 ) {
     if (index & 1) {
-        pSaveGame2->seed_group[(index / 2)] &= 0xf0;
-        pSaveGame2->seed_group[(index / 2)] |= value;
+        pSaveGame2->seed_group[(index >> 1)] &= 0xf0;
+        pSaveGame2->seed_group[(index >> 1)] |= value;
     }
     else {
-        pSaveGame2->seed_group[(index / 2)] &= 0x0f;
-        pSaveGame2->seed_group[(index / 2)] |= (byte) (value << 4);
+        pSaveGame2->seed_group[(index >> 1)] &= 0x0f;
+        pSaveGame2->seed_group[(index >> 1)] |= (byte) (value << 4);
     }
 }
 
@@ -453,14 +453,14 @@ get_group_tyre(
     byte index;
 
     tyre = default_tyre;
-    index = pReplayState->pit_groups[group_index].current_index;
+    index = pReplayState->pit_groups[group_index].current_stop;
     if (pg->tyres != 0) {
         if (index == 0) {
-            /* check default pit group tyre */
+            /* tyre for start of race */
             tyre = pg->tyres - 'A';
         }
         else {
-            /* check tyre for current pit stop */
+            /* tyre for current pit stop */
             tyre = get_group_pit_tyre(pg, index - 1);
         }
     }
@@ -472,7 +472,10 @@ get_group_pit_tyre(
     PIT_GROUP far *pg,
     byte index
 ) {
-    return ((pg->pit_tyres[index / 4]) >> ((index % 4) * 2)) & 3;
+    /* stored as 12 times 2 bits */
+    byte far *p = pg->pit_tyres + (index >> 2);
+    byte s = (index & 3) << 1;
+    return (*p >> s) & 3;
 }
 
 void
@@ -481,10 +484,11 @@ set_group_pit_tyre(
     byte index,
     byte tyre
 ) {
-    byte s = (index % 4) * 2;
-    byte t = (tyre & 3) << s;
-    pg->pit_tyres[index / 4] &= ~(3 << s);
-    pg->pit_tyres[index / 4] |= t;
+    /* stored as 12 times 2 bits */
+    byte far *p = pg->pit_tyres + (index >> 2);
+    byte s = (index & 3) << 1;
+    *p &= ~(3 << s);
+    *p |= (tyre & 3) << s;
 }
 
 /*---------------------------------------------------------------------------

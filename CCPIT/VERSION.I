@@ -10,5 +10,5 @@
 **                  Added support for specific tyre compound per pit group and pit stop.
 */
 
-#define VERSION     "V4.0.0 25/May/2019"
+#define VERSION     "V4.0.1 25/May/2019"
 

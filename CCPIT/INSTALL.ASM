@@ -81,6 +81,7 @@ STACK_TMP       ends
 TSR_TMP         segment
 
 extrn           parse:near
+extrn           dump_config:near
 
 ;*****************************************************************************
 ;** Purpose: Install TSR.
@@ -183,6 +184,10 @@ no_unload:
         jmp     terminate
 
 not_installed1:
+        ;**
+        ;** Install
+        ;**
+        call    dump_config
         call    tsr_vectors_install
 
         ;**

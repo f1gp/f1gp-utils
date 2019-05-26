@@ -62,7 +62,7 @@ typedef unsigned short   word;
 ** Must keep this structure size <= 18 bytes.
 */
 typedef struct {
-    byte      max_index;                          /*  1 byte  */
+    byte      num_stops;                          /*  1 byte  */
     byte      num_cars;                           /*  1 byte  */
     byte      tyres;                              /*  1 byte  */
     byte      percent[MAX_PITS_PER_GROUP];        /* 12 bytes */
@@ -70,7 +70,7 @@ typedef struct {
 } PIT_GROUP;                                      /* 18 bytes */
 
 typedef struct {
-    byte      current_index;                      /*  1 byte  */
+    byte      current_stop;                       /*  1 byte  */
 } PIT_GROUP_STATE;                                /*  1 byte  */
 
 

@@ -80,6 +80,13 @@ If you start CCPIT with no parameters it defaults to:
                Normal game (not multi-player).
                CC tyre compounds allocated by F1GP (as per original game).
 
+If you don't want the defaults and let all cars use a zero-stop strategy,
+use an empty group:
+
+        ccpit -g
+
+As a confirmation, CCPIT will always print the resulting configuration.
+
 Starting CCPIT
 --------------
 Before you run GP (or F1GP) load CCPIT with your specified parameters.
