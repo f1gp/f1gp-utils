@@ -6,6 +6,8 @@
 *.BAK
 *.ASH
 *.TDS
+*.TD
+*.TR
 *.PRF
 *.BAT
 *.OUT
