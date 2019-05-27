@@ -256,12 +256,12 @@ may manually select any other compound for this stop whilst on the jacks.
 
 Stops for Damage
 -----------------
-CCPIT has special handling for cars that stop early due to damage to the
-car. If more than 60% of the race distance is complete no futher stops will
-be made. If less than 60% of the race distance is left then a single
-further stop will be made within 40% of the *remaining* distance. So for
-a typical first lap accident the car will then only make one stop at 40%
-of the remaining race distance.
+CCPIT has special handling for cars that stop due to damage to the car.
+If more than 50% of the current stint is complete, the next scheduled pit stop
+will be executed early. That means the next stint will also be extended.
+
+For a typical first lap accident the normal pit stop strategy shouldn't be
+affected as this is normally less than 50% of the first stint.
 
 Notes
 -----
@@ -283,9 +283,10 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 24/05/2019  Added support for replays.
+V4.0 24/05/2019  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
-                 Not compatible with old save games.
+                 Increased maximum number of pit groups and pit stops.
+                 Improved handling of unscheduled pit stops.
 
 Further Info
 ------------

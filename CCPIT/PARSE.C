@@ -118,10 +118,7 @@ parse(
                        tmp_tyres = *cmd_line;
                     }
                     else if (pg->num_stops == 0) {
-                        pg->tyres = *cmd_line;
-                        for (i = 0; i < MAX_PITS_PER_GROUP; i++) {
-                            set_group_pit_tyre(pg, i, pg->tyres - 'A');
-                        }
+                        init_group_tyre(pg, *cmd_line - 'A');
                     }
                     else if (pg->tyres) {
                         set_group_pit_tyre(pg, pg->num_stops - 1, *cmd_line - 'A');

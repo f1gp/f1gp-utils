@@ -507,14 +507,10 @@ hook_sf_line:
         mov     cl, es:[298Bh]
         add     cx, 1
 
-        push    es
-        push    si
-        sub     si, 0d1bh
-        push    si
         push    [bp+123Ch]
         push    cx
         call    StartFinishLineHook
-        add     sp, 10
+        add     sp, 4
 
         pop     es
         pop     ds
@@ -621,11 +617,9 @@ hook_on_jacks:
         push    cs
         pop     ds
         push    si
-        sub     si, 0d1bh
-        push    si
         push    [bp+123Ch]
         call    OntoJacks
-        add     sp, 8
+        add     sp, 6
 
         pop     es
         pop     ds

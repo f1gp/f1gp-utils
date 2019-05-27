@@ -32,12 +32,16 @@
 #define MAGIC1SG1                  0x00393323L    /* "#39" */
 #define MAGIC1SG2                  0x00303423L    /* "#40" */
 #define MAGIC2                     0x55ac
-#define MAGICRS                    0xaa55
+#define MAGICRS                    0xcc77
 
 /*
 ** Car Data structure SI indexes.
 */
 #define CAR_DATA_SI_LAP_NUMBER     0x22
+#define CAR_DATA_SI_ID             0xac
+
+#define CAR_IS_CC(pCar)            (((pCar)->si[CAR_DATA_SI_ID] & 0x80) == 0x00)
+#define CAR_NUMBER(pCar)           ((pCar)->si[CAR_DATA_SI_ID] & 0x3f)
 
 /*
 ** Tyre compounds
@@ -154,8 +158,10 @@ extern char         near *msg_text;
 */
 
 extern byte rnd(void);
+extern void init_group_tyre(PIT_GROUP far *pg, byte tyre);
 extern byte get_group_pit_tyre(PIT_GROUP far *pg, byte index);
 extern void set_group_pit_tyre(PIT_GROUP far *pg, byte index, byte tyre);
+extern byte get_group_tyre(PIT_GROUP far *pg, byte stop, byte default_tyre);
 
 #endif    /* ccpit_h */
 /*---------------------------------------------------------------------------
