@@ -287,6 +287,7 @@ V4.0 28/05/2019  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Improved handling of unscheduled pit stops.
+                 Prints actual pit group configuration.
 
 Further Info
 ------------

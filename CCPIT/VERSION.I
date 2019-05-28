@@ -10,6 +10,7 @@
 **                  Added support for specific tyre compound per pit group and pit stop.
 **                  Increased maximum number of pit groups and pit stops.
 **                  Improved handling of unscheduled pit stops.
+**                  Prints actual pit group configuration.
 */
 
 #define VERSION     "V4.0.1 28/May/2019"
