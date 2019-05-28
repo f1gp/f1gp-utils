@@ -111,7 +111,8 @@ install proc    near
         mov     al, [bx]
         mov     cs:cmd_line_len, al
 
-        mov     ax, cs:cmd_line_len
+        mov     al, cs:cmd_line_len
+        xor     ah, ah
         push    ax
         mov     ax, cs:cmd_line_seg
         push    ax
