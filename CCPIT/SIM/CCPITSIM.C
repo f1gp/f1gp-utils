@@ -50,14 +50,14 @@ extern word TyreChange(word tyre, CAR far *pCar, CAR_SETUP far *pCarSetup);
 
 char driver_names[40][24];
 byte replay_state[128];
-byte num_cars_in_pit;
+byte max_cars_in_pit;
 CAR cars[MAX_CARS];
 CAR_SETUP car_setup;
 
 SAVE_GAME1   far *pSaveGame1 = (SAVE_GAME1 far *) (driver_names + 38);
 SAVE_GAME2   far *pSaveGame2 = (SAVE_GAME2 far *) (driver_names + 39);
 REPLAY_STATE far *pReplayState = (REPLAY_STATE far *) replay_state;
-byte         far *hook_nc_value = (byte far *) &num_cars_in_pit;
+byte         far *hook_nc_value = (byte far *) &max_cars_in_pit;
 CAR          far *pFirstCar = cars;
 
 
@@ -93,7 +93,7 @@ void init_data(void) {
 
     memset(driver_names, 0, sizeof(driver_names));
     memset(replay_state, 0, sizeof(replay_state));
-    num_cars_in_pit = 0;
+    max_cars_in_pit = 0;
     memset(&car_setup, 0, sizeof(car_setup));
 
     memset(cars, 0, sizeof(cars));
@@ -104,8 +104,8 @@ void init_data(void) {
     default_tyre    = COMPOUND_A;
 
     /* unsupported for now */
-    tmp_randomise   = FALSE;
-    tmp_multiplayer = FALSE;
+    tmp_randomise       = FALSE;
+    tmp_multiplayer     = FALSE;
 }
 
 PIT_GROUP *fixture_add_group(byte num_cars, byte tyres) {
@@ -137,8 +137,7 @@ void setup_fixture(void) {
     PIT_GROUP *pg;
 
     total_laps          = 69;
-
-    tmp_max_cars_in_pit = 13;
+    tmp_max_cars_in_pit = 5;
     tmp_tyres           = 'A';          // the default tyre for pit groups
 
     /* pit groups */
@@ -162,7 +161,7 @@ void setup_fixture(void) {
     fixture_add_extra_stop(6, 66);
 }
 
-void init_race() {
+void init_race(void) {
     word car_index;
     CAR far *pCar;
 
@@ -172,6 +171,7 @@ void init_race() {
         pCar->si[0xb2] = TyreChange(default_tyre, pCar, &car_setup);
         printf("Car %d starting on %c's\n", car_index, 'A' + pCar->si[0xb2], 'A');
     }
+    printf("Maximum %d cars in the pits\n", tmp_max_cars_in_pit);
 }
 
 void pit_car(CAR far *pCar, word car_index, byte extra) {
@@ -192,6 +192,7 @@ void simulate_race(void) {
     word lap;
     word car_index;
     word i;
+    word nc;
     CAR far *pCar;
 
     init_race();
@@ -203,15 +204,18 @@ void simulate_race(void) {
             cars[car_index].si[CAR_DATA_SI_LAP_NUMBER] = lap;
             StartFinishLineHook(pCar, lap, total_laps);
         }
+        nc = 0;
         for (car_index = 0; car_index < MAX_CARS; car_index++) {
             pCar = cars + car_index;
             for (i = 0; i < num_extra_stops; i++) {
                 if (lap == extra_stops[i].lap && car_index == extra_stops[i].car_index) {
                     pit_car(pCar, car_index, TRUE);
+                    ++nc;
                 }
             }
-            if (pCar->si[0x97] & 0x01) {
+            if (pCar->si[0x97] & 0x01 && nc < max_cars_in_pit) {
                 pit_car(pCar, car_index, FALSE);
+                ++nc;
             }
         }
     }
