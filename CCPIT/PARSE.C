@@ -29,13 +29,11 @@
 ** Local function prototypes
 */
 
-void wrt_msg(void);
-
 void Usage(void);
 void display_msg(char near *msg);
 void display_int(int v);
 void display_chr(char c);
-short atoi(register const char far *p);
+short parse_short(register const char far *p);
 
 /*---------------------------------------------------------------------------
 ** Data
@@ -53,7 +51,8 @@ char title_msg[] =
 
 int
 parse(
-    void
+    char far *cmd_line,
+    char cmd_line_len
 ) {
     register PIT_GROUP  *pg = tmp_pit_groups;
     register int        i;
@@ -85,7 +84,7 @@ parse(
             ** Don't use switch as indirect table gets it wrong for a COM file.
             */
             if (*cmd_line == 'p') {
-                n = atoi(&cmd_line[1]);
+                n = parse_short(&cmd_line[1]);
                 if (n >= 5 && n <= 26) {
                     tmp_max_cars_in_pit = (byte) n;
                 }
@@ -136,7 +135,7 @@ parse(
                     return FALSE;
                 }
 
-                n = atoi(&cmd_line[1]);
+                n = parse_short(&cmd_line[1]);
                 if (n >= 1 && n <= 26) {
                     total_cars += n;
                     if (total_cars > 26) {
@@ -162,7 +161,7 @@ parse(
                 }
 
                 if (pg->num_stops < MAX_PITS_PER_GROUP) {
-                    n = atoi(&cmd_line[1]);
+                    n = parse_short(&cmd_line[1]);
                     if (n >= 5 && n <= 95) {
                         pg->percent[pg->num_stops++] = (byte) n;
                     }
@@ -446,7 +445,7 @@ display_chr(
 /*lint +e789 Ignore assigning auto to static */
 
 short
-atoi(
+parse_short(
     register const char far *p         /* In  Pointer to ASCII string     */
 ) {
     register int n;

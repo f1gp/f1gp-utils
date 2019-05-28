@@ -7,12 +7,15 @@ CC_FLAGS       =    -c -v -1 -O2 -I..
 LINK           =    bcc
 LINK_FLAGS     =    -M -v
 
-OBJS           =    ccpitsim.obj pit.obj
+OBJS           =    ccpitsim.obj pit.obj parse.obj
 
 all:           ccpitsim.exe
 
 pit.obj:       ../pit.c ../ccpit.h
                $(CC) $(CC_FLAGS) ../pit.c
+
+parse.obj:     ../parse.c ../ccpit.h
+               $(CC) $(CC_FLAGS) ../parse.c
 
 ccpitsim.obj:  ccpitsim.c ../ccpit.h
 			   $(CC) $(CC_FLAGS) ccpitsim.c

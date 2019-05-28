@@ -55,8 +55,6 @@ cant_unload_msg db      "Unable to unload as another TSR was loaded after CCPIT.
 no_unload_msg   db      "Can't unload as CCPIT isn't loaded!", BELL, CR, LF, "$"
 unloaded_msg    db      "CCPIT unloaded OK.", CR, LF, "$"
 
-public          cmd_line
-public          cmd_line_len
 cmd_line        label   dword
 cmd_line_off    dw      0081h           ; Point to PSP command line.
 cmd_line_seg    dw      ?
@@ -113,12 +111,20 @@ install proc    near
         mov     al, [bx]
         mov     cs:cmd_line_len, al
 
+        mov     ax, cs:cmd_line_len
+        push    ax
+        mov     ax, cs:cmd_line_seg
+        push    ax
+        mov     ax, cs:cmd_line_off
+        push    ax
+
         ;**
         ;** Point DS at our common segment before calling C code.
         ;**
         mov     ax, cs
         mov     ds, ax
         call    parse
+        add     sp, 6
         or      al, al
         jnz     parse_ok
         jmp     terminate

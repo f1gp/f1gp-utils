@@ -147,8 +147,6 @@ extern byte         tmp_tyres;
 extern bool         tmp_multiplayer;
 
 extern char         unload_flag;
-extern char         far *cmd_line;
-extern char         cmd_line_len;
 extern char         near *msg_text;
 
 /*---------------------------------------------------------------------------
@@ -156,6 +154,8 @@ extern char         near *msg_text;
 */
 
 extern byte rnd(void);
+extern void wrt_msg(void);  /* write DOS string pointed to by msg_text */
+
 extern void init_group_tyre(PIT_GROUP far *pg, byte tyre);
 extern byte get_group_pit_tyre(PIT_GROUP far *pg, byte index);
 extern void set_group_pit_tyre(PIT_GROUP far *pg, byte index, byte tyre);
