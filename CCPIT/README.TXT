@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 25th May 2019                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 28th May 2019                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -135,6 +135,12 @@ one of ABCD):
 
 If 3) is used, then 2) must also be used.
 
+So, for a race where 13 cars start on Cs and stop at 45% for Bs, and the
+remaining cars start on As:
+
+     CCPIT -tA -g -c13 -tC -l45 -tB
+
+
 Pitting
 -------
 The '-l' option specifies the *percentage* of the race distance when the cars
@@ -241,10 +247,8 @@ they may choose to cancel this, or request to come in at any other time.
 
 CC Tyre Compounds
 -----------------
-F1GP normally lets the CC cars use C and B compound tyres. You can modify this
-behaviour by using the "-t" option. E.g., to force all the CC to start the
-race on Ds use "'-tD", subsequent CC pit stops will also use the specified
-tyres (Ds in this case). This can also be specified for each pit group.
+F1GP normally lets the CC cars use C and B compound tyres. Specify the global
+-t option to override this behaviour.
 
 Player's Tyre Compound
 ----------------------
