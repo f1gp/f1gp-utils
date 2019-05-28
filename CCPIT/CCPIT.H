@@ -19,6 +19,9 @@
 ** Defines and Macros
 */
 
+#define TRUE                       1
+#define FALSE                      0
+
 #define MAX_CARS                   26
 
 #define MAX_GROUPS                 10
@@ -73,10 +76,6 @@ typedef struct {
     byte      pit_tyres[MAX_PITS_PER_GROUP / 4];  /*  3 bytes */
 } PIT_GROUP;                                      /* 18 bytes */
 
-typedef struct {
-    byte      current_stop;                       /*  1 byte  */
-} PIT_GROUP_STATE;                                /*  1 byte  */
-
 
 /*
 ** Keep this structure size <= 24 bytes.
@@ -106,9 +105,8 @@ typedef struct {
 */
 typedef struct {
     word            magic;                        /*  2 bytes */
-    byte            last_pitstop[MAX_CARS];       /* 26 bytes */
-    PIT_GROUP_STATE pit_groups[MAX_GROUPS];       /* 10 bytes */
-} REPLAY_STATE;                                   /* 38 bytes */
+    byte            current_stop[MAX_CARS];       /* 26 bytes */
+} REPLAY_STATE;                                   /* 28 bytes */
 
 
 typedef struct {

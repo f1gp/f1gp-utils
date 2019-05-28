@@ -19,9 +19,6 @@
 ** Defines and Macros
 */
 
-#define TRUE        1
-#define FALSE       0
-
 #define WHAT_OFFSET 4
 
 /*---------------------------------------------------------------------------

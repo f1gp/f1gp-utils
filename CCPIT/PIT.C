@@ -52,12 +52,12 @@ extern void display_msg(char near *msg);
 
 void fmemcpy(void far *dst, void far *src, unsigned short len);
 byte get_car_index(CAR far *pCar);
+byte calc_lap_from_percent(byte total_laps, byte percent);
+byte calc_pit_window_lap(PIT_GROUP far *pg, byte current_stop, byte total_laps);
 PIT_GROUP far *get_group(unsigned short group_index);
 void seed_group(unsigned short group_index, PIT_GROUP far *pg);
 byte get_seed_group_value(unsigned short index);
 void put_seed_group_value(unsigned short index, byte value);
-byte get_last_pitstop_value(unsigned short index);
-void put_last_pitstop_value(unsigned short index, byte value);
 byte get_group_tyre(PIT_GROUP far *pg, byte stop, byte default_tyre);
 
 /*---------------------------------------------------------------------------
@@ -131,18 +131,15 @@ SeedGrid(
     /*
     ** Init replay state.
     */
-    for (i = 0; i < sizeof(pReplayState->last_pitstop); i++) {
-        pReplayState->last_pitstop[i] = 0;
-    }
-    for (i = 0; i < sizeof(pReplayState->pit_groups); i++) {
-        pReplayState->pit_groups[i].current_stop = 0;
-    }
     pReplayState->magic = MAGICRS;
+    for (i = 0; i < MAX_CARS; i++) {
+        pReplayState->current_stop[i] = 0;
+    }
 
 }
 
 /*---------------------------------------------------------------------------
-** Purpose:    Mark all cars as having pitted.
+** Purpose:    Mark car as having to pit.
 **
 ** Returns:    Nothing.
 **
@@ -150,14 +147,15 @@ SeedGrid(
 */
 void
 StartFinishLineHook(
-    word leaders_lap,        /* In  Leaders lap                 */
-    word total_laps          /* In  Total race distance         */
+    CAR far *pCar,               /* In  Car crossing the line       */
+    word     leaders_lap,        /* In  Leaders lap                 */
+    word     total_laps          /* In  Total race distance         */
 ) {
-    PIT_GROUP far            *pg;
-    PIT_GROUP_STATE far      *pgs;
-    unsigned short           j;
-    unsigned short           i;
-    byte                     lap;
+    unsigned short car_index;
+    PIT_GROUP far  *pg;
+    byte           group;
+    byte           current_stop;
+    byte           lap;
 
     /*
     ** Check for pit stops (catch saved reloaded saved games which don't
@@ -171,45 +169,30 @@ StartFinishLineHook(
         */
         *hook_nc_value = pSaveGame2->max_cars_in_pit;
 
-        for (i = 0, pgs = pReplayState->pit_groups; i < pSaveGame2->num_groups; i++, pgs++) {
-            pg = get_group(i);
-            if (pg != 0) {
-                if (pgs->current_stop < pg->num_stops) {
-                    /*
-                    ** Has leader reached current pit lap yet?
-                    */
-                    lap = (byte) ((total_laps * pg->percent[pgs->current_stop] + 50) / 100);
-                    if (leaders_lap >= lap) {
+        /*
+        ** Don't mark player(s).
+        */
+        if (pSaveGame2->multiplayer || CAR_IS_CC(pCar)) {
+            car_index = get_car_index(pCar);
+            group = get_seed_group_value(car_index);
+            if (group != 0) {
+                pg = get_group(group - 1);
+                if (pg != 0) {
+                    current_stop = pReplayState->current_stop[car_index];
+                    if (current_stop < pg->num_stops) {
                         /*
-                        ** Mark all cars to pit.
+                        ** Has leader reached current pit lap yet?
                         */
-                        for (j = 0; j < MAX_CARS; j++) {
+                        lap = calc_lap_from_percent(total_laps, pg->percent[current_stop]);
+                        if (leaders_lap >= lap) {
                             /*
-                            ** Only mark cars in this group, don't mark player(s).
+                            ** Mark car to pit.
                             */
-                            if (pSaveGame2->multiplayer || CAR_IS_CC(pFirstCar + j)) {
-                                if (get_seed_group_value(j) == (byte) (i + 1)) {
-                                    if (get_last_pitstop_value(j) == 0) {
-                                        /*
-                                        ** On proper pit schedule.
-                                        */
-                                        pFirstCar[j].si[0x97] |= 0x01;
+                            pCar->si[0x97] |= 0x01;
 
-                                        /*
-                                        ** Mark next pit as scheduled.
-                                        */
-                                        put_last_pitstop_value(j, 0x80);
-                                    }
-                                    else if (get_last_pitstop_value(j) == 1) {
-                                        /*
-                                        ** Skip, but continue with normal schedule.
-                                        */
-                                        put_last_pitstop_value(j, 0);
-                                    }
-                                }
-                            }
+                            ++current_stop;
+                            pReplayState->current_stop[car_index] = current_stop;
                         }
-                        ++pgs->current_stop;
                     }
                 }
             }
@@ -232,9 +215,8 @@ OntoJacks(
     PIT_GROUP far  *pg;
     unsigned char  current_lap;
     byte           group;
-    byte           prev_percent;
     byte           current_stop;
-    byte           pit_window_percent;
+    byte           current_stop_value;
     byte           pit_window_lap;
     unsigned short car_index;
 
@@ -250,20 +232,9 @@ OntoJacks(
         if (pSaveGame2->multiplayer || CAR_IS_CC(pCar)) {
             car_index = get_car_index(pCar);
 
-            /*
-            ** Ensure "pit request" bit is reset, as GP.EXE only resets it
-            ** if the current number of laps is greater than its pit stop
-            ** threshold.
-            */
-            pCar->si[0x97] &= ~0x01;
-
-            if ((get_last_pitstop_value(car_index) & 0x80) != 0x00) {
-                /*
-                ** Scheduled stop, clear flag bit.
-                */
-                put_last_pitstop_value(car_index, 0);
-            }
-            else {
+            current_stop_value = pReplayState->current_stop[car_index];
+            current_stop = current_stop_value & 0x7f;
+            if ((pCar->si[0x97] & 0x01) == 0x00) {
                 /*
                 ** Unscheduled stop.
                 */
@@ -271,23 +242,25 @@ OntoJacks(
                 if (group != 0) {
                     pg = get_group(group - 1);
                     if (pg != 0) {
-                        current_stop = pReplayState->pit_groups[group - 1].current_stop;
-                        if (current_stop <= pg->num_stops) {
-                            prev_percent = 0;
-                            if (current_stop > 0) {
-                                prev_percent = pg->percent[current_stop - 1];
-                            }
-                            pit_window_percent = (prev_percent + pg->percent[current_stop] + 1) >> 1;
-                            pit_window_lap = (byte) ((total_laps * pit_window_percent + 50) / 100);
+                        if (current_stop < pg->num_stops) {
+                            pit_window_lap = calc_pit_window_lap(pg, current_stop, total_laps);
                             current_lap = pCar->si[CAR_DATA_SI_LAP_NUMBER];
                             if (current_lap > pit_window_lap) {
-                                /* this will skip the next regular pit stop */
-                                put_last_pitstop_value(car_index, 0x01);
+                                /* reschedule the next regular pit stop to right now */
+                                ++current_stop;
+                                pReplayState->current_stop[car_index] = current_stop;
                             }
                         }
                     }
                 }
             }
+
+            /*
+            ** Ensure "pit request" bit is reset, as GP.EXE only resets it
+            ** if the current number of laps is greater than its pit stop
+            ** threshold.
+            */
+            pCar->si[0x97] &= ~0x01;
         }
     }
 }
@@ -342,7 +315,7 @@ TyreChange(
             if (group != 0) {
                 pg = get_group(group - 1);
                 if (pg != 0) {
-                    stop = pReplayState->pit_groups[group - 1].current_stop;
+                    stop = pReplayState->current_stop[car_index];
                     tyre = get_group_tyre(pg, stop, tyre);
                 }
             }
@@ -386,6 +359,31 @@ get_car_index(
     CAR far *pCar
 ) {
     return (byte) ((int) ((byte far *) pCar - (byte far *) pFirstCar) / 0xc0);
+}
+
+byte
+calc_lap_from_percent(
+    byte total_laps,
+    byte percent
+) {
+     return (byte) ((total_laps * percent + 50) / 100);
+}
+
+byte
+calc_pit_window_lap(
+    PIT_GROUP far *pg,
+    byte current_stop,
+    byte total_laps
+) {
+    byte prev_percent;
+    byte pit_window_percent;
+
+    prev_percent = 0;
+    if (current_stop > 0) {
+        prev_percent = pg->percent[current_stop - 1];
+    }
+    pit_window_percent = (prev_percent + pg->percent[current_stop] + 1) >> 1;
+    return calc_lap_from_percent(total_laps, pit_window_percent);
 }
 
 PIT_GROUP far *
@@ -464,21 +462,6 @@ put_seed_group_value(
         pSaveGame2->seed_group[(index >> 1)] &= 0x0f;
         pSaveGame2->seed_group[(index >> 1)] |= (byte) (value << 4);
     }
-}
-
-byte
-get_last_pitstop_value(
-     unsigned short index
-) {
-    return pReplayState->last_pitstop[index];
-}
-
-void
-put_last_pitstop_value(
-    unsigned short index,
-    byte           value
-) {
-    pReplayState->last_pitstop[index] = value;
 }
 
 byte

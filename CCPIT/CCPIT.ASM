@@ -458,7 +458,7 @@ TSR_CODE        ends
 ;** 003267  80A49700FB     and    byte ptr [si+97],0FB
 ;** 00326C  808CB30004     or     byte ptr [si+0B3],4
 ;** 003271  9ACB1BED19     call   19ED:1BCB
-;** 003276 �61             popa
+;** 003276  61             popa
 ;** 003277  C3             ret
 ;**
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
@@ -507,10 +507,12 @@ hook_sf_line:
         mov     cl, es:[298Bh]
         add     cx, 1
 
-        push    [bp+123Ch]
-        push    cx
+        push    [bp+123Ch]  ; total_laps
+        push    cx          ; leaders_lap
+        push    es          ; current car
+        push    si
         call    StartFinishLineHook
-        add     sp, 4
+        add     sp, 8
 
         pop     es
         pop     ds

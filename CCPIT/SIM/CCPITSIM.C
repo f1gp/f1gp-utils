@@ -22,17 +22,25 @@
 ** Defines and Macros
 */
 
-#define TRUE        1
-#define FALSE       0
+#define WHAT_OFFSET     4
 
-#define WHAT_OFFSET 4
+#define MAX_EXTRA_STOPS MAX_CARS
+
+/*---------------------------------------------------------------------------
+** Defines and Macros
+*/
+
+typedef struct {
+    byte car_index;
+    byte lap;
+} ExtraStop;
 
 /*---------------------------------------------------------------------------
 ** External function prototypes
 */
 
 extern void SeedGrid(void);
-extern void StartFinishLineHook(word leaders_lap, word total_laps);
+extern void StartFinishLineHook(CAR far *pCar, word leaders_lap, word total_laps);
 extern void OntoJacks(unsigned short total_laps, CAR far *pCar);
 extern word TyreChange(word tyre, CAR far *pCar, CAR_SETUP far *pCarSetup);
 
@@ -42,14 +50,14 @@ extern word TyreChange(word tyre, CAR far *pCar, CAR_SETUP far *pCarSetup);
 
 char driver_names[40][24];
 byte replay_state[128];
-byte nc_value;
+byte num_cars_in_pit;
 CAR cars[MAX_CARS];
 CAR_SETUP car_setup;
 
 SAVE_GAME1   far *pSaveGame1 = (SAVE_GAME1 far *) (driver_names + 38);
 SAVE_GAME2   far *pSaveGame2 = (SAVE_GAME2 far *) (driver_names + 39);
 REPLAY_STATE far *pReplayState = (REPLAY_STATE far *) replay_state;
-byte         far *hook_nc_value = (byte far *) &hook_nc_value;
+byte         far *hook_nc_value = (byte far *) &num_cars_in_pit;
 CAR          far *pFirstCar = cars;
 
 
@@ -59,9 +67,8 @@ CAR          far *pFirstCar = cars;
 
 word total_laps;
 word default_tyre;
-word extra_stop_car;
-word extra_stop_lap;
-
+ExtraStop extra_stops[MAX_EXTRA_STOPS];
+word num_extra_stops;
 
 /*---------------------------------------------------------------------------
 ** Other Data
@@ -86,13 +93,19 @@ void init_data(void) {
 
     memset(driver_names, 0, sizeof(driver_names));
     memset(replay_state, 0, sizeof(replay_state));
-    nc_value = 0;
+    num_cars_in_pit = 0;
     memset(&car_setup, 0, sizeof(car_setup));
 
     memset(cars, 0, sizeof(cars));
     for (car_index = 0; car_index < MAX_CARS; car_index++) {
         cars[car_index].si[CAR_DATA_SI_ID] = car_index + 1;
     }
+
+    default_tyre    = COMPOUND_A;
+
+    /* unsupported for now */
+    tmp_randomise   = FALSE;
+    tmp_multiplayer = FALSE;
 }
 
 PIT_GROUP *fixture_add_group(byte num_cars, byte tyres) {
@@ -114,22 +127,22 @@ void fixture_add_stop(PIT_GROUP *pg, byte percent, byte tyres) {
     ++pg->num_stops;
 }
 
+void fixture_add_extra_stop(byte car_index, byte lap) {
+    extra_stops[num_extra_stops].car_index = car_index;
+    extra_stops[num_extra_stops].lap = lap;
+    ++num_extra_stops;
+}
+
 void setup_fixture(void) {
     PIT_GROUP *pg;
 
-    tmp_max_cars_in_pit = 13;
-    tmp_randomise       = FALSE;
-    tmp_multiplayer     = FALSE;
-    tmp_tyres           = 'A';          // the default tyre for pit groups
-    default_tyre        = COMPOUND_C;   // what the game provides
-
     total_laps          = 69;
 
-    extra_stop_car      = 6;
-    extra_stop_lap      = 11;
+    tmp_max_cars_in_pit = 13;
+    tmp_tyres           = 'A';          // the default tyre for pit groups
 
+    /* pit groups */
     tmp_num_groups = 0;
-
     // -tA   -g -c6 -tB -l60 -tC  -g -c8 -tC -l30 -tD -l50 -tB  -g -tD -c10 -l30 -tC -l70
     pg = fixture_add_group(6, 'B');
     fixture_add_stop(pg, 60, 'C');
@@ -141,37 +154,64 @@ void setup_fixture(void) {
     pg = fixture_add_group(10, 'D');
     fixture_add_stop(pg, 30, 'C');
     fixture_add_stop(pg, 70, 'D');
+
+    /* extra pit stops */
+    num_extra_stops     = 0;
+    fixture_add_extra_stop(0, 11);
+    fixture_add_extra_stop(6, 11);
+    fixture_add_extra_stop(6, 66);
 }
 
-void pit_car(CAR far *pCar, word car_index) {
+void init_race() {
+    word car_index;
+    CAR far *pCar;
+
+    SeedGrid();
+    for (car_index = 0; car_index < MAX_CARS; car_index++) {
+        pCar = cars + car_index;
+        pCar->si[0xb2] = TyreChange(default_tyre, pCar, &car_setup);
+        printf("Car %d starting on %c's\n", car_index, 'A' + pCar->si[0xb2], 'A');
+    }
+}
+
+void pit_car(CAR far *pCar, word car_index, byte extra) {
     word tyre = default_tyre;
 
     OntoJacks(total_laps, pCar);
     tyre = TyreChange(tyre, pCar, &car_setup);
-    pCar->si[0xb2] = tyre;
 
-    printf("Pitted car %d on end of lap %d for %c's\n",
-        car_index, pCar->si[CAR_DATA_SI_LAP_NUMBER], 'A' + tyre);
+    printf("Lap %2d: Car %2d pitted, going from %c's to %c's%s\n",
+        pCar->si[CAR_DATA_SI_LAP_NUMBER], car_index,
+        'A' + pCar->si[0xb2], 'A' + tyre,
+        extra ? " (unscheduled)" : "");
+
+    pCar->si[0xb2] = tyre;
 }
 
 void simulate_race(void) {
     word lap;
     word car_index;
+    word i;
     CAR far *pCar;
 
+    init_race();
+
     printf("Starting race of %d laps\n", total_laps);
-    SeedGrid();
     for (lap = 1; lap <= total_laps; lap++) {
-        StartFinishLineHook(lap, total_laps);
         for (car_index = 0; car_index < MAX_CARS; car_index++) {
             pCar = cars + car_index;
             cars[car_index].si[CAR_DATA_SI_LAP_NUMBER] = lap;
-
-            if (lap == extra_stop_lap && car_index == extra_stop_car) {
-                pit_car(pCar, car_index);
+            StartFinishLineHook(pCar, lap, total_laps);
+        }
+        for (car_index = 0; car_index < MAX_CARS; car_index++) {
+            pCar = cars + car_index;
+            for (i = 0; i < num_extra_stops; i++) {
+                if (lap == extra_stops[i].lap && car_index == extra_stops[i].car_index) {
+                    pit_car(pCar, car_index, TRUE);
+                }
             }
             if (pCar->si[0x97] & 0x01) {
-                pit_car(pCar, car_index);
+                pit_car(pCar, car_index, FALSE);
             }
         }
     }
