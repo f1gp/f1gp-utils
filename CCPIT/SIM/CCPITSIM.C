@@ -16,12 +16,12 @@
 /*lint +elib(???) */
 
 #include "ccpit.h"
-#include "version.i"
 
 /*---------------------------------------------------------------------------
 ** Defines and Macros
 */
 
+#define SIM_VERSION     "V1.1"
 #define WHAT_OFFSET     4
 
 #define MAX_EXTRA_STOPS MAX_CARS
@@ -80,7 +80,7 @@ word num_extra_stops;
 
 char sim_title_msg[] =
     "@(#)"
-    "CCPITSIM " VERSION " - GP Simulator For Computer Cars Pit Strategy.\n"
+    "CCPITSIM " SIM_VERSION " - GP Simulator For Computer Cars Pit Strategy.\n"
     "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
@@ -149,36 +149,55 @@ void fixture_add_extra_stop(byte car_index, byte lap) {
     ++num_extra_stops;
 }
 
-int setup_fixture(void) {
+int setup_fixture_from_args(short argc, char *argv[]) {
     PIT_GROUP *pg;
-    int ret;
-    char cmd[] = "-p5 -tA   -g -c6 -tB -l60 -tC  -g -c8 -tC -l30 -tD -l50 -tB  -g -tD -c10 -l30 -tC -l70";
+    int ret, a, i, j;
+    char cmd[512], *arg;
 
-    total_laps = 69;
+    i = 0;
+    for (a = 1; a < argc; a++) {
+        arg = argv[a];
+        if (i > 0) {
+            cmd[i++] = ' ';
+        }
+        for (j = 0; arg[j] != 0; j++) {
+            cmd[i++] = arg[j];
+        }
+    }
+    cmd[i] = 0;
 
     ret = parse(cmd, strlen(cmd));
     if (!ret) {
         return FALSE;
     }
 
-    // Alternatively, specify options in code:
-    // tmp_max_cars_in_pit = 5;
-    // tmp_tyres           = 'A';          // the default tyre for pit groups
-    //
-    // /* pit groups */
-    // tmp_num_groups = 0;
-    // pg = fixture_add_group(6, 'B');
-    // fixture_add_stop(pg, 60, 'C');
-    //
-    // pg = fixture_add_group(8, 'C');
-    // fixture_add_stop(pg, 30, 'D');
-    // fixture_add_stop(pg, 50, 'B');
-    //
-    // pg = fixture_add_group(10, 'D');
-    // fixture_add_stop(pg, 30, 'C');
-    // fixture_add_stop(pg, 70, 'D');
+    /* extra pit stops */
+    num_extra_stops = 0;
+    fixture_add_extra_stop(0, 11);
+    fixture_add_extra_stop(6, 11);
+    fixture_add_extra_stop(6, 66);
+    return TRUE;
+}
 
-    dump_config();
+int setup_fixture(void) {
+    PIT_GROUP *pg;
+    int ret;
+
+    tmp_max_cars_in_pit = 5;
+    tmp_tyres           = 'A';          // the default tyre for pit groups
+
+    /* pit groups */
+    tmp_num_groups = 0;
+    pg = fixture_add_group(6, 'B');
+    fixture_add_stop(pg, 60, 'C');
+
+    pg = fixture_add_group(8, 'C');
+    fixture_add_stop(pg, 30, 'D');
+    fixture_add_stop(pg, 50, 'B');
+
+    pg = fixture_add_group(10, 'D');
+    fixture_add_stop(pg, 30, 'C');
+    fixture_add_stop(pg, 70, 'D');
 
     /* extra pit stops */
     num_extra_stops     = 0;
@@ -253,14 +272,19 @@ void simulate_race(void) {
 
 short main(short argc, char *argv[]) {
     int ret;
-    (void) argc;
-    (void) argv;
 
     printf("%s", &sim_title_msg[WHAT_OFFSET]);
 
     init_data();
-    ret = setup_fixture();
+
+    total_laps = 69;
+    if (argc > 1) {
+        ret = setup_fixture_from_args(argc, argv);
+    } else {
+        ret = setup_fixture();
+    }
     if (ret) {
+        dump_config();
         simulate_race();
     }
 
