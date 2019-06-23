@@ -12,6 +12,7 @@
 
 /*lint -elib(???) */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 /*lint +elib(???) */
 
@@ -24,7 +25,7 @@
 #define SIM_VERSION     "V1.1"
 #define WHAT_OFFSET     4
 
-#define MAX_EXTRA_STOPS MAX_CARS
+#define MAX_EXTRA_STOPS 100
 
 /*---------------------------------------------------------------------------
 ** Defines and Macros
@@ -122,6 +123,8 @@ void init_data(void) {
     /* unsupported for now */
     tmp_randomise       = FALSE;
     tmp_multiplayer     = FALSE;
+
+    num_extra_stops = 0;
 }
 
 PIT_GROUP *fixture_add_group(byte num_cars, byte tyres) {
@@ -151,35 +154,58 @@ void fixture_add_extra_stop(byte car_index, byte lap) {
 
 int setup_fixture_from_args(short argc, char *argv[]) {
     PIT_GROUP *pg;
-    int ret, a, i, j;
+    int ret, a, i, j, k, uc, ul;
     char cmd[512], *arg;
 
-    i = 0;
+    /* look for -X args for the simulator itself */
     for (a = 1; a < argc; a++) {
         arg = argv[a];
-        if (i > 0) {
-            cmd[i++] = ' ';
+        if (arg[0] == '-' && arg[1] == 'X') {
+            switch (arg[2]) {
+                case 't':
+                    total_laps = atoi(arg + 3);
+                    break;
+                case 'u':
+                    /* unscheduled pitstop for car:lap */
+                    k = 3;
+                    uc = atoi(arg + k);
+                    while (arg[k] && arg[k] != ':') {
+                        k++;
+                    }
+                    ul = atoi(arg + k + 1);
+                    if (ul && num_extra_stops < MAX_EXTRA_STOPS) {
+                        fixture_add_extra_stop(uc, ul);
+                    }
+                    break;
+            }
+            arg[0] = 0;
         }
-        for (j = 0; arg[j] != 0; j++) {
-            cmd[i++] = arg[j];
+    }
+
+    /* CCPIT wants a space separated string for the args */
+    i = 0;
+    for (a = 1; a < argc && i < sizeof(cmd) - 1; a++) {
+        arg = argv[a];
+        if (arg[0]) {
+            if (i > 0) {
+                cmd[i++] = ' ';
+            }
+            for (j = 0; arg[j] != 0; j++) {
+                cmd[i++] = arg[j];
+            }
         }
     }
     cmd[i] = 0;
 
-    ret = parse(cmd, strlen(cmd));
+    ret = parse(cmd, i);
     if (!ret) {
         return FALSE;
     }
 
-    /* extra pit stops */
-    num_extra_stops = 0;
-    fixture_add_extra_stop(0, 11);
-    fixture_add_extra_stop(6, 11);
-    fixture_add_extra_stop(6, 66);
     return TRUE;
 }
 
-int setup_fixture(void) {
+int setup_default_fixture(void) {
     PIT_GROUP *pg;
     int ret;
 
@@ -200,7 +226,6 @@ int setup_fixture(void) {
     fixture_add_stop(pg, 70, 'D');
 
     /* extra pit stops */
-    num_extra_stops     = 0;
     fixture_add_extra_stop(0, 11);
     fixture_add_extra_stop(6, 11);
     fixture_add_extra_stop(6, 66);
@@ -266,22 +291,23 @@ void simulate_race(void) {
             }
         }
     }
-    printf("Race over\n");
+    printf("Lap %2d: Race over\n", lap);
 }
 
 
 short main(short argc, char *argv[]) {
-    int ret;
+    int ret, a;
+    char *arg;
 
     printf("%s", &sim_title_msg[WHAT_OFFSET]);
 
     init_data();
 
-    total_laps = 69;
+    total_laps = 70;
     if (argc > 1) {
         ret = setup_fixture_from_args(argc, argv);
     } else {
-        ret = setup_fixture();
+        ret = setup_default_fixture();
     }
     if (ret) {
         dump_config();
