@@ -68,6 +68,7 @@ old21_seg       dw      ?
 
 delay_count     db      0
 beep_count      db      0
+                public  always_enabled
 always_enabled  db      0
 enabled         db      0
                 public  pending_enable

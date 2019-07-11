@@ -1,5 +1,5 @@
 GpPerf V3.1 25-Oct-95                        Trevor Kellaway (CIS:100331,2330)
-GpPerf V4.0 12-May-2019                           Rene Smit (sdidit@gmail.com)
+GpPerf V4.1 26-Jun-2019                           Rene Smit (sdidit@gmail.com)
 
               Grand Prix/World Circuit Car Performance
               ========================================
@@ -132,6 +132,7 @@ You may also change some of the other defaults of GPPERF when you load it.
             -b(N)     Specify rev limit #2 (default 11500).
             -c(N)     Specify rev limit #3 (default 13000).
             -d        Startup with logging disabled.
+            -e        Startup with logging enabled.
             -t        Startup with tyre wear display disabled.
             -n(N)     Log for computer car N only.
             -h,-?     This help message.
@@ -396,6 +397,7 @@ V4.0 13-May-2019    Made the yellow grip bar fill up twice as slow, because
                     on some circuits the maximum was beyond the bar's range.
                     Use the game's tyre grip table as a base for the grip bar.
                     Made grip bar work also in wet conditions.
+V4.1 26-Jun-2019    Added -e option to start with (manual) logging enabled.
 
 Further Info
 ------------

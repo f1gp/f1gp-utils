@@ -145,6 +145,9 @@ parse(
                else if (*cmd_line == 'd') {
                     pending_enable = FALSE;
                }
+               else if (*cmd_line == 'e') {
+                    always_enabled = TRUE;
+               }
                else if (*cmd_line == 't') {
                     show_tyres = FALSE;
                }
@@ -182,6 +185,7 @@ Usage(
                     "       -b(N)     Specify rev limit #2 (default 11500).\n"
                     "       -c(N)     Specify rev limit #3 (default 13000).\n"
                     "       -d        Startup with logging disabled.\n"
+                    "       -e        Startup with logging enabled.\n"
                     "       -t        Startup with tyre wear display disabled.\n"
                     "       -n(N)     Log for computer car N only.\n"
                     "       -h,-?     This help message.\n"

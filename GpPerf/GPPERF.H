@@ -77,7 +77,7 @@
 /*
 ** Tyres compounds.
 */
-#define TYRE_COMPOUND_A       0       
+#define TYRE_COMPOUND_A       0
 #define TYRE_COMPOUND_B       1
 #define TYRE_COMPOUND_C       2
 #define TYRE_COMPOUND_D       3
@@ -135,6 +135,7 @@ extern char    near *msg_text;
 extern char         beep_count;
 extern char    far  *fname_ptr;
 extern char         pending_enable;
+extern char         always_enabled;
 extern short        log_laps;
 extern short        rev_limit1;
 extern short        rev_limit2;
