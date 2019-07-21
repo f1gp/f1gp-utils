@@ -58,7 +58,13 @@ unloaded_msg    db      "CCPIT unloaded OK.", CR, LF, "$"
 cmd_line        label   dword
 cmd_line_off    dw      0081h           ; Point to PSP command line.
 cmd_line_seg    dw      ?
-cmd_line_len    db      ?
+cmd_line_len    dw      ?
+
+public          cfg_filename
+cfg_filename    db      80 dup(?)
+cfg_fh          dw      ?
+public          cfg_data
+cfg_data        db      512 dup(?)
 
 public          msg_text
 msg_text        dw      ?
@@ -109,10 +115,10 @@ install proc    near
         mov     cs:cmd_line_seg, bx
         mov     bx, 0080h                       ; PSP Command line length
         mov     al, [bx]
-        mov     cs:cmd_line_len, al
-
-        mov     al, cs:cmd_line_len
         xor     ah, ah
+        mov     cs:cmd_line_len, ax
+
+        mov     ax, cs:cmd_line_len
         push    ax
         mov     ax, cs:cmd_line_seg
         push    ax
@@ -393,6 +399,47 @@ wrt_msg proc   near
         ret
 
 wrt_msg endp
+
+;*****************************************************************************
+
+        public read_cfg_file
+read_cfg_file proc  near
+        push    bx
+        mov     cfg_fh, 0
+        mov     ah, 3dh ; open
+        mov     al, 0
+        mov     dx, OFFSET TSR:cfg_filename
+        int     DOS
+        jc      rcf_fail
+
+        mov     cfg_fh, ax
+        mov     bx, ax  ; file handle
+        mov     ah, 3fh ; read
+        mov     cx, 511 ; number of bytes to read
+        mov     dx, OFFSET TSR:cfg_data
+        int     DOS
+        jc      rcf_fail2
+
+        push    ax
+        mov     bx, OFFSET TSR:cfg_data
+        add     bx, ax
+        mov     BYTE PTR [bx], 0
+        mov     ah, 3eh ; close
+        mov     bx, cfg_fh
+        int     DOS
+        pop     ax
+        jmp     rcf_end
+rcf_fail2:
+        mov     ah, 3eh ; close
+        mov     bx, cfg_fh
+        int     DOS
+rcf_fail:
+        mov     ax, 0
+rcf_end:
+        pop     bx
+        ret
+
+read_cfg_file endp
 
 ;*****************************************************************************
 

@@ -40,7 +40,7 @@ typedef struct {
 ** External function prototypes
 */
 
-extern int parse(char far *cmd_line, char cmd_line_len);
+extern int parse(char far *cmd_line, word cmd_line_len);
 extern void dump_config(void);
 extern void SeedGrid(void);
 extern void StartFinishLineHook(CAR far *pCar, word leaders_lap, word total_laps);
@@ -64,6 +64,8 @@ byte         far *hook_nc_value = (byte far *) &max_cars_in_pit;
 CAR          far *pFirstCar = cars;
 char         unload_flag = FALSE;
 char         near *msg_text = 0;
+char         cfg_filename[80];
+char         cfg_data[512];
 
 
 /*---------------------------------------------------------------------------
@@ -98,6 +100,21 @@ void wrt_msg(void) {
     while (*p != '$') {
         printf("%c", *p++);
     }
+}
+
+word read_cfg_file(void) {
+    FILE *fp;
+    word bytes_read;
+
+    /* read cfg_filename to cfg_data */
+    fp = fopen(cfg_filename, "rt");
+    if (fp) {
+        bytes_read = fread(cfg_data, 1, 1023, fp);
+        cfg_data[bytes_read] = 0;
+        fclose(fp);
+        return bytes_read;
+    }
+    return 0;
 }
 
 
@@ -240,7 +257,7 @@ void init_race(void) {
     for (car_index = 0; car_index < MAX_CARS; car_index++) {
         pCar = cars + car_index;
         pCar->si[0xb2] = TyreChange(default_tyre, pCar, &car_setup);
-        printf("Car %d starting on %c's\n", car_index, 'A' + pCar->si[0xb2], 'A');
+        printf("Car %d starting on %c's\n", car_index + 1, 'A' + pCar->si[0xb2], 'A');
     }
 }
 
@@ -251,7 +268,7 @@ void pit_car(CAR far *pCar, word car_index, byte extra) {
     tyre = TyreChange(tyre, pCar, &car_setup);
 
     printf("Lap %2d: Car %2d pitted, going from %c's to %c's%s\n",
-        pCar->si[CAR_DATA_SI_LAP_NUMBER], car_index,
+        pCar->si[CAR_DATA_SI_LAP_NUMBER], car_index + 1,
         'A' + pCar->si[0xb2], 'A' + tyre,
         extra ? " (unscheduled)" : "");
 

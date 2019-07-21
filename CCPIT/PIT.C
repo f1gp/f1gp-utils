@@ -291,41 +291,51 @@ TyreChange(
     */
     if (tyre != COMPOUND_W && tyre != COMPOUND_Q) {
         /*
-         ** If computer car (not player).
-         */
-        if (CAR_IS_CC(pCar)) {
+        ** Check for pit stops (catch saved reloaded saved games which don't
+        ** contain our data).
+        */
+        if (pSaveGame2->magic1 == MAGIC1SG2 && pSaveGame2->magic2 == MAGIC2 &&
+            pReplayState->magic == MAGICRS
+        ) {
             /*
-            ** Check tyre in settings.
-            ** Catch saved reloaded saved games which don't contain our data.
-            */
-            if (pSaveGame2->magic1 == MAGIC1SG2 && pSaveGame2->magic2 == MAGIC2) {
+             ** If computer car (not player).
+             */
+            if (pSaveGame2->multiplayer || CAR_IS_CC(pCar)) {
                 /*
+                ** Check tyre in settings.
                 ** Use default game behaviour if not over-ridden.
                 */
                 if (pSaveGame2->tyres != 0) {
                     tyre = pSaveGame2->tyres - 'A';
                 }
-            }
-            /*
-            ** Check tyre in pit group.
-            ** Catch saved reloaded saved games which don't contain our data.
-            */
-            car_index = get_car_index(pCar);
-            group = get_seed_group_value(car_index);
-            if (group != 0) {
-                pg = get_group(group - 1);
-                if (pg != 0) {
-                    stop = pReplayState->current_stop[car_index];
-                    tyre = get_group_tyre(pg, stop, tyre);
+                /*
+                ** Check tyre in pit group.
+                ** Catch saved reloaded saved games which don't contain our data.
+                */
+                car_index = get_car_index(pCar);
+                group = get_seed_group_value(car_index);
+                if (group != 0) {
+                    pg = get_group(group - 1);
+                    if (pg != 0) {
+                        stop = pReplayState->current_stop[car_index];
+                        tyre = get_group_tyre(pg, stop, tyre);
+                    }
                 }
             }
-        }
-        else {
-            /*
-            ** Use specified players car setup compound.
-            */
-            car_number = CAR_NUMBER(pCar);
-            tyre = pCarSetup[car_number - 1].race_tyres;
+            else {
+                /*
+                ** Use specified players car setup compound.
+                */
+                car_number = CAR_NUMBER(pCar);
+                tyre = pCarSetup[car_number - 1].race_tyres;
+             }
+         }
+         else if (!CAR_IS_CC(pCar)) {
+             /*
+             ** Use specified players car setup compound.
+             */
+             car_number = CAR_NUMBER(pCar);
+             tyre = pCarSetup[car_number - 1].race_tyres;
          }
     }
 

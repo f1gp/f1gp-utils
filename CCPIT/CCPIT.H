@@ -149,12 +149,16 @@ extern bool         tmp_multiplayer;
 extern char         unload_flag;
 extern char         near *msg_text;
 
+extern char         cfg_filename[80];
+extern char         cfg_data[512];
+
 /*---------------------------------------------------------------------------
 ** Functions
 */
 
 extern byte rnd(void);
 extern void wrt_msg(void);  /* write DOS string pointed to by msg_text */
+extern word read_cfg_file(void);  /* read cfg_filename to cfg_data */
 
 extern void init_group_tyre(PIT_GROUP far *pg, byte tyre);
 extern byte get_group_pit_tyre(PIT_GROUP far *pg, byte index);

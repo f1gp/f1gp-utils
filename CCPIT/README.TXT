@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 28th May 2019                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 21th Jul 2019                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -49,6 +49,8 @@ Command Line Options
 --------------------
 Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...
 
+       @filename Read options from filename.
+
        -h,-?     This help message.
        -u        Unload TSR.
 
@@ -62,7 +64,7 @@ Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...
         -cN      Stop N cars (for this group).
         -t?      Specify tyres where ? is one of ABCD (for this group).
         -lN      Trigger cars to stop at race percentage N (for this group).
-         -t?     Specify tyres where ? is one of ABCD (for this pit stop).
+         -t?     Specify tyres where ? is one of ABCD (for this stop).
 
 For the top 15 cars to use compound D and to pit at 30% and 60%, next 8 cars to
 start on compound C and pit at 45% for B's, and the rest to use compound A
@@ -86,6 +88,12 @@ use an empty group:
         ccpit -g
 
 As a confirmation, CCPIT will always print the resulting configuration.
+
+Warning: If the command is longer than 128 characters DOS won't pass the
+remaining part. It is recommended to use the @ option to specify a
+configuration file instead. This file can contain any of the options
+above, as if you specified them on the command line. They may also be
+specified on separate lines. The @ option can be repeated and even be nested.
 
 Starting CCPIT
 --------------
@@ -204,7 +212,8 @@ However, the player's car will NOT be called into the pits for tyres! It is
 entirely up to you to decide when you should pit. The exception to this rule
 is if you use the '-m' multi-player option. This option is intended to ensure
 that player's cars being driven by the computer will be called in for a tyre
-change.
+change. It will also ignore the player's race setup tyre compound, even when
+player is in control.
 
 Saved Games
 -----------
@@ -216,7 +225,8 @@ The last driver name field is used for global settings. Then each pit group
 will use a driver name field before it for the pit group settings.
 The last two teams are normally disabled. It doesn't matter if teams with
 settings are enabled but if they are you will see the driver names as "#40",
-"#39", "#38", etc. With 10 pit groups this will continue to "#30".
+"#39", "#38", etc. With 10 pit groups this will continue to "#30". A warning
+will be printed when more than 3 pit groups are used.
 
 To save a game use the normal "Save Game" feature of F1GP. When you come to
 restart F1GP and reload a saved game make sure you have started CCPIT
@@ -248,7 +258,7 @@ they may choose to cancel this, or request to come in at any other time.
 CC Tyre Compounds
 -----------------
 F1GP normally lets the CC cars use C and B compound tyres. Specify the global
--t option to override this behaviour.
+or group specific -t option to override this behaviour.
 
 Player's Tyre Compound
 ----------------------
@@ -287,11 +297,13 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 28/05/2019  Added support for replays (incompatible with old save games).
+V4.0 21/07/2019  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Improved handling of unscheduled pit stops.
                  Prints actual pit group configuration.
+                 Added support for configuration files.
+                 Preselect tyre for player in control during multiplayer.
 
 Further Info
 ------------

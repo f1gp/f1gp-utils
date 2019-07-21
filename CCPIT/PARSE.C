@@ -25,6 +25,11 @@
 ** Typedefs
 */
 
+typedef struct {
+    int        pit_group;
+    int        total_cars;
+} ParseState;
+
 /*---------------------------------------------------------------------------
 ** Local function prototypes
 */
@@ -50,33 +55,25 @@ char title_msg[] =
 */
 
 int
-parse(
+do_parse(
     char far *cmd_line,
-    char cmd_line_len
+    word cmd_line_len,
+    ParseState *parse_state
 ) {
-    register PIT_GROUP  *pg = tmp_pit_groups;
-    register int        i;
-    int                 n;
-    int                 option_next;
-    int                 total_cars     = 0;
-    int                 pit_group      = 0;
-
-    display_msg(&title_msg[WHAT_OFFSET]);
-
-    tmp_num_groups      = 0;
-    tmp_max_cars_in_pit = DEFAULT_MAX_CARS_IN_PIT;
-    tmp_randomise       = FALSE;
-    tmp_tyres           = 0;
-    tmp_multiplayer     = FALSE;
+    register PIT_GROUP *pg;
+    register int       i, n;
+    int                option_next;
+    char               cfg_data_local[512];
 
     for (i = 0; i <= cmd_line_len; i++) {
-        if ( cmd_line[i] == '\r' || cmd_line[i] == '\n' ||
+        if (cmd_line[i] == '\r' || cmd_line[i] == '\n' ||
             cmd_line[i] == ' '  || cmd_line[i] == '\t'
         ) {
             cmd_line[i] = '\0';
         }
     }
 
+    pg = &tmp_pit_groups[parse_state->pit_group];
     option_next = FALSE;
     while (cmd_line_len--) {
         if (option_next) {
@@ -97,8 +94,8 @@ parse(
                 tmp_randomise = TRUE;
             }
             else if (*cmd_line == 'g') {
-                if (pit_group < MAX_GROUPS) {
-                    pg = &tmp_pit_groups[pit_group++];
+                if (parse_state->pit_group < MAX_GROUPS) {
+                    pg = &tmp_pit_groups[parse_state->pit_group++];
                     pg->num_cars = 0;
                     pg->tyres = 0;
                 }
@@ -110,7 +107,7 @@ parse(
             else if (*cmd_line == 't') {
                 ++cmd_line;
                 if (*cmd_line >= 'A' && *cmd_line <= 'D') {
-                    if (pit_group == 0) {
+                    if (parse_state->pit_group == 0) {
                        tmp_tyres = *cmd_line;
                     }
                     else if (pg->num_stops == 0) {
@@ -130,15 +127,14 @@ parse(
                 }
             }
             else if (*cmd_line == 'c') {
-                if (pit_group == 0) {
+                if (parse_state->pit_group == 0) {
                     display_msg("ccpit: You must use -g before a -c.\n");
                     return FALSE;
                 }
-
                 n = parse_short(&cmd_line[1]);
                 if (n >= 1 && n <= 26) {
-                    total_cars += n;
-                    if (total_cars > 26) {
+                    parse_state->total_cars += n;
+                    if (parse_state->total_cars > 26) {
                         display_msg("ccpit: Total number of cars specified with all -c can't exceed 26.\n");
                         return FALSE;
                     }
@@ -150,7 +146,7 @@ parse(
                 }
             }
             else if (*cmd_line == 'l') {
-                if (pit_group == 0) {
+                if (parse_state->pit_group == 0) {
                     display_msg("ccpit: You must use -g before a -l.\n");
                     return FALSE;
                 }
@@ -193,35 +189,83 @@ parse(
         else if (*cmd_line == '-' || *cmd_line == '/') {
             option_next = TRUE;
         }
+        else if (*cmd_line == '@') {
+            word cfg_len;
+            char *pCfg = cfg_filename;
+            ++cmd_line;
+            n = 0;
+            while (*cmd_line && n < sizeof(cfg_filename) - 1) {
+                *pCfg++ = *cmd_line++;
+                ++n;
+            }
+            *pCfg = 0;
+            cfg_len = read_cfg_file();
+            if (cfg_len > 0) {
+                for (n = 0; n <= cfg_len; n++) {
+                    cfg_data_local[n] = cfg_data[n];
+                }
+                if (!do_parse(cfg_data_local, cfg_len, parse_state)) {
+                    return FALSE;
+                }
+            } else {
+                display_msg("Failed to read config file: ");
+                display_msg(cfg_filename);
+                display_chr('\n');
+                return FALSE;
+            }
+        }
         ++cmd_line;
+    }
+
+    return TRUE;
+}
+
+int
+parse(
+    char far *cmd_line,
+    char cmd_line_len
+) {
+    ParseState parse_state;
+
+    parse_state.pit_group = 0;
+    parse_state.total_cars = 0;
+
+    display_msg(&title_msg[WHAT_OFFSET]);
+
+    tmp_num_groups      = 0;
+    tmp_max_cars_in_pit = DEFAULT_MAX_CARS_IN_PIT;
+    tmp_randomise       = FALSE;
+    tmp_tyres           = 0;
+    tmp_multiplayer     = FALSE;
+
+    if (!do_parse(cmd_line, cmd_line_len, &parse_state)) {
+        return FALSE;
     }
 
     /*
     ** Nothing defined so use defaults.
     */
-    if (pit_group == 0) {
-        pg = tmp_pit_groups;
-
-        pg->num_cars        = 13;
-        pg->num_stops       = 2;
-        pg->percent[0]      = 25;
-        pg->percent[1]      = 55;
-
+    if (parse_state.pit_group == 0) {
+        PIT_GROUP  *pg = tmp_pit_groups;
+        pg->num_cars   = 13;
+        pg->num_stops  = 2;
+        pg->percent[0] = 25;
+        pg->percent[1] = 55;
         ++pg;
 
-        pg->num_cars        = 13;
-        pg->num_stops       = 2;
-        pg->percent[0]      = 35;
-        pg->percent[1]      = 65;
+        pg->num_cars   = 13;
+        pg->num_stops  = 2;
+        pg->percent[0] = 35;
+        pg->percent[1] = 65;
 
-        tmp_num_groups = 2;
+        parse_state.pit_group = 2;
     }
-    else {
-        tmp_num_groups = pit_group;
-    }
+
+    tmp_num_groups = parse_state.pit_group;
 
     return TRUE;
 }
+
 
 void
 dump_count(
@@ -312,6 +356,9 @@ dump_config(
             ++g;
             remaining_cars -= pg->num_cars;
         }
+        else {
+            display_msg("Ignoring empty pit group\n");
+        }
     }
     if (remaining_cars > 0) {
         ++g;
@@ -366,6 +413,17 @@ dump_config(
         }
         dump_no_stops();
     }
+    if (tmp_num_groups > 3) {
+        if (tmp_num_groups == 4) {
+            display_msg("Warning: car 37 will be named #37.\n");
+        } else {
+            display_msg("Warning: car 3");
+            display_int(10 - tmp_num_groups);
+            display_msg(" through 37 will be named #3");
+            display_int(10 - tmp_num_groups);
+            display_msg(" through #37.\n");
+        }
+    }
     display_msg("\n");
 }
 
@@ -374,6 +432,8 @@ Usage(
     void
 ) {
     display_msg("Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...\n"
+                "\n"
+                "       @filename Read options from filename.\n"
                 "\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
@@ -388,7 +448,7 @@ Usage(
                 "        -cN      Stop N cars (for this group).\n"
                 "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
                 "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
-                "         -t?     Specify tyres where ? is one of ABCD (for this pit stop).\n"
+                "         -t?     Specify tyres where ? is one of ABCD (for this stop).\n"
                 "\n"
                 "For the top 15 cars to pit at 30% and 60%, next 8 cars at 45% & the rest 0:\n"
                 "\n"
@@ -415,16 +475,21 @@ display_int(
     int d;
     int i;
     int b = 0;
-    if (v < 0) {
-        display_chr('-');
-        v = -v;
+    if (v == 0) {
+        display_chr('0');
     }
-    for (i = 0, d = 10000; i < 5; i++, d /= 10) {
-        if (b || v / d) {
-            display_chr('0' + v / d);
-            b = 1;
+    else {
+        if (v < 0) {
+            display_chr('-');
+            v = -v;
         }
-        v = v % d;
+        for (i = 0, d = 10000; i < 5; i++, d /= 10) {
+            if (b || v / d) {
+                display_chr('0' + v / d);
+                b = 1;
+            }
+            v = v % d;
+        }
     }
 }
 
