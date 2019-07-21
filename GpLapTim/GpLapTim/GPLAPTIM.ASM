@@ -2106,6 +2106,10 @@ do_log: mov     al, REC_TYPE_LAP
         ;**
         mov     cx, RECORD_LEN
         les     si, game_si
+        test    WORD PTR [lr.lr_lap_time + 2], 0C000h
+        jz      is_best_lap
+        jmp     log_setup
+is_best_lap:
         test    BYTE PTR es:[si + 0ach], 80h
         jz      npc
         test    BYTE PTR es:[si + 0ach], 40h
@@ -2113,10 +2117,6 @@ do_log: mov     al, REC_TYPE_LAP
         jmp     is_player
 npc:    jmp     not_players_car
 is_player:
-        test    WORD PTR [lr.lr_lap_time + 2], 0C000h
-        jz      is_best_lap
-        jmp     log_setup
-is_best_lap:
         ;**
         ;** Is it 100% race distance?
         ;**

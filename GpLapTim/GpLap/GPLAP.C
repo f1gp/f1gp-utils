@@ -392,10 +392,10 @@ IsFilter(
      bool                fDoComputer    = FALSE;
      bool                fDoPlayer      = FALSE;
 
-     if (lr->lr_record_type == REC_TYPE_LAP || lr->lr_record_type == REC_TYPE_SPLIT) {
-          fDoComputer    = fShowComputer && !IS_PLAYER(lr->lr_car_number);
-          fDoPlayer      = fShowPlayer   && IS_PLAYER(lr->lr_car_number);
+     fDoComputer    = fShowComputer && !IS_PLAYER(lr->lr_car_number);
+     fDoPlayer      = fShowPlayer   && IS_PLAYER(lr->lr_car_number);
 
+     if (lr->lr_record_type == REC_TYPE_LAP || lr->lr_record_type == REC_TYPE_SPLIT) {
           if (IS_RACE(lr->lr_game_mode) && fShowRace) {
                if (fShowLeader && lr->lr_car_position == 1) {
                     fAdd = TRUE;
@@ -454,14 +454,14 @@ IsFilter(
           }
      }
      else if (lr->lr_record_type == REC_TYPE_SETUP) {
-          if (fShowSetup && fShowPlayer) {
+          if (fShowSetup) {
                if ( (IS_RACE(lr->lr_game_mode)              && fShowRace)       ||
                     (IS_QUALIFYING(lr->lr_game_mode)        && fShowQualifying) ||
                     (IS_PRACTICE(lr->lr_game_mode)          && fShowPractice)   ||
                     (IS_FREE_PRACTICE(lr->lr_game_mode)     && fShowPractice)   ||
                     (IS_PRE_RACE_PRACTICE(lr->lr_game_mode) && fShowPractice)
                ) {
-                    fAdd = TRUE;
+                   fAdd = (fAdd || fDoComputer || fDoPlayer);
                }
           }
      }

@@ -98,9 +98,9 @@ static TCHAR BASED_CODE szCarSetupKey[]		= _T("Car Setup");
 static TCHAR BASED_CODE szPitKey[]			= _T("Pit");
 
 CGplapwView::CGplapwView()
-{                                               
+{
 	m_uFontHeight 	= 0;
-	m_uTitleHeight	= 0;            
+	m_uTitleHeight	= 0;
 
      m_uPrintHeaderBlankLines = 5;
      m_uPrintFooterBlankLines = 5;
@@ -151,12 +151,12 @@ void CGplapwView::OnInitialUpdate()
 /////////////////////////////////////////////////////////////////////////////
 // CGplapwView printing
 
-BOOL CGplapwView::OnPreparePrinting(CPrintInfo* pInfo) 
+BOOL CGplapwView::OnPreparePrinting(CPrintInfo* pInfo)
 {
 	return DoPreparePrinting(pInfo);
 }
 
-void CGplapwView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo) 
+void CGplapwView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo)
 {
 	CView::OnPrepareDC(pDC, pInfo);
      if (pDC->IsPrinting()) {
@@ -174,7 +174,7 @@ void CGplapwView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo)
           else {
                pInfo->m_bContinuePrinting = FALSE;
           }
-     }	
+     }
 }
 
 void CGplapwView::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
@@ -185,8 +185,8 @@ void CGplapwView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
 }
 
-void CGplapwView::OnPrint(CDC* pDC, CPrintInfo* pInfo) 
-{    
+void CGplapwView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
+{
 	LB_ENTRY	*le;
      TCHAR     szBuff[132];
      UINT      uLineNum;
@@ -199,7 +199,7 @@ void CGplapwView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
      UINT      uTitleWidth;
      INT       iCircuit = -1;
      CFont     *pfntOldFont;
-     
+
     	CWaitCursor wait;
 
      uLinesPerPage  = (pInfo->m_rectDraw.bottom - pInfo->m_rectDraw.top) / abs(m_uFontHeight);
@@ -245,36 +245,36 @@ void CGplapwView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
                lstrcpy(szBuff, LapCircuitText(iCircuit));
                pDC->SetTextAlign(TA_LEFT);
           	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin,
-          	               uLineNum * abs(m_uFontHeight), 
-          	               szBuff, 
+          	               uLineNum * abs(m_uFontHeight),
+          	               szBuff,
           	               lstrlen(szBuff));
           }
           wsprintf(szBuff, _T("[%s]"), GetDocument()->GetPathName());
           pDC->SetTextAlign(TA_RIGHT);
      	pDC->TextOut(  pInfo->m_rectDraw.right - uLeftOrigin,
-     	               uLineNum * abs(m_uFontHeight), 
-     	               szBuff, 
+     	               uLineNum * abs(m_uFontHeight),
+     	               szBuff,
      	               lstrlen(szBuff));
 
           pDC->SetTextAlign(TA_LEFT);
           uLineNum++;
           uLineNum++;
      	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin,
-     	               uLineNum * abs(m_uFontHeight), 
-     	               LapTitleText(), 
+     	               uLineNum * abs(m_uFontHeight),
+     	               LapTitleText(),
      	               lstrlen(LapTitleText()));
           uLineNum++;
-     	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin, 
-     	               uLineNum * abs(m_uFontHeight), 
-     	               LapTitleUnderlineText(), 
+     	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin,
+     	               uLineNum * abs(m_uFontHeight),
+     	               LapTitleUnderlineText(),
      	               lstrlen(LapTitleUnderlineText()));
 
           uLineNum = m_uPrintHeaderBlankLines + m_uPrintHeaderLines + uLinesPerPage + 1;
           wsprintf(szBuff, _T("%u of %u"), pInfo->m_nCurPage, (uListBoxCount / uLinesPerPage) + 1);
           pDC->SetTextAlign(TA_CENTER);
      	pDC->TextOut(  (pInfo->m_rectDraw.right - pInfo->m_rectDraw.left) / 2,
-     	               uLineNum * abs(m_uFontHeight), 
-     	               szBuff, 
+     	               uLineNum * abs(m_uFontHeight),
+     	               szBuff,
      	               lstrlen(szBuff));
 
           pDC->SetTextAlign(TA_LEFT);
@@ -284,9 +284,9 @@ void CGplapwView::OnPrint(CDC* pDC, CPrintInfo* pInfo)
      		le = (LB_ENTRY *) m_wndLogListBox.GetItemData(uPrintIndex);
 
                LbEntryToText(szBuff, le);
-          	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin, 
-          	               uLineNum++ * abs(m_uFontHeight), 
-          	               szBuff, 
+          	pDC->TextOut(  pInfo->m_rectDraw.left + uLeftOrigin,
+          	               uLineNum++ * abs(m_uFontHeight),
+          	               szBuff,
           	               lstrlen(szBuff));
           }
 
@@ -793,9 +793,10 @@ BOOL CGplapwView::IsFilter(
      BOOL                fDoComputer    = FALSE;
      BOOL                fDoPlayer      = FALSE;
 
+	 fDoComputer    = fShowComputer && !IS_PLAYER(lr->lr_car_number);
+	 fDoPlayer      = fShowPlayer   && IS_PLAYER(lr->lr_car_number);
+
      if (lr->lr_record_type == REC_TYPE_LAP || lr->lr_record_type == REC_TYPE_SPLIT) {
-          fDoComputer    = fShowComputer && !IS_PLAYER(lr->lr_car_number);
-          fDoPlayer      = fShowPlayer   && IS_PLAYER(lr->lr_car_number);
 
           if (IS_RACE(lr->lr_game_mode) && fShowRace) {
                if (fShowLeader && lr->lr_car_position == 1) {
@@ -855,14 +856,14 @@ BOOL CGplapwView::IsFilter(
           }
      }
      else if (lr->lr_record_type == REC_TYPE_SETUP) {
-          if (fShowSetup && fShowPlayer) {
+          if (fShowSetup) {
                if ( (IS_RACE(lr->lr_game_mode)              && fShowRace)       ||
                     (IS_QUALIFYING(lr->lr_game_mode)        && fShowQualifying) ||
                     (IS_PRACTICE(lr->lr_game_mode)          && fShowPractice)   ||
                     (IS_FREE_PRACTICE(lr->lr_game_mode)     && fShowPractice)   ||
                     (IS_PRE_RACE_PRACTICE(lr->lr_game_mode) && fShowPractice)
                ) {
-                    fAdd = TRUE;
+				    fAdd = (fAdd || fDoComputer || fDoPlayer);
                }
           }
      }
@@ -1037,7 +1038,7 @@ void CGplapwView::NewCircuit(INT nCircuit) {
 	GetDocument()->SetTitle(strTitle);
 }
 
-void CGplapwView::OnFileAuthenticationToTextFile() 
+void CGplapwView::OnFileAuthenticationToTextFile()
 {
      LB_ENTRY  *lbe;
      BOOL      fEntrySelected = FALSE;
@@ -1062,7 +1063,7 @@ void CGplapwView::OnFileAuthenticationToTextFile()
 
 	CString	strFilter;
 	VERIFY(strFilter.LoadString(IDS_SAVE_TXT_FILE_TEMPLATE));
-     
+
      CFileDialog    dlgFileSaveAs( FALSE,
                                    _T(".txt"),
                                    _T("authlap.txt"),
@@ -1084,7 +1085,7 @@ void CGplapwView::OnFileAuthenticationToTextFile()
 		CString	strMsg;
 		VERIFY(strMsg.LoadString(IDS_APPEND_TO_FILE_QUERY));
 		if (MessageBox((LPCTSTR) strMsg, AfxGetAppName(), MB_ICONQUESTION | MB_YESNO) == IDYES) {
-               fAppend = TRUE;     
+               fAppend = TRUE;
           }
      }
 
@@ -1094,11 +1095,11 @@ void CGplapwView::OnFileAuthenticationToTextFile()
      CFileException fe;
      CFile          file;
      try {
-     	if (!file.Open(     strPathName, 
-     	                    fAppend ? (    CFile::modeReadWrite     | 
+     	if (!file.Open(     strPathName,
+     	                    fAppend ? (    CFile::modeReadWrite     |
      	                                   CFile::shareExclusive)
-                                      : (    CFile::modeCreate        | 
-     	                                   CFile::modeReadWrite     | 
+                                      : (    CFile::modeCreate        |
+     	                                   CFile::modeReadWrite     |
      	                                   CFile::shareExclusive),
      	                    &fe)
           ) {
@@ -1217,11 +1218,11 @@ BOOL CGplapwView::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void CGplapwView::OnFileSaveAs() 
+void CGplapwView::OnFileSaveAs()
 {
 	CString	strFilter;
 	VERIFY(strFilter.LoadString(IDS_SAVE_FILES_TEMPLATE));
-     
+
      CFileDialog    dlgFileSaveAs( FALSE,
                                    NULL,
                                    NULL,
@@ -1264,16 +1265,16 @@ void CGplapwView::OnFileSaveAs()
           case IDCANCEL:
                return;
           }
-     }    
+     }
 
     	CWaitCursor wait;
 
      CFileException fe;
      CFile          file;
      try {
-     	if (!file.Open(     strPathName, 
-     	                    CFile::modeCreate        | 
-     	                    CFile::modeReadWrite     | 
+     	if (!file.Open(     strPathName,
+     	                    CFile::modeCreate        |
+     	                    CFile::modeReadWrite     |
      	                    CFile::shareExclusive,
      	                    &fe)
           ) {
@@ -1323,7 +1324,7 @@ void CGplapwView::OnFileSaveAs()
                                         strBuff += _T("\r\n");
                                    }
                               }
-          
+
                               LbEntryToText(buff, lbe);
                               strBuff += _T(" ");
                               strBuff += buff;
