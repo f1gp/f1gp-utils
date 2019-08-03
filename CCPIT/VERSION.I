@@ -15,5 +15,5 @@
 **                  Preselect tyre for player in control during multiplayer.
 */
 
-#define VERSION     "V4.0.2 21/Jul/2019"
+#define VERSION     "V4.0.3 3/Aug/2019"
 

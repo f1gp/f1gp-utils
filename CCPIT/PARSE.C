@@ -62,13 +62,19 @@ do_parse(
 ) {
     register PIT_GROUP *pg;
     register int       i, n;
-    int                option_next;
-    char               cfg_data_local[512];
+    int                option_next, comment, in_cfg_file;
 
+    in_cfg_file = cmd_line == cfg_data;
+    comment = FALSE;
     for (i = 0; i <= cmd_line_len; i++) {
-        if (cmd_line[i] == '\r' || cmd_line[i] == '\n' ||
-            cmd_line[i] == ' '  || cmd_line[i] == '\t'
-        ) {
+        int newline = cmd_line[i] == '\r' || cmd_line[i] == '\n';
+        if (newline) {
+            comment = FALSE;
+        }
+        else if (in_cfg_file && cmd_line[i] == ';') {
+            comment = TRUE;
+        }
+        if (comment || newline || cmd_line[i] == ' '  || cmd_line[i] == '\t') {
             cmd_line[i] = '\0';
         }
     }
@@ -95,9 +101,11 @@ do_parse(
             }
             else if (*cmd_line == 'g') {
                 if (parse_state->pit_group < MAX_GROUPS) {
-                    pg = &tmp_pit_groups[parse_state->pit_group++];
-                    pg->num_cars = 0;
-                    pg->tyres = 0;
+                    if (parse_state->pit_group == 0 || pg->num_cars > 0) {
+                        pg = &tmp_pit_groups[parse_state->pit_group++];
+                        pg->num_cars = 0;
+                        pg->tyres = 0;
+                    }
                 }
                 else {
                     display_msg("ccpit: Too many -g pit groups defined.\n");
@@ -190,31 +198,39 @@ do_parse(
             option_next = TRUE;
         }
         else if (*cmd_line == '@') {
-            word cfg_len;
-            char *pCfg = cfg_filename;
-            ++cmd_line;
-            n = 0;
-            while (*cmd_line && n < sizeof(cfg_filename) - 1) {
-                *pCfg++ = *cmd_line++;
-                ++n;
+            if (in_cfg_file) {
+                display_msg("@ option inside config file is not allowed\n");
+                return FALSE;
             }
-            *pCfg = 0;
-            cfg_len = read_cfg_file();
-            if (cfg_len > 0) {
-                for (n = 0; n <= cfg_len; n++) {
-                    cfg_data_local[n] = cfg_data[n];
+            else {
+                word cfg_len;
+                char *pCfg = cfg_filename;
+                ++cmd_line;
+                n = 0;
+                while (*cmd_line && n < sizeof(cfg_filename) - 1) {
+                    *pCfg++ = *cmd_line++;
+                    ++n;
                 }
-                if (!do_parse(cfg_data_local, cfg_len, parse_state)) {
+                *pCfg = 0;
+                cfg_len = read_cfg_file();
+                if (cfg_len > 0) {
+                    if (!do_parse(cfg_data, cfg_len, parse_state)) {
+                        return FALSE;
+                    }
+                } else {
+                    display_msg("Failed to read config file: ");
+                    display_msg(cfg_filename);
+                    display_chr('\n');
                     return FALSE;
                 }
-            } else {
-                display_msg("Failed to read config file: ");
-                display_msg(cfg_filename);
-                display_chr('\n');
-                return FALSE;
             }
         }
         ++cmd_line;
+    }
+
+    if (parse_state->pit_group > 0 && pg->num_cars == 0) {
+        /* last group is empty */
+        --parse_state->pit_group;
     }
 
     return TRUE;
@@ -357,7 +373,7 @@ dump_config(
             remaining_cars -= pg->num_cars;
         }
         else {
-            display_msg("Ignoring empty pit group\n");
+            display_msg("Warning: empty pit group.\n");
         }
     }
     if (remaining_cars > 0) {
@@ -413,16 +429,12 @@ dump_config(
         }
         dump_no_stops();
     }
-    if (tmp_num_groups > 3) {
-        if (tmp_num_groups == 4) {
-            display_msg("Warning: car 37 will be named #37.\n");
-        } else {
-            display_msg("Warning: car 3");
-            display_int(10 - tmp_num_groups);
-            display_msg(" through 37 will be named #3");
-            display_int(10 - tmp_num_groups);
-            display_msg(" through #37.\n");
-        }
+    if (tmp_num_groups > 4) {
+        display_msg("Warning: drivers of cars 3");
+        display_int(10 - tmp_num_groups);
+        display_msg(" through 39 will be named #3");
+        display_int(10 - tmp_num_groups);
+        display_msg(" through #39 resp.\n");
     }
     display_msg("\n");
 }

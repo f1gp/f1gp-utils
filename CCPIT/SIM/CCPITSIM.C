@@ -65,7 +65,7 @@ CAR          far *pFirstCar = cars;
 char         unload_flag = FALSE;
 char         near *msg_text = 0;
 char         cfg_filename[80];
-char         cfg_data[512];
+char         cfg_data[MAX_CFG_SIZE];
 
 
 /*---------------------------------------------------------------------------
@@ -172,7 +172,7 @@ void fixture_add_extra_stop(byte car_index, byte lap) {
 int setup_fixture_from_args(short argc, char *argv[]) {
     PIT_GROUP *pg;
     int ret, a, i, j, k, uc, ul;
-    char cmd[512], *arg;
+    char cmd[MAX_CFG_SIZE], *arg;
 
     /* look for -X args for the simulator itself */
     for (a = 1; a < argc; a++) {

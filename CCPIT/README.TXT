@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 21th Jul 2019                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0  3rd Aug 2019                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -93,7 +93,9 @@ Warning: If the command is longer than 128 characters DOS won't pass the
 remaining part. It is recommended to use the @ option to specify a
 configuration file instead. This file can contain any of the options
 above, as if you specified them on the command line. They may also be
-specified on separate lines. The @ option can be repeated and even be nested.
+specified on separate lines, and a ';' can be used as a comment prefix that
+lasts until the end of the line. The maximum file size is 2047 bytes.
+The @ option can be repeated but cannot be nested.
 
 Starting CCPIT
 --------------
@@ -226,7 +228,7 @@ will use a driver name field before it for the pit group settings.
 The last two teams are normally disabled. It doesn't matter if teams with
 settings are enabled but if they are you will see the driver names as "#40",
 "#39", "#38", etc. With 10 pit groups this will continue to "#30". A warning
-will be printed when more than 3 pit groups are used.
+will be printed when more than 4 pit groups have been specified.
 
 To save a game use the normal "Save Game" feature of F1GP. When you come to
 restart F1GP and reload a saved game make sure you have started CCPIT
@@ -297,7 +299,7 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 21/07/2019  Added support for replays (incompatible with old save games).
+V4.0 03/08/2019  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Improved handling of unscheduled pit stops.

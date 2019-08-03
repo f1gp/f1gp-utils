@@ -29,6 +29,8 @@
 
 #define DEFAULT_MAX_CARS_IN_PIT    10
 
+#define MAX_CFG_SIZE               2048
+
 /*
 ** Magic numbers, note these are used as the driver's names.
 */
@@ -150,7 +152,7 @@ extern char         unload_flag;
 extern char         near *msg_text;
 
 extern char         cfg_filename[80];
-extern char         cfg_data[512];
+extern char         cfg_data[MAX_CFG_SIZE];
 
 /*---------------------------------------------------------------------------
 ** Functions

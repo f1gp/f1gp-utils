@@ -31,6 +31,7 @@ TSR_TMP         segment
 ;** Equates & Macros
 ;**
 
+CFG_SIZE        equ     2048
 STACK_SIZE      equ     512
 
 ;*****************************************************************************
@@ -64,7 +65,7 @@ public          cfg_filename
 cfg_filename    db      80 dup(?)
 cfg_fh          dw      ?
 public          cfg_data
-cfg_data        db      512 dup(?)
+cfg_data        db      CFG_SIZE dup(?)
 
 public          msg_text
 msg_text        dw      ?
@@ -414,23 +415,26 @@ read_cfg_file proc  near
 
         mov     cfg_fh, ax
         mov     bx, ax  ; file handle
-        mov     ah, 3fh ; read
-        mov     cx, 511 ; number of bytes to read
+        mov     ah, 3fh ; read file
+        mov     cx, CFG_SIZE ; number of bytes to read
         mov     dx, OFFSET TSR:cfg_data
         int     DOS
         jc      rcf_fail2
 
         push    ax
+        cmp     ax, CFG_SIZE
+        jae      rcf_fail2   ; too big
+
         mov     bx, OFFSET TSR:cfg_data
         add     bx, ax
-        mov     BYTE PTR [bx], 0
-        mov     ah, 3eh ; close
+        mov     BYTE PTR [bx], 0    ; terminate string with 0
+        mov     ah, 3eh ; close file
         mov     bx, cfg_fh
         int     DOS
         pop     ax
         jmp     rcf_end
 rcf_fail2:
-        mov     ah, 3eh ; close
+        mov     ah, 3eh ; close file
         mov     bx, cfg_fh
         int     DOS
 rcf_fail:
