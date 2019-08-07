@@ -23,9 +23,10 @@
 ** V6.0 07/10/95    Added support for race authentication records.
 ** V6.1 04/04/96    Updated version number to keep in step with GPLAPW.
 ** V7.0 25/05/2019  Added watch period parameter, defaults to 0s (was 5s).
+** V7.1 08/08/2019  Show CC setups.
 */
 
-#define VERSION     "V7.0 25th May 2019"
+#define VERSION     "V7.1.0 8th Aug 2019"
 
 /*---------------------------------------------------------------------------
 ** Includes
