@@ -22,8 +22,8 @@
 **                  on some circuits the maximum was beyond the bar's range.
 **                  Use the game's tyre grip table as a base for the grip bar.
 **                  Made grip bar work also in wet conditions.
-** V4.1 26-Jun-2019 Added -e option to start with (manual) logging enabled.
+** V4.1 18-Aug-2019 Added -e option to start with logging enabled.
 */
 
-#define VERSION          "V4.1 26-Jun-2019"
+#define VERSION          "V4.1 18-Aug-2019"
 
