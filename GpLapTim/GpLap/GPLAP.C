@@ -262,7 +262,8 @@ ShowLog(
                                    le.u.lr.lr_record_type == REC_TYPE_AUTH      ||
                                    le.u.lr.lr_record_type == REC_TYPE_AUTH_RACE ||
                                    le.u.lr.lr_record_type == REC_TYPE_PIT_IN    ||
-                                   le.u.lr.lr_record_type == REC_TYPE_PIT_OUT
+                                   le.u.lr.lr_record_type == REC_TYPE_PIT_OUT   ||
+                                   le.u.lr.lr_record_type == REC_TYPE_SETUP
                               ) {
                                    if (circuit != CIRCUIT(le.u.lr.lr_game_mode)) {
                                         circuit = CIRCUIT(le.u.lr.lr_game_mode);
