@@ -14,3 +14,5 @@
 *.COM
 *.LOG
 *.ZIP
+*.TMP
+*.code-workspace
