@@ -13,7 +13,8 @@
 **                  Prints actual pit group configuration.
 **                  Added support for configuration files.
 **                  Preselect tyre for player in control during multiplayer.
+**                  Set minimum race distance to 5% instead of 75%.
 */
 
-#define VERSION     "V4.0.3 3/Aug/2019"
+#define VERSION     "V4.0.4 15/Sep/2019"
 

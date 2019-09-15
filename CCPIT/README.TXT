@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0  3rd Aug 2019                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 15th Sep 2019                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -115,7 +115,7 @@ the number of cars in the group using the '-c' option.  Up to seven pit stop
 points may be specified using the '-l' option the appropriate number of
 times. Note that the stopping points are specified as a *percentage* of the
 current race distance (they are scaled if you specify less than a 100% race
-distance, less than 75% races won't have any pit stops, neither will wet
+distance, less than 5% races won't have any pit stops, neither will wet
 races). Upto ten pit stop groups can be defined.
 
 So, for a race where 13 cars stop at 25% and 55%, and 10 cars stop at 45%:
@@ -286,7 +286,7 @@ CCPIT may be loaded high (into upper memory blocks) but don't forget that
 it will need ~6Kb to install itself before shrinking down to its 2.5Kb
 resident size.
 
-CCPIT works with Quick Races as long as they are >75% race distance.
+CCPIT works with Quick Races as long as they are >5% race distance.
 
 CCPIT will work fine alongside GPLAPTIM and SPLITTIM. Note that you
 should unload the TSRs in the opposite order to that used to load them.
@@ -299,13 +299,14 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 03/08/2019  Added support for replays (incompatible with old save games).
+V4.0 15/09/2019  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Improved handling of unscheduled pit stops.
                  Prints actual pit group configuration.
                  Added support for configuration files.
                  Preselect tyre for player in control during multiplayer.
+                 Set minimum race distance to 5% instead of 75%.
 
 Further Info
 ------------

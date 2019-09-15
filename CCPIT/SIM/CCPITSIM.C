@@ -290,7 +290,7 @@ void simulate_race(void) {
     for (lap = 1; lap <= total_laps; lap++) {
         for (car_index = 0; car_index < MAX_CARS; car_index++) {
             pCar = cars + car_index;
-            cars[car_index].si[CAR_DATA_SI_LAP_NUMBER] = lap;
+            pCar->si[CAR_DATA_SI_LAP_NUMBER] = lap;
             StartFinishLineHook(pCar, lap, total_laps);
         }
         nc = 0;

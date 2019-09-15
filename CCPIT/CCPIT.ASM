@@ -201,6 +201,15 @@ TSR_CODE        segment
         public  hook_gp_exe
 hook_gp_exe proc near
 
+        mov     cx, HOOK_EUR_RL_MSW
+        mov     ax, HOOK_EUR_RL_LSW
+        mov     dx, HOOK_US_RL_MSW
+        mov     bx, HOOK_US_RL_LSW
+        call    get_hook_offset
+        mov     si, OFFSET cs:hook_rl_code_start
+        mov     cx, HOOK_RL_LENGTH
+        call    copy_patch_block
+
         mov     cx, HOOK_EUR_SG_MSW
         mov     ax, HOOK_EUR_SG_LSW
         mov     dx, HOOK_US_SG_MSW
@@ -373,6 +382,12 @@ TSR_CODE        ends
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
 ;** (DOS VER hook point = 06d295H in GPU.EXE)
 
+HOOK_EUR_RL_MSW equ     6000h
+HOOK_EUR_RL_LSW equ     (0d2eah - 6293h)
+
+HOOK_US_RL_MSW  equ     6000h
+HOOK_US_RL_LSW  equ     (0d295h - 6293h)
+
 HOOK_EUR_SG_MSW equ     6000h
 HOOK_EUR_SG_LSW equ     (0d2eah - 62A5h)
 
@@ -380,6 +395,11 @@ HOOK_US_SG_MSW  equ     6000h
 HOOK_US_SG_LSW  equ     (0d295h - 62A5h)
 
 TSR_DATA                segment
+
+hook_rl_code_start:
+                        dw      5       ; minimum 5% race length (instead of 75%)
+hook_rl_code_end:
+HOOK_RL_LENGTH          equ     (hook_rl_code_end - hook_rl_code_start)
 
 hook_sg_code_start:
                         nop
