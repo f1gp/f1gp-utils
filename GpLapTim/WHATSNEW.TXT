@@ -3,12 +3,12 @@
 GPLAPTIM.COM
 ------------
 1. Fixed pitstop duration being 65.5s too high sometimes.
-2. Added option -e to start with (manual) logging enabled.
+3. Log CC setups as well.
 
 GPLAP.EXE
 ---------
 1. Show race time for pitstops with -e option as well
-2. Show track before setup
+2. Show CC setups as well.
 
 
 

@@ -41,10 +41,11 @@
 **                      Randomization of this value will be disabled, just like for Player BHP.
 **                  The BHP logged in the authentication record is taken from the actual value of the car,
 **                      to make sure it shows the right value for CCPLayer.
-** V7.1 08/08/2019  Log CC setups.
+** V7.1 13/10/2019  Log CC setups.
+**                  Fixed pitstop duration being 65.5s too high sometimes.
 */
 
-#define VERSION     "V7.1.0 8th Aug 2019"
+#define VERSION     "V7.1.1 13th Oct 2019"
 
 /*---------------------------------------------------------------------------
 ** Includes
