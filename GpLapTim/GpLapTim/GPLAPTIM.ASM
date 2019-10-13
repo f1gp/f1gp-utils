@@ -2479,6 +2479,23 @@ log_setup:
         or      sr.sr_game_mode, al
 
         mov     al, lr.lr_car_number
+        or      al, al
+        js      copy_player_setup
+
+copy_cc_setup:
+        mov     es, game_si_seg
+        mov     si, 204h
+        mov     di, OFFSET sr.sr_front_wing
+        mov     cx, SETUP_SRC_LEN
+copy_cc_setup_loop:
+        mov     al, es:[si]
+        mov     [di], al
+        inc     si
+        inc     di
+        loop    copy_cc_setup_loop
+        jmp     copy_tyre
+
+copy_player_setup:
         and     al, 3fh
         xor     ah, ah
         sub     al, 1
@@ -2490,15 +2507,16 @@ log_setup:
 
         mov     di, OFFSET sr.sr_front_wing
         mov     cx, SETUP_SRC_LEN
-copy_setup:
+copy_pl_setup_loop:
         push    ax
         call    get_sg_byte
         mov     [di], al
         pop     ax
         inc     ax
         inc     di
-        loop    copy_setup
+        loop    copy_pl_setup_loop
 
+copy_tyre:
         ;**
         ;** Current tyres.
         ;**
