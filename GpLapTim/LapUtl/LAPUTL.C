@@ -571,6 +571,13 @@ LbEntryToText(
                     pi->pi_driver
                );
           (void) strcat(buff, tmp);
+          if (GAME_MODE(lbe->u.pi.pi_game_mode) == GM_RACE) {
+               if (fElapsed) {
+                    (void) strcat(buff, "               ");
+                    LapRaceTimeToAscii(tmp, lbe->u.pi.pi_in_time);
+                    (void) strcat(buff, tmp);
+               }
+          }
      }
      else if (lbe->u.lr.lr_record_type == REC_TYPE_PIT_OUT) {
           PIT_OUT_RECORD *po  = &lbe->u.po;
@@ -618,6 +625,12 @@ LbEntryToText(
                if (lbe->pitstop_time != 0L) {
                     LapPitTimeToAscii(tmp, lbe->pitstop_time);
                     (void) strcat(buff, tmp);
+                    
+                    if (fElapsed) {
+                         (void) strcat(buff, "       ");
+                         LapRaceTimeToAscii(tmp, lbe->u.po.po_out_time);
+                         (void) strcat(buff, tmp);
+                    }
                }
           }
      }

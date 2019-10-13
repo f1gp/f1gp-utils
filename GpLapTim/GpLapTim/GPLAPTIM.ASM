@@ -199,7 +199,6 @@ hook_pit1_code_start:
 hook_pit1_code          db      09ah
 hook_pit1_code_off      dw      ?
 hook_pit1_code_seg      dw      ?
-                        db      90h
 hook_pit1_code_end:
 HOOK1_LENGTH    equ     (hook_pit1_code_end - hook_pit1_code_start)
 
@@ -1050,30 +1049,30 @@ announce_hook endp
 ;**
 ;** Notes  :
 ;**
-;** European V1.05 = 06d2eaH - 00571eH = 067bcch
-;** Italian  V1.05 = 06d2aaH - 00571eH = 067b8ch
-;** US       V1.05 = 06d295H - 00571eH = 067b77h
-;** Spanish  V1.05 = 06d2c9H - 00571eH = 067babh
+;** European V1.05 = 06d2eaH - 005724H = 067bc6h
+;** Italian  V1.05 = 06d2aaH - 005724H = 067b86h
+;** US       V1.05 = 06d295H - 005724H = 067b71h
+;** Spanish  V1.05 = 06d2c9H - 005724H = 067ba5h
 ;**
 
 HOOK1_EUR_MSW   equ     6000h
-HOOK1_EUR_LSW   equ     7bcch
+HOOK1_EUR_LSW   equ     7bc6h
 
 HOOK1_ITA_MSW   equ     6000h
-HOOK1_ITA_LSW   equ     7b8ch
+HOOK1_ITA_LSW   equ     7b86h
 
 HOOK1_USA_MSW   equ     6000h
-HOOK1_USA_LSW   equ     7b77h
+HOOK1_USA_LSW   equ     7b71h
 
 HOOK1_SPA_MSW   equ     6000h
-HOOK1_SPA_LSW   equ     7babh
+HOOK1_SPA_LSW   equ     7ba5h
 
         public  hook_pit1
 hook_pit1:
         ;**
         ;** Original code.
         ;**
-        add     WORD PTR [si+92h], 0190h
+        adc     WORD PTR [si+94h], 0
 
         ;**
         ;** Save games flags.

@@ -1,3 +1,17 @@
+                     What's New in GPLAPTIM V7.1
+                     ===========================
+GPLAPTIM.COM
+------------
+1. Fixed pitstop duration being 65.5s too high sometimes.
+2. Added option -e to start with (manual) logging enabled.
+
+GPLAP.EXE
+---------
+1. Show race time for pitstops with -e option as well
+2. Show track before setup
+
+
+
                      What's New in GPLAPTIM V7.0
                      ===========================
 GPLAPTIM.COM

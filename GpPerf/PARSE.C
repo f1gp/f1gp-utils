@@ -184,7 +184,7 @@ Usage(
                     "       -a(N)     Specify rev limit #1 (default 10000).\n"
                     "       -b(N)     Specify rev limit #2 (default 11500).\n"
                     "       -c(N)     Specify rev limit #3 (default 13000).\n"
-                    "       -d        Startup with logging disabled.\n"
+                    "       -d        Startup with automatic logging disabled.\n"
                     "       -e        Startup with logging enabled.\n"
                     "       -t        Startup with tyre wear display disabled.\n"
                     "       -n(N)     Log for computer car N only.\n"
