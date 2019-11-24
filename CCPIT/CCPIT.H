@@ -23,6 +23,7 @@
 #define FALSE                      0
 
 #define MAX_CARS                   26
+#define DRIVER_NAME_SIZE           24
 
 #define MAX_GROUPS                 10
 #define MAX_PITS_PER_GROUP         12

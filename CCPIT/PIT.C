@@ -124,7 +124,7 @@ SeedGrid(
 
         seed_group(i, &sg1->pit_group);
 
-        sg1 = (SAVE_GAME1 far *) ((byte far *) sg1 - 24);
+        sg1 = (SAVE_GAME1 far *) ((byte far *) sg1 - DRIVER_NAME_SIZE);
         pg_magic1 -= 0x10000L;
     }
 
@@ -405,7 +405,7 @@ get_group(
         /*
         ** Groups are stored inside SAVE_GAME1 at driver name #39, #38, etc.
         */
-        sg1 = (SAVE_GAME1 far *) ((byte far *) pSaveGame1 - 24 * group_index);
+        sg1 = (SAVE_GAME1 far *) ((byte far *) pSaveGame1 - DRIVER_NAME_SIZE * group_index);
         if (sg1->magic2 == MAGIC2 && sg1->magic1 == MAGIC1SG1 - 0x10000L * group_index) {
             return &sg1->pit_group;
         }
