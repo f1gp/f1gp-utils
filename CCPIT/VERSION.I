@@ -14,7 +14,8 @@
 **                  Added support for configuration files.
 **                  Preselect tyre for player in control during multiplayer.
 **                  Set minimum race distance to 5% instead of 75%.
+**                  Added option to assign a specific car number to a pit group.
 */
 
-#define VERSION     "V4.0.4 15/Sep/2019"
+#define VERSION     "V4.0.5 5/Jan/2020"
 

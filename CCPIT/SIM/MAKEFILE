@@ -14,7 +14,7 @@ all:           ccpitsim.exe
 pit.obj:       ../pit.c ../ccpit.h
                $(CC) $(CC_FLAGS) ../pit.c
 
-parse.obj:     ../parse.c ../ccpit.h
+parse.obj:     ../parse.c ../ccpit.h ../version.i
                $(CC) $(CC_FLAGS) ../parse.c
 
 ccpitsim.obj:  ccpitsim.c ../ccpit.h

@@ -45,6 +45,8 @@
 */
 #define CAR_DATA_SI_LAP_NUMBER     0x22
 #define CAR_DATA_SI_ID             0xac
+#define CAR_DATA_SI_PITFLAGS       0x97
+#define CAR_DATA_SI_TYRE_COMPOUND  0xb2
 
 #define CAR_IS_CC(pCar)            (((pCar)->si[CAR_DATA_SI_ID] & 0x80) == 0x00)
 #define CAR_NUMBER(pCar)           ((pCar)->si[CAR_DATA_SI_ID] & 0x3f)
@@ -144,6 +146,7 @@ extern byte         far *hook_nc_value;
 
 extern PIT_GROUP    tmp_pit_groups[MAX_GROUPS];
 extern byte         tmp_num_groups;
+extern byte         tmp_reserved_pit_groups[40];  /* id -> group */
 extern byte         tmp_max_cars_in_pit;
 extern bool         tmp_randomise;
 extern byte         tmp_tyres;

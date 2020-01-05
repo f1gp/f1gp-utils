@@ -52,13 +52,19 @@ extern void display_msg(char near *msg);
 
 void fmemcpy(void far *dst, void far *src, unsigned short len);
 byte get_car_index(CAR far *pCar);
+CAR far *get_car(byte car_index);
 byte calc_lap_from_percent(byte total_laps, byte percent);
 byte calc_pit_window_lap(PIT_GROUP far *pg, byte current_stop, byte total_laps);
 PIT_GROUP far *get_group(unsigned short group_index);
-void seed_group(unsigned short group_index, PIT_GROUP far *pg);
-byte get_seed_group_value(unsigned short index);
-void put_seed_group_value(unsigned short index, byte value);
+void seed_group(unsigned short group_index);
+void assign_next_car_to_seed_group(byte n, unsigned short group_index);
+bool is_seed_group_unused(unsigned short index);
+byte get_seed_group(unsigned short index);
+void reset_seed_group(unsigned short index);
+void put_seed_group(unsigned short index, byte value);
 byte get_group_tyre(PIT_GROUP far *pg, byte stop, byte default_tyre);
+SAVE_GAME1 far *get_savegame1(unsigned short group_index);
+long get_group_magic1(long group_index);
 
 /*---------------------------------------------------------------------------
 ** Data
@@ -66,6 +72,7 @@ byte get_group_tyre(PIT_GROUP far *pg, byte stop, byte default_tyre);
 
 PIT_GROUP tmp_pit_groups[MAX_GROUPS];
 byte      tmp_num_groups = 0;
+byte      tmp_reserved_pit_groups[40];  /* id -> group */
 byte      tmp_max_cars_in_pit;
 bool      tmp_randomise;
 byte      tmp_tyres;
@@ -76,66 +83,77 @@ bool      tmp_multiplayer;
 */
 
 /*---------------------------------------------------------------------------
-** Purpose:    Set all indexes to zero at start of race.
+** Purpose:    Assign pit groups to all cars on the grid.
 **
 ** Returns:    Nothing.
 **
 ** Notes  :    Called for every car on the grid.
+**             All car ID's have been assigned already.
+**             TyreChange will be called afterwards.
 */
 void
 SeedGrid(
-    void
+    CAR far *pCar                /* In  Car to be seeded            */
 ) {
     register unsigned short  i;
     SAVE_GAME1 far           *sg1;
-    long                     pg_magic1;
+    byte                     id;
+    byte                     car_index;
 
-    /*
-    ** Save max num of cars in pit in save game area & patch code.
-    ** Save game area is at driver name #40.
-    */
-    pSaveGame2->num_groups      = tmp_num_groups;
-    pSaveGame2->max_cars_in_pit = tmp_max_cars_in_pit;
-    pSaveGame2->randomise       = tmp_randomise;
-    pSaveGame2->tyres           = tmp_tyres;
-    pSaveGame2->multiplayer     = tmp_multiplayer;
-    *hook_nc_value              = tmp_max_cars_in_pit;
+    id = CAR_NUMBER(pCar);
+    car_index = get_car_index(pCar);
 
-    /*
-    ** Ensure all cars are marked as not stopping.
-    */
-    pSaveGame2->magic1 = MAGIC1SG2;
-    pSaveGame2->magic2 = MAGIC2;
-    for (i = 0; i < sizeof(pSaveGame2->seed_group); i++) {
-         pSaveGame2->seed_group[i] = 0;
+    if (car_index == 0) {
+        /*
+        ** Save max num of cars in pit in save game area & patch code.
+        ** Save game area is at driver name #40.
+        */
+        pSaveGame2->num_groups      = tmp_num_groups;
+        pSaveGame2->max_cars_in_pit = tmp_max_cars_in_pit;
+        pSaveGame2->randomise       = tmp_randomise;
+        pSaveGame2->tyres           = tmp_tyres;
+        pSaveGame2->multiplayer     = tmp_multiplayer;
+        *hook_nc_value              = tmp_max_cars_in_pit;
+
+        /*
+        ** Ensure all cars are marked as not stopping.
+        */
+        pSaveGame2->magic1 = MAGIC1SG2;
+        pSaveGame2->magic2 = MAGIC2;
+        for (i = 0; i < MAX_CARS; i++) {
+            reset_seed_group(i);
+        }
+
+        /*
+        ** Init replay state.
+        */
+        pReplayState->magic = MAGICRS;
+        for (i = 0; i < MAX_CARS; i++) {
+            pReplayState->current_stop[i] = 0;
+        }
+
+        /*
+        ** Init pit groups.
+        */
+        for (i = 0; i < tmp_num_groups; i++) {
+            sg1 = get_savegame1(i);
+
+            /* Copy command line structure to saved game area */
+            fmemcpy(&sg1->pit_group, tmp_pit_groups + i, sizeof(PIT_GROUP));
+            sg1->magic1 = get_group_magic1(i);
+            sg1->magic2 = MAGIC2;
+
+            seed_group(i);
+        }
     }
 
-    /*
-    ** Init pit groups.
-    ** Groups are stored at driver name #39, #38, etc.
-    */
-    sg1 = pSaveGame1;
-    pg_magic1 = MAGIC1SG1;
-    for (i = 0; i < tmp_num_groups; i++) {
-        /* Copy command line structure to saved game area */
-        fmemcpy(&sg1->pit_group, tmp_pit_groups + i, sizeof(PIT_GROUP));
-        sg1->magic1 = pg_magic1;
-        sg1->magic2 = MAGIC2;
-
-        seed_group(i, &sg1->pit_group);
-
-        sg1 = (SAVE_GAME1 far *) ((byte far *) sg1 - DRIVER_NAME_SIZE);
-        pg_magic1 -= 0x10000L;
+    /* Check if car is explicitly assigned to a pit group */
+    if (id >= 1 && id <= 40) {
+        byte reserved_group = tmp_reserved_pit_groups[id - 1];
+        if (reserved_group != 0) {
+            put_seed_group(car_index, reserved_group);
+        }
     }
-
-    /*
-    ** Init replay state.
-    */
-    pReplayState->magic = MAGICRS;
-    for (i = 0; i < MAX_CARS; i++) {
-        pReplayState->current_stop[i] = 0;
-    }
-
 }
 
 /*---------------------------------------------------------------------------
@@ -174,7 +192,7 @@ StartFinishLineHook(
         */
         if (pSaveGame2->multiplayer || CAR_IS_CC(pCar)) {
             car_index = get_car_index(pCar);
-            group = get_seed_group_value(car_index);
+            group = get_seed_group(car_index);
             if (group != 0) {
                 pg = get_group(group - 1);
                 if (pg != 0) {
@@ -188,7 +206,7 @@ StartFinishLineHook(
                             /*
                             ** Mark car to pit.
                             */
-                            pCar->si[0x97] |= 0x01;
+                            pCar->si[CAR_DATA_SI_PITFLAGS] |= 0x01;
 
                             ++current_stop;
                             pReplayState->current_stop[car_index] = current_stop;
@@ -234,11 +252,11 @@ OntoJacks(
 
             current_stop_value = pReplayState->current_stop[car_index];
             current_stop = current_stop_value & 0x7f;
-            if ((pCar->si[0x97] & 0x01) == 0x00) {
+            if ((pCar->si[CAR_DATA_SI_PITFLAGS] & 0x01) == 0x00) {
                 /*
                 ** Unscheduled stop.
                 */
-                group = get_seed_group_value(car_index);
+                group = get_seed_group(car_index);
                 if (group != 0) {
                     pg = get_group(group - 1);
                     if (pg != 0) {
@@ -260,7 +278,7 @@ OntoJacks(
             ** if the current number of laps is greater than its pit stop
             ** threshold.
             */
-            pCar->si[0x97] &= ~0x01;
+            pCar->si[CAR_DATA_SI_PITFLAGS] &= ~0x01;
         }
     }
 }
@@ -313,7 +331,7 @@ TyreChange(
                 ** Catch saved reloaded saved games which don't contain our data.
                 */
                 car_index = get_car_index(pCar);
-                group = get_seed_group_value(car_index);
+                group = get_seed_group(car_index);
                 if (group != 0) {
                     pg = get_group(group - 1);
                     if (pg != 0) {
@@ -356,8 +374,8 @@ fmemcpy(
     void far       *src,
     unsigned short len
 ) {
-    register unsigned char far *d = dst;
-    register unsigned char far *s = src;
+    register byte far *d = (byte far *)dst;
+    register byte far *s = (byte far *)src;
 
     while (len--) {
         *d++ = *s++;
@@ -369,6 +387,13 @@ get_car_index(
     CAR far *pCar
 ) {
     return (byte) ((int) ((byte far *) pCar - (byte far *) pFirstCar) / 0xc0);
+}
+
+CAR far *
+get_car(
+    byte car_index
+) {
+    return pFirstCar + car_index;
 }
 
 byte
@@ -402,11 +427,8 @@ get_group(
 ) {
     register SAVE_GAME1 far *sg1;
     if (group_index < pSaveGame2->num_groups) {
-        /*
-        ** Groups are stored inside SAVE_GAME1 at driver name #39, #38, etc.
-        */
-        sg1 = (SAVE_GAME1 far *) ((byte far *) pSaveGame1 - DRIVER_NAME_SIZE * group_index);
-        if (sg1->magic2 == MAGIC2 && sg1->magic1 == MAGIC1SG1 - 0x10000L * group_index) {
+        sg1 = get_savegame1(group_index);
+        if (sg1->magic2 == MAGIC2 && sg1->magic1 == get_group_magic1(group_index)) {
             return &sg1->pit_group;
         }
     }
@@ -415,12 +437,13 @@ get_group(
 
 void
 seed_group(
-    unsigned short group_index,
-    PIT_GROUP far *pg
+    unsigned short group_index
 ) {
-    register unsigned short num_cars;
-    byte j;
-    byte n;
+    unsigned short num_cars;
+    PIT_GROUP far *pg;
+    byte           n;
+
+    pg = &get_savegame1(group_index)->pit_group;
 
     for (num_cars = 0; num_cars < pg->num_cars; ++num_cars) {
         if (pSaveGame2->randomise) {
@@ -429,28 +452,57 @@ seed_group(
         else {
             n = 0;
         }
-
-        for (j = 0; j < MAX_CARS; j++) {
-            /*
-            ** Fill in slot if unused.
-            */
-            if (get_seed_group_value(n) == 0) {
-                put_seed_group_value(n, (byte) (group_index + 1));
-                break;
-            }
-
-            /*
-            ** Update index for current group.
-            */
-            if (++n >= MAX_CARS) {
-                n = 0;
-            }
-        }
+        assign_next_car_to_seed_group(n, group_index);
     }
 }
 
+void
+assign_next_car_to_seed_group(
+    byte n,
+    unsigned short group_index
+) {
+    register byte  j;
+
+    for (j = 0; j < MAX_CARS; j++) {
+        if (n >= MAX_CARS) {
+            n = 0;
+        }
+
+        /*
+        ** Fill in slot if unused.
+        */
+        if (is_seed_group_unused(n)) {
+            put_seed_group(n, (byte) (group_index + 1));
+            break;
+        }
+
+        /*
+        ** Try next car.
+        */
+        ++n;
+    }
+}
+
+bool
+is_seed_group_unused(
+     unsigned short index
+) {
+    byte id;
+
+    if (get_seed_group(index) != 0) {
+        return FALSE;
+    }
+
+    id = CAR_NUMBER(get_car(index));
+    if (id >= 1 && id <= 40 && tmp_reserved_pit_groups[id - 1] != 0) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 byte
-get_seed_group_value(
+get_seed_group(
      unsigned short index
 ) {
     if (index & 1) {
@@ -460,10 +512,18 @@ get_seed_group_value(
 }
 
 void
-put_seed_group_value(
-    unsigned short index,
-    byte value
+reset_seed_group(
+    unsigned short index
 ) {
+    put_seed_group(index, 0);
+}
+
+void
+put_seed_group(
+     unsigned short index,
+     byte value
+) {
+    value &= 0x0f;
     if (index & 1) {
         pSaveGame2->seed_group[(index >> 1)] &= 0xf0;
         pSaveGame2->seed_group[(index >> 1)] |= value;
@@ -534,6 +594,21 @@ set_group_pit_tyre(
     byte s = (index & 3) << 1;
     *p &= ~(3 << s);
     *p |= (tyre & 3) << s;
+}
+
+SAVE_GAME1 far *
+get_savegame1(
+    unsigned short group_index
+) {
+    /* Groups are stored at driver name #39, #38, etc. */
+    return (SAVE_GAME1 far *) ((byte far *) pSaveGame1 - group_index * DRIVER_NAME_SIZE);
+}
+
+long
+get_group_magic1(
+    long group_index
+) {
+    return MAGIC1SG1 - 0x10000L * group_index;
 }
 
 /*---------------------------------------------------------------------------

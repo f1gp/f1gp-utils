@@ -22,7 +22,7 @@
 ** Defines and Macros
 */
 
-#define SIM_VERSION     "V1.1"
+#define SIM_VERSION     "V1.3"
 #define WHAT_OFFSET     4
 
 #define MAX_EXTRA_STOPS 100
@@ -42,7 +42,7 @@ typedef struct {
 
 extern int parse(char far *cmd_line, word cmd_line_len);
 extern void dump_config(void);
-extern void SeedGrid(void);
+extern void SeedGrid(CAR far *pCar);
 extern void StartFinishLineHook(CAR far *pCar, word leaders_lap, word total_laps);
 extern void OntoJacks(unsigned short total_laps, CAR far *pCar);
 extern word TyreChange(word tyre, CAR far *pCar, CAR_SETUP far *pCarSetup);
@@ -51,7 +51,7 @@ extern word TyreChange(word tyre, CAR far *pCar, CAR_SETUP far *pCarSetup);
 ** Simulation Data
 */
 
-char driver_names[40][24];
+char driver_names[40][DRIVER_NAME_SIZE];
 byte replay_state[128];
 byte max_cars_in_pit;
 CAR cars[MAX_CARS];
@@ -73,6 +73,7 @@ char         cfg_data[MAX_CFG_SIZE];
 */
 
 word total_laps;
+word run_count;
 word default_tyre;
 ExtraStop extra_stops[MAX_EXTRA_STOPS];
 word num_extra_stops;
@@ -90,15 +91,20 @@ char sim_title_msg[] =
 ** Mock Functions
 */
 
+static byte rndnr = 0;
+
 byte rnd(void) {
-    /* not used yet */
-    return 0;
+    rndnr += 37;
+    return rndnr;
 }
 
 void wrt_msg(void) {
     char near *p = msg_text;
-    while (*p != '$') {
-        printf("%c", *p++);
+    char c;
+    while ((c = *p) != '$') {
+        if (c != '\r')  /* \n already translates to \r\n with printf */
+            printf("%c", c);
+        p++;
     }
 }
 
@@ -135,11 +141,11 @@ void init_data(void) {
         cars[car_index].si[CAR_DATA_SI_ID] = car_index + 1;
     }
 
-    default_tyre    = COMPOUND_A;
+    default_tyre = COMPOUND_A;
 
     /* unsupported for now */
-    tmp_randomise       = FALSE;
-    tmp_multiplayer     = FALSE;
+    tmp_randomise = FALSE;
+    tmp_multiplayer = FALSE;
 
     num_extra_stops = 0;
 }
@@ -179,6 +185,9 @@ int setup_fixture_from_args(short argc, char *argv[]) {
         arg = argv[a];
         if (arg[0] == '-' && arg[1] == 'X') {
             switch (arg[2]) {
+                case 'r':
+                    run_count = atoi(arg + 3);
+                    break;
                 case 't':
                     total_laps = atoi(arg + 3);
                     break;
@@ -213,6 +222,7 @@ int setup_fixture_from_args(short argc, char *argv[]) {
         }
     }
     cmd[i] = 0;
+    printf("Calling CCPIT with parameters: %s\n", cmd);
 
     ret = parse(cmd, i);
     if (!ret) {
@@ -249,16 +259,33 @@ int setup_default_fixture(void) {
     return TRUE;
 }
 
+void dump_grid(void) {
+    word car_index;
+
+    for (car_index = 0; car_index < MAX_CARS; car_index++) {
+        byte group;
+        if (car_index & 1) {
+            group = (pSaveGame2->seed_group[(car_index >> 1)] & 0x0f);
+        } else {
+            group = ((pSaveGame2->seed_group[(car_index >> 1)] & 0xf0) >> 4);
+        }
+        printf("Car %2d assigned to group %d\n", car_index + 1, group);
+    }
+
+
+}
+
 void init_race(void) {
     word car_index;
     CAR far *pCar;
 
-    SeedGrid();
     for (car_index = 0; car_index < MAX_CARS; car_index++) {
         pCar = cars + car_index;
-        pCar->si[0xb2] = TyreChange(default_tyre, pCar, &car_setup);
-        printf("Car %d starting on %c's\n", car_index + 1, 'A' + pCar->si[0xb2], 'A');
+        SeedGrid(pCar);
+        pCar->si[CAR_DATA_SI_TYRE_COMPOUND] = TyreChange(default_tyre, pCar, &car_setup);
+        printf("Car %2d starting on %c's\n", car_index + 1, 'A' + pCar->si[CAR_DATA_SI_TYRE_COMPOUND], 'A');
     }
+    /*dump_grid();*/
 }
 
 void pit_car(CAR far *pCar, word car_index, byte extra) {
@@ -269,10 +296,10 @@ void pit_car(CAR far *pCar, word car_index, byte extra) {
 
     printf("Lap %2d: Car %2d pitted, going from %c's to %c's%s\n",
         pCar->si[CAR_DATA_SI_LAP_NUMBER], car_index + 1,
-        'A' + pCar->si[0xb2], 'A' + tyre,
+        'A' + pCar->si[CAR_DATA_SI_TYRE_COMPOUND], 'A' + tyre,
         extra ? " (unscheduled)" : "");
 
-    pCar->si[0xb2] = tyre;
+    pCar->si[CAR_DATA_SI_TYRE_COMPOUND] = tyre;
 }
 
 void simulate_race(void) {
@@ -282,7 +309,7 @@ void simulate_race(void) {
     word nc;
     CAR far *pCar;
 
-    printf("Starting simulation\n", total_laps);
+    printf("Starting race simulation\n");
     printf("Race distance: %d laps\n", total_laps);
     init_race();
 
@@ -302,7 +329,7 @@ void simulate_race(void) {
                     ++nc;
                 }
             }
-            if (pCar->si[0x97] & 0x01 && nc < max_cars_in_pit) {
+            if ((pCar->si[CAR_DATA_SI_PITFLAGS] & 0x01) && nc < max_cars_in_pit) {
                 pit_car(pCar, car_index, FALSE);
                 ++nc;
             }
@@ -313,13 +340,14 @@ void simulate_race(void) {
 
 
 short main(short argc, char *argv[]) {
-    int ret, a;
+    int ret, r;
     char *arg;
 
     printf("%s", &sim_title_msg[WHAT_OFFSET]);
 
     init_data();
 
+    run_count = 1;
     total_laps = 70;
     if (argc > 1) {
         ret = setup_fixture_from_args(argc, argv);
@@ -328,7 +356,9 @@ short main(short argc, char *argv[]) {
     }
     if (ret) {
         dump_config();
-        simulate_race();
+        for (r = 0; r < run_count; r++) {
+            simulate_race();
+        }
     }
 
     return ret ? 0 : 5;

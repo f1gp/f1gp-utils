@@ -427,9 +427,12 @@ hook_seed_grid:
 
         call    save_games_ds
 
+        push    ds          ; current car
+        push    si
         push    cs
         pop     ds
         call    SeedGrid
+        add     sp, 4
 
         pop     es
         pop     ds

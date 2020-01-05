@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 15th Sep 2019                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0  5th Jan 2020                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -47,10 +47,10 @@ will be run if you keep both CCPIT.COM and CCPIT.EXE in the same directory.
 
 Command Line Options
 --------------------
-Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...
+Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]
+             {-g -#N -cN [-t?] (-lN [-t?]) ...} ...
 
        @filename Read options from filename.
-
        -h,-?     This help message.
        -u        Unload TSR.
 
@@ -61,10 +61,12 @@ Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...
        -t?       Specify tyres for all computer cars where ? is one of ABCD.
 
        -g        Pit group.
-        -cN      Stop N cars (for this group).
+        -#N      Stop car number N (for this group)
+        -cN      Stop another N cars (for this group).
         -t?      Specify tyres where ? is one of ABCD (for this group).
         -lN      Trigger cars to stop at race percentage N (for this group).
          -t?     Specify tyres where ? is one of ABCD (for this stop).
+
 
 For the top 15 cars to use compound D and to pit at 30% and 60%, next 8 cars to
 start on compound C and pit at 45% for B's, and the rest to use compound A
@@ -110,23 +112,27 @@ If you wish to unload CCPIT after finishing playing GP then use "CCPIT -u".
 
 Pit Groups
 ----------
-A pit group definition should start with a '-g'. A pit group should contain
-the number of cars in the group using the '-c' option.  Up to seven pit stop
-points may be specified using the '-l' option the appropriate number of
-times. Note that the stopping points are specified as a *percentage* of the
-current race distance (they are scaled if you specify less than a 100% race
-distance, less than 5% races won't have any pit stops, neither will wet
-races). Upto ten pit stop groups can be defined.
+A pit group definition should start with a '-g'. Upto ten pit stop groups
+can be defined. A pit group can contain '-#' options to specify car numbers
+to assign to the group. It can also contain the '-c' option to stop an
+additional number of cars in the group.
 
-So, for a race where 13 cars stop at 25% and 55%, and 10 cars stop at 45%:
+Up to twelve pit stop points may be specified using the '-l' option the
+appropriate number of times. Note that the stopping points are specified as
+a *percentage* of the current race distance (they are scaled if you specify
+less than a 100% race distance, less than 5% won't have any pit stops,
+neither will wet races).
 
-     CCPIT -g -c13 -l25 -l55  -g -c10 -l45
+So, for a race where 13 cars stop at 25% and 55%, and 10 cars stop at 45%,
+one of which is car #5:
+
+     CCPIT -g -c13 -l25 -l55  -g -#5 -c9 -l45
 
 Note that you must specify the '-l' (note this is the letter "ell" *not* the
 digit one!) stopping points in increasing percentage order, CCPIT won't
-validate this! The total number of cars specified with the '-c' option can't
-exceed 26. If the total number of cars specified is less than 26 then the
-remaining cars will go through the race without stopping.
+validate this! The total number of cars specified with the '-c' and '-#'
+options can't exceed 26. If the total number of cars specified is less than
+26 then the remaining cars will go through the race without stopping.
 
 Tyre Compounds
 --------------
@@ -215,7 +221,9 @@ entirely up to you to decide when you should pit. The exception to this rule
 is if you use the '-m' multi-player option. This option is intended to ensure
 that player's cars being driven by the computer will be called in for a tyre
 change. It will also ignore the player's race setup tyre compound, even when
-player is in control.
+player is in control. To control the pit stop strategy used by player's car
+when under computer control, assign player's cars to pit groups using the
+'-#' option.
 
 Saved Games
 -----------
@@ -299,14 +307,16 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 15/09/2019  Added support for replays (incompatible with old save games).
+V4.0  5/01/2020  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
+                 Added option to assign a specific car number to a pit group.
                  Improved handling of unscheduled pit stops.
                  Prints actual pit group configuration.
                  Added support for configuration files.
                  Preselect tyre for player in control during multiplayer.
                  Set minimum race distance to 5% instead of 75%.
+                 Added option to assign a specific car number to a pit group.
 
 Further Info
 ------------

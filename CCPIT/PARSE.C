@@ -35,7 +35,9 @@ typedef struct {
 */
 
 void Usage(void);
+byte reserved_cars_in_seed_group(byte group);
 void display_msg(char near *msg);
+void display_newline(void);
 void display_int(int v);
 void display_chr(char c);
 short parse_short(register const char far *p);
@@ -101,7 +103,9 @@ do_parse(
             }
             else if (*cmd_line == 'g') {
                 if (parse_state->pit_group < MAX_GROUPS) {
-                    if (parse_state->pit_group == 0 || pg->num_cars > 0) {
+                    if (parse_state->pit_group == 0 ||
+                            pg->num_cars > 0 ||
+                            reserved_cars_in_seed_group(parse_state->pit_group) > 0) {
                         pg = &tmp_pit_groups[parse_state->pit_group++];
                         pg->num_cars = 0;
                         pg->tyres = 0;
@@ -134,16 +138,43 @@ do_parse(
                     return FALSE;
                 }
             }
+            else if (*cmd_line == '#') {
+                if (parse_state->pit_group == 0) {
+                    display_msg("ccpit: You must use -g before a -#.\n");
+                    return FALSE;
+                }
+                n = parse_short(&cmd_line[1]);
+                if (n >= 1 && n <= 40) {
+                    parse_state->total_cars++;
+                    if (parse_state->total_cars > 26) {
+                        display_msg("ccpit: Total number of cars in pit group can't exceed 26.\n");
+                        return FALSE;
+                    }
+                    if (tmp_reserved_pit_groups[n - 1] != 0) {
+                        display_msg("ccpit: A car cannot be assigned to multiple pit groups.\n");
+                        return FALSE;
+                    }
+                    tmp_reserved_pit_groups[n - 1] = parse_state->pit_group;
+                }
+                else {
+                    display_msg("ccpit: -# value should be between 1 and 40.\n");
+                    return FALSE;
+                }
+            }
             else if (*cmd_line == 'c') {
                 if (parse_state->pit_group == 0) {
                     display_msg("ccpit: You must use -g before a -c.\n");
+                    return FALSE;
+                }
+                if (pg->num_cars != 0) {
+                    display_msg("ccpit: -c option may only be specified once per pit group.\n");
                     return FALSE;
                 }
                 n = parse_short(&cmd_line[1]);
                 if (n >= 1 && n <= 26) {
                     parse_state->total_cars += n;
                     if (parse_state->total_cars > 26) {
-                        display_msg("ccpit: Total number of cars specified with all -c can't exceed 26.\n");
+                        display_msg("ccpit: Total number of cars in pit group can't exceed 26.\n");
                         return FALSE;
                     }
                     pg->num_cars = (byte) n;
@@ -158,12 +189,10 @@ do_parse(
                     display_msg("ccpit: You must use -g before a -l.\n");
                     return FALSE;
                 }
-
-                if (pg->num_cars == 0) {
-                    display_msg("ccpit: You must use -c before the first -l in a group.\n");
-                    return FALSE;
-                }
-
+//                if (pg->num_cars == 0) {
+//                    display_msg("ccpit: You must use -c before the first -l in a group.\n");
+//                    return FALSE;
+//                }
                 if (pg->num_stops < MAX_PITS_PER_GROUP) {
                     n = parse_short(&cmd_line[1]);
                     if (n >= 5 && n <= 95) {
@@ -228,10 +257,10 @@ do_parse(
         ++cmd_line;
     }
 
-    if (parse_state->pit_group > 0 && pg->num_cars == 0) {
-        /* last group is empty */
-        --parse_state->pit_group;
-    }
+//    if (parse_state->pit_group > 0 && pg->num_cars == 0) {
+//        /* last group is empty */
+//        --parse_state->pit_group;
+//    }
 
     return TRUE;
 }
@@ -241,6 +270,8 @@ parse(
     char far *cmd_line,
     char cmd_line_len
 ) {
+    byte index;
+
     ParseState parse_state;
 
     parse_state.pit_group = 0;
@@ -253,6 +284,10 @@ parse(
     tmp_randomise       = FALSE;
     tmp_tyres           = 0;
     tmp_multiplayer     = FALSE;
+
+    for (index = 0; index < 40; index++) {
+        tmp_reserved_pit_groups[index] = 0;
+    }
 
     if (!do_parse(cmd_line, cmd_line_len, &parse_state)) {
         return FALSE;
@@ -282,6 +317,27 @@ parse(
     return TRUE;
 }
 
+
+byte
+reserved_cars_in_seed_group(
+    byte group
+) {
+    byte count = 0;
+    byte index;
+
+    for (index = 0; index < 40; index++) {
+        if (tmp_reserved_pit_groups[index] == group) {
+            count++;
+        }
+    }
+    return count;
+}
+
+
+void
+display_newline(void) {
+    display_msg("\n");
+}
 
 void
 dump_count(
@@ -323,15 +379,44 @@ dump_group_hdr(
 ) {
     display_msg(" -> ");
     dump_num_cars(num_cars);
-    display_msg("\n");
+    display_newline();
+}
+
+void
+dump_group_item_prefix(void) {
+    display_msg("    - ");
 }
 
 void
 dump_group_item_hdr(
     char near *hdr
 ) {
-    display_msg("    - ");
+    dump_group_item_prefix();
     display_msg(hdr);
+}
+
+void
+dump_reserved_cars(
+    int count,
+    int group_index
+) {
+    int i;
+    bool first = TRUE;
+
+    dump_group_item_prefix();
+    dump_num_cars(count);
+    display_msg(" reserved: ");
+    for (i = 0; i < 40; i++) {
+        if (tmp_reserved_pit_groups[i] == group_index) {
+            if (!first) {
+                display_msg(", ");
+            }
+            display_msg("#");
+            display_int(i + 1);
+            first = FALSE;
+        }
+    }
+    display_newline();
 }
 
 void
@@ -340,7 +425,7 @@ dump_tyres_start(
 ) {
     dump_group_item_hdr("starting on ");
     dump_tyre_compound(tyres);
-    display_msg("\n");
+    display_newline();
 }
 
 void
@@ -364,13 +449,15 @@ dump_config(
     int                 j;
     int                 remaining_cars;
     int                 g;
+    int                 r;
 
     g = 0;
     remaining_cars = 26;
     for (i = 0, pg = tmp_pit_groups; i < tmp_num_groups; i++, pg++) {
-        if (pg->num_cars > 0) {
+        r = reserved_cars_in_seed_group(i + 1);
+        if (r > 0 || pg->num_cars > 0) {
             ++g;
-            remaining_cars -= pg->num_cars;
+            remaining_cars -= r + pg->num_cars;
         }
         else {
             display_msg("Warning: empty pit group.\n");
@@ -383,7 +470,7 @@ dump_config(
     display_msg("Maximum ");
     dump_num_cars(tmp_max_cars_in_pit);
     display_msg(" in the pits");
-    display_msg("\n");
+    display_newline();
     if (tmp_randomise) {
         display_msg("Group allocation on grid will be randomised\n");
     }
@@ -395,8 +482,12 @@ dump_config(
     dump_count(g, "pit group", "pit groups");
     display_msg(":\n");
     for (i = 0, pg = tmp_pit_groups; i < tmp_num_groups; i++, pg++) {
-        if (pg->num_cars > 0) {
-            dump_group_hdr(pg->num_cars);
+        r = reserved_cars_in_seed_group(i + 1);
+        if (r > 0 || pg->num_cars > 0) {
+            dump_group_hdr(r + pg->num_cars);
+            if (r > 0) {
+                dump_reserved_cars(r, i + 1);
+            }
             if (pg->tyres != 0 || tmp_tyres != 0) {
                 dump_tyres_start(pg->tyres ? pg->tyres : tmp_tyres);
             }
@@ -418,7 +509,7 @@ dump_config(
                         dump_tyre_compound(tmp_tyres);
                     }
                 }
-                display_msg("\n");
+                display_newline();
             }
         }
     }
@@ -436,17 +527,17 @@ dump_config(
         display_int(10 - tmp_num_groups);
         display_msg(" through #39 resp.\n");
     }
-    display_msg("\n");
+    display_newline();
 }
 
 void
 Usage(
     void
 ) {
-    display_msg("Usage: ccpit [-h] [-u] [-pN] [-r] [-m] [-t?] {-g -cN [-t?] (-lN [-t?]) ...} ...\n"
+    display_msg("Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]\n"
+                "             {-g -#N -cN [-t?] (-lN [-t?]) ...} ...\n"
                 "\n"
                 "       @filename Read options from filename.\n"
-                "\n"
                 "       -h,-?     This help message.\n"
                 "       -u        Unload TSR.\n"
                 "\n"
@@ -457,14 +548,11 @@ Usage(
                 "       -t?       Specify tyres for all computer cars where ? is one of ABCD.\n"
                 "\n"
                 "       -g        Pit group.\n"
-                "        -cN      Stop N cars (for this group).\n"
+                "        -#N      Stop car number N (for this group)\n"
+                "        -cN      Stop another N cars (for this group).\n"
                 "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
                 "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
                 "         -t?     Specify tyres where ? is one of ABCD (for this stop).\n"
-                "\n"
-                "For the top 15 cars to pit at 30% and 60%, next 8 cars at 45% & the rest 0:\n"
-                "\n"
-                "       ccpit -g -c15 -l30 -l60  -g -c8 -l45\n"
                );
 }
 
