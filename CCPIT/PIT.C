@@ -196,6 +196,7 @@ StartFinishLineHook(
             if (group != 0) {
                 pg = get_group(group - 1);
                 if (pg != 0) {
+                    /* TODO: store lap number instead for more dynamic strategy in the future */
                     current_stop = pReplayState->current_stop[car_index];
                     if (current_stop < pg->num_stops) {
                         /*

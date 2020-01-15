@@ -88,6 +88,10 @@ do_parse(
             /*
             ** Don't use switch as indirect table gets it wrong for a COM file.
             */
+            if (*cmd_line == 'h' || *cmd_line == '?') {
+                Usage();
+                return FALSE;
+            }
             if (*cmd_line == 'p') {
                 n = parse_short(&cmd_line[1]);
                 if (n >= 5 && n <= 26) {
@@ -217,10 +221,21 @@ do_parse(
                 tmp_multiplayer = TRUE;
             }
             else {
-                Usage();
+                display_msg("Unknown option: ");
+                cmd_line--;
+                while (*cmd_line) {
+                    display_chr(*cmd_line);
+                    ++cmd_line;
+                }
+                display_msg("\n\nRun with option -h for help.\n");
                 return FALSE;
             }
 
+            /* eat option value */
+            while (cmd_line_len && *cmd_line) {
+                cmd_line_len--;
+                cmd_line++;
+            }
             option_next = FALSE;
         }
         else if (*cmd_line == '-' || *cmd_line == '/') {
@@ -235,8 +250,9 @@ do_parse(
                 word cfg_len;
                 char *pCfg = cfg_filename;
                 ++cmd_line;
+                --cmd_line_len;
                 n = 0;
-                while (*cmd_line && n < sizeof(cfg_filename) - 1) {
+                while (cmd_line_len && *cmd_line && n < sizeof(cfg_filename) - 1) {
                     *pCfg++ = *cmd_line++;
                     ++n;
                 }
@@ -253,6 +269,15 @@ do_parse(
                     return FALSE;
                 }
             }
+        }
+        else if (*cmd_line) {
+            display_msg("Unexpected argument: ");
+            while (*cmd_line) {
+                display_chr(*cmd_line);
+                ++cmd_line;
+            }
+            display_newline();
+            return FALSE;
         }
         ++cmd_line;
     }
