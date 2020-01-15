@@ -48,7 +48,7 @@ will be run if you keep both CCPIT.COM and CCPIT.EXE in the same directory.
 Command Line Options
 --------------------
 Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]
-             {-g -#N -cN [-t?] (-lN [-t?]) ...} ...
+             {-g -#N -cN [-t?] (-%N [-t?]) ...} ...
 
        @filename Read options from filename.
        -h,-?     This help message.
@@ -64,7 +64,7 @@ Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]
         -#N      Stop car number N (for this group)
         -cN      Stop another N cars (for this group).
         -t?      Specify tyres where ? is one of ABCD (for this group).
-        -lN      Trigger cars to stop at race percentage N (for this group).
+        -%N      Trigger cars to stop at race percentage N (for this group).
          -t?     Specify tyres where ? is one of ABCD (for this stop).
 
 
@@ -72,7 +72,7 @@ For the top 15 cars to use compound D and to pit at 30% and 60%, next 8 cars to
 start on compound C and pit at 45% for B's, and the rest to use compound A
 without pit stops:
 
-       ccpit -tA  -g -c15 -tD -l30 -l60  -g -c8 -tC -l45 -tB
+       ccpit -tA  -g -c15 -tD -%30 -%60  -g -c8 -tC -%45 -tB
 
 If you start CCPIT with no parameters it defaults to:
 
@@ -90,6 +90,13 @@ use an empty group:
         ccpit -g
 
 As a confirmation, CCPIT will always print the resulting configuration.
+
+For pit group options (#, c, t, l), the dash in front is optional. So the next
+command is the same as the above:
+
+       ccpit -tA  -g c15 tD %30 %60  -g c8 tC %45 tB
+
+For backward compatibility -l is the same as the -% option.
 
 Warning: If the command is longer than 128 characters DOS won't pass the
 remaining part. It is recommended to use the @ option to specify a
@@ -117,7 +124,7 @@ can be defined. A pit group can contain '-#' options to specify car numbers
 to assign to the group. It can also contain the '-c' option to stop an
 additional number of cars in the group.
 
-Up to twelve pit stop points may be specified using the '-l' option the
+Up to twelve pit stop points may be specified using the '-%' option the
 appropriate number of times. Note that the stopping points are specified as
 a *percentage* of the current race distance (they are scaled if you specify
 less than a 100% race distance, less than 5% won't have any pit stops,
@@ -126,13 +133,13 @@ neither will wet races).
 So, for a race where 13 cars stop at 25% and 55%, and 10 cars stop at 45%,
 one of which is car #5:
 
-     CCPIT -g -c13 -l25 -l55  -g -#5 -c9 -l45
+     CCPIT -g -c13 -%25 -%55  -g -#5 -c9 -%45
 
-Note that you must specify the '-l' (note this is the letter "ell" *not* the
-digit one!) stopping points in increasing percentage order, CCPIT won't
-validate this! The total number of cars specified with the '-c' and '-#'
-options can't exceed 26. If the total number of cars specified is less than
-26 then the remaining cars will go through the race without stopping.
+Note that you must specify the '-%' stopping points in increasing percentage
+order, CCPIT won't validate this! The total number of cars specified with
+the '-c' options can't exceed 26. If the total number of cars specified is
+less than 26 then the remaining cars will be put into an empty pit group and
+go through the race without stopping.
 
 Tyre Compounds
 --------------
@@ -144,22 +151,22 @@ one of ABCD):
 2) A default tyre compound for a pit group. This will also be the tyre the
    CC cars in that group will start the race on.
    This overrides the tyre compound specified at 1).
-   Should follow a -g option and precede any -lN option.
+   Should follow a -g option and precede any -%N option.
 3) A tyre compound for a pit stop.
    This overrides the tyre compound specified at 2).
-   Should follow a -lN option.
+   Should follow a -%N option.
 
 If 3) is used, then 2) must also be used.
 
 So, for a race where 13 cars start on Cs and stop at 45% for Bs, and the
 remaining cars start on As:
 
-     CCPIT -tA -g -c13 -tC -l45 -tB
+     CCPIT -tA -g -c13 -tC -%45 -tB
 
 
 Pitting
 -------
-The '-l' option specifies the *percentage* of the race distance when the cars
+The '-%' option specifies the *percentage* of the race distance when the cars
 will pit. For example, at Silverstone which is a 59 lap race if we specify
 a stop at 30% the pit stop lap will be calculated as:
 
@@ -194,7 +201,7 @@ When all the cars from the first group have been allocated the second group
 (if present) will be allocated to the next car on the grid. So for our
 example of:
 
-     CCPIT -g -c13 -l25 -l55  -g -c10 -l45
+     CCPIT -g -c13 -%25 -%55  -g -c10 -%45
 
 We would have:
      1st: G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1, G1,

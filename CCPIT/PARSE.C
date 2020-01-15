@@ -188,13 +188,13 @@ do_parse(
                     return FALSE;
                 }
             }
-            else if (*cmd_line == 'l') {
+            else if (*cmd_line == '%' || *cmd_line == 'l') {
                 if (parse_state->pit_group == 0) {
-                    display_msg("ccpit: You must use -g before a -l.\n");
+                    display_msg("ccpit: You must use -g before a -%.\n");
                     return FALSE;
                 }
 //                if (pg->num_cars == 0) {
-//                    display_msg("ccpit: You must use -c before the first -l in a group.\n");
+//                    display_msg("ccpit: You must use -c before the first -% in a group.\n");
 //                    return FALSE;
 //                }
                 if (pg->num_stops < MAX_PITS_PER_GROUP) {
@@ -203,12 +203,12 @@ do_parse(
                         pg->percent[pg->num_stops++] = (byte) n;
                     }
                     else {
-                        display_msg("ccpit: -l value should be between 5% and 95%.\n");
+                        display_msg("ccpit: -% percentage value should be between 5 and 95.\n");
                         return FALSE;
                     }
                 }
                 else {
-                    display_msg("ccpit: Too many -l points for a group.\n");
+                    display_msg("ccpit: Too many -% points for a group.\n");
                     return FALSE;
                 }
             }
@@ -269,6 +269,12 @@ do_parse(
                     return FALSE;
                 }
             }
+        }
+        else if (parse_state->pit_group != 0 &&
+                (*cmd_line == '#' || *cmd_line == 'c' || *cmd_line == 't' || *cmd_line == 'l')) {
+            option_next = TRUE;
+            cmd_line--;
+            cmd_line_len++;
         }
         else if (*cmd_line) {
             display_msg("Unexpected argument: ");
@@ -560,7 +566,7 @@ Usage(
     void
 ) {
     display_msg("Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]\n"
-                "             {-g -#N -cN [-t?] (-lN [-t?]) ...} ...\n"
+                "             {-g -#N -cN [-t?] (-%N [-t?]) ...} ...\n"
                 "\n"
                 "       @filename Read options from filename.\n"
                 "       -h,-?     This help message.\n"
@@ -576,7 +582,7 @@ Usage(
                 "        -#N      Stop car number N (for this group)\n"
                 "        -cN      Stop another N cars (for this group).\n"
                 "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
-                "        -lN      Trigger cars to stop at race percentage N (for this group).\n"
+                "        -%N      Trigger cars to stop at race percentage N (for this group).\n"
                 "         -t?     Specify tyres where ? is one of ABCD (for this stop).\n"
                );
 }
