@@ -121,8 +121,13 @@ Pit Groups
 ----------
 A pit group definition should start with a '-g'. Upto ten pit stop groups
 can be defined. A pit group can contain '-#' options to specify car numbers
-to assign to the group. It can also contain the '-c' option to stop an
-additional number of cars in the group.
+to reserve for the group. It can also contain the '-c' option to stop upto
+an additional number of cars in the group. Since it is not known in advance
+if reseved cars will make it through qualifying into the race, the actual pit
+group size can vary if cars are reserved, even for pit groups that have no
+reserved cars. In case of conflicts for the additional cars, the order in
+which the pit groups are specified determines the priority (first has highest
+priority).
 
 Up to twelve pit stop points may be specified using the '-%' option the
 appropriate number of times. Note that the stopping points are specified as

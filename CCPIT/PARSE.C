@@ -149,11 +149,6 @@ do_parse(
                 }
                 n = parse_short(&cmd_line[1]);
                 if (n >= 1 && n <= 40) {
-                    parse_state->total_cars++;
-                    if (parse_state->total_cars > 26) {
-                        display_msg("ccpit: Total number of cars in pit group can't exceed 26.\n");
-                        return FALSE;
-                    }
                     if (tmp_reserved_pit_groups[n - 1] != 0) {
                         display_msg("ccpit: A car cannot be assigned to multiple pit groups.\n");
                         return FALSE;
@@ -183,7 +178,7 @@ do_parse(
                     }
                     pg->num_cars = (byte) n;
                 }
-                else {
+                else if (n) {
                     display_msg("ccpit: -c value should be between 1 and 26.\n");
                     return FALSE;
                 }
