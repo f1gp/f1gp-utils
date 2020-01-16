@@ -85,7 +85,7 @@ word num_extra_stops;
 char sim_title_msg[] =
     "@(#)"
     "CCPITSIM " SIM_VERSION " - GP Simulator For Computer Cars Pit Strategy.\n"
-    "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
+    "Copyright (c) Rene Smit 2020 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Mock Functions

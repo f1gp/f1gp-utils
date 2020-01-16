@@ -50,7 +50,7 @@ char title_msg[] =
     "@(#)"
     "CCPIT " VERSION " - Grand Prix/World Circuit Computer Cars Pit Strategy.\n"
     "Copyright (c) Trevor Kellaway (CIS:100331,2330) 1994 - All Rights Reserved.\n"
-    "Copyright (c) Rene Smit 2019 - All Rights Reserved.\n\n";
+    "Copyright (c) Rene Smit 2020 - All Rights Reserved.\n\n";
 
 /*---------------------------------------------------------------------------
 ** Functions
