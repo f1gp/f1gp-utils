@@ -115,7 +115,7 @@ word read_cfg_file(void) {
     /* read cfg_filename to cfg_data */
     fp = fopen(cfg_filename, "rt");
     if (fp) {
-        bytes_read = fread(cfg_data, 1, 1023, fp);
+        bytes_read = fread(cfg_data, 1, MAX_CFG_SIZE-1, fp);
         cfg_data[bytes_read] = 0;
         fclose(fp);
         return bytes_read;
