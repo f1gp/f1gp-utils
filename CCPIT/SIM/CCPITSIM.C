@@ -40,7 +40,7 @@ typedef struct {
 ** External function prototypes
 */
 
-extern int parse(char far *cmd_line, word cmd_line_len);
+extern int parse(char far *cmd_line, short cmd_line_len);
 extern void dump_config(void);
 extern void SeedGrid(CAR far *pCar);
 extern void StartFinishLineHook(CAR far *pCar, word leaders_lap, word total_laps);
