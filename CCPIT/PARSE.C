@@ -381,6 +381,10 @@ parse_option(
         if (ps->pg->num_stops < MAX_PITS_PER_GROUP) {
             n = parse_short(cline);
             if (n >= 5 && n <= 95) {
+                if (ps->pg->num_stops > 0 && (byte) n <= ps->pg->percent[ps->pg->num_stops - 1]) {
+                    display_msg("ccpit: -% percentage values should be in increasing order.\n");
+                    return FALSE;
+                }
                 ps->pg->percent[ps->pg->num_stops++] = (byte) n;
             }
             else {
@@ -451,8 +455,11 @@ parse_short(
         }
         break;
     }
-    while (!is_parsed_fully(cline) && c >= '0' && c <= '9') {
+    while (c >= '0' && c <= '9') {
         n = n * 10 + c - '0';
+        if (is_parsed_fully(cline)) {
+            break;
+        }
         c = parse_char(cline);
     }
     return (neg ? -n : n);

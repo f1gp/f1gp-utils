@@ -141,10 +141,10 @@ one of which is car #5:
      CCPIT -g -c13 -%25 -%55  -g -#5 -c9 -%45
 
 Note that you must specify the '-%' stopping points in increasing percentage
-order, CCPIT won't validate this! The total number of cars specified with
-the '-c' options can't exceed 26. If the total number of cars specified is
-less than 26 then the remaining cars will be put into an empty pit group and
-go through the race without stopping.
+order. And the total number of cars specified with the '-c' options can't
+exceed 26. If the total number of cars specified is less than 26 then the
+remaining cars will be put into an empty pit group and go through the race
+without stopping.
 
 Tyre Compounds
 --------------
@@ -319,7 +319,7 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 18/01/2020  Added support for replays (incompatible with old save games).
+V4.0 28/03/2020  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Added option to assign a specific car number to a pit group.
