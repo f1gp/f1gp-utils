@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 16th Jan 2020                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 30th Mar 2020                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -25,7 +25,7 @@ make them, and on what tyre compound. CCPIT allows you to define upto ten
 groups of cars which have different pit strategies. For each group you can
 specify the number of cars in the group, how many stops they will make, at
 what percentage race distance they should stop at, and what tyre compound to
-use for each stint.
+use for each stint. The maximum number of scheduled stops is 12.
 
 CCPIT now also supports local multi-player games (when you select
 more than one active driver in F1GP's "Driver/Team Selection" menu).
@@ -344,7 +344,7 @@ Internet:      100331.2330@compuserve.com
 For the 4.x version:
 
 Email:         sdidit@gmail.com
-WWW:           https://sites.google.com/view/f1gpwc/home
+WWW:           https://sites.google.com/view/f1gpwc
 Forum:         https://groups.google.com/forum/#!forum/f1gpwc
 
 This program may be freely copied and distributed, as long as it is not

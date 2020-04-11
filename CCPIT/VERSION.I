@@ -19,5 +19,5 @@
 **                  Allow to skip dashes for group options.
 */
 
-#define VERSION     "V4.0.7 30/Mar/2020"
+#define VERSION     "V4.0 30/Mar/2020"
 
