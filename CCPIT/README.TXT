@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 30th Mar 2020                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 12th Apr 2020                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -58,14 +58,14 @@ Usage: ccpit [@filename] [-h] [-u] [-pN] [-r] [-m] [-t?]
        -r        Randomise group allocation on grid (default grid order).
 
        -m        Enable local multi-player mode (player's car called to pit).
-       -t?       Specify tyres for all computer cars where ? is one of ABCD.
+       -t?       Specify tyres for all computer cars, where ? is one of ABCD.
 
        -g        Pit group.
         -#N      Stop car number N (for this group)
         -cN      Stop another N cars (for this group).
-        -t?      Specify tyres where ? is one of ABCD (for this group).
+        -t?      Race start tyres (for this group), where ? is one of ABCD.
         -%N      Trigger cars to stop at race percentage N (for this group).
-         -t?     Specify tyres where ? is one of ABCD (for this stop).
+         -t?     Tyres for this pit stop, where ? is one of ABCD.
 
 
 For the top 15 cars to use compound D and to pit at 30% and 60%, next 8 cars to
@@ -153,8 +153,8 @@ one of ABCD):
 
 1) A default tyre compound for all CC cars.
    Should precede any -g option.
-2) A default tyre compound for a pit group. This will also be the tyre the
-   CC cars in that group will start the race on.
+2) A tyre compound for a pit group. This will be the tyre the CC cars in that
+   group will start the race on.
    This overrides the tyre compound specified at 1).
    Should follow a -g option and precede any -%N option.
 3) A tyre compound for a pit stop.
@@ -162,6 +162,8 @@ one of ABCD):
    Should follow a -%N option.
 
 If 3) is used, then 2) must also be used.
+When a car makes a pit stop and no tyre compound is specified for that stop,
+new tyres of the same compound as the current ones will be fitted.
 
 So, for a race where 13 cars start on Cs and stop at 45% for Bs, and the
 remaining cars start on As:
@@ -319,7 +321,7 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 28/03/2020  Added support for replays (incompatible with old save games).
+V4.0 12/04/2020  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Added option to assign a specific car number to a pit group.

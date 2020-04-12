@@ -568,9 +568,7 @@ init_group_tyre(
     byte i;
 
     pg->tyres = 'A' + tyre;
-    for (i = 0; i < MAX_PITS_PER_GROUP; i++) {
-        set_group_pit_tyre(pg, i, tyre);
-    }
+    set_group_pit_tyre(pg, 0, tyre);
 }
 
 byte
@@ -590,11 +588,18 @@ set_group_pit_tyre(
     byte index,
     byte tyre
 ) {
-    /* stored as 12 times 2 bits */
-    byte far *p = pg->pit_tyres + (index >> 2);
-    byte s = (index & 3) << 1;
-    *p &= ~(3 << s);
-    *p |= (tyre & 3) << s;
+    byte i;
+    byte s;
+    byte far *p;
+
+    /* set it for this and all subsequent stops */
+    for (i = index; i < MAX_PITS_PER_GROUP; i++) {
+        /* stored as 12 times 2 bits */
+        p = pg->pit_tyres + (i >> 2);
+        s = (i & 3) << 1;
+        *p &= ~(3 << s);
+        *p |= (tyre & 3) << s;
+    }
 }
 
 SAVE_GAME1 far *

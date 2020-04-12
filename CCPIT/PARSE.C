@@ -159,6 +159,7 @@ start_pit_group(
     if (!is_in_pit_group(ps) ||
             ps->pg->num_cars > 0 ||
             reserved_cars_in_seed_group(ps->pit_group) > 0) {
+        
         ps->pg = &tmp_pit_groups[ps->pit_group++];
         ps->pg->num_cars = 0;
         ps->pg->tyres = 0;
@@ -323,7 +324,7 @@ parse_option(
                 set_group_pit_tyre(ps->pg, ps->pg->num_stops - 1, t - 'A');
             }
             else {
-                display_msg("ccpit: Pit stop tyres require default group tyres.\n");
+                display_msg("ccpit: Cannot specify pit stop tyres without specifying race start tyres.\n");
                 return FALSE;
             }
         }
@@ -744,14 +745,14 @@ Usage(
                 "       -r        Randomise group allocation on grid (default grid order).\n"
                 "\n"
                 "       -m        Enable local multi-player mode (player's car called to pit).\n"
-                "       -t?       Specify tyres for all computer cars where ? is one of ABCD.\n"
+                "       -t?       Specify tyres for all computer cars, where ? is one of ABCD.\n"
                 "\n"
                 "       -g        Pit group.\n"
                 "        -#N      Stop car number N (for this group)\n"
                 "        -cN      Stop another N cars (for this group).\n"
-                "        -t?      Specify tyres where ? is one of ABCD (for this group).\n"
+                "        -t?      Race start tyres (for this group), where ? is one of ABCD.\n"
                 "        -%N      Trigger cars to stop at race percentage N (for this group).\n"
-                "         -t?     Specify tyres where ? is one of ABCD (for this stop).\n"
+                "         -t?     Tyres for this pit stop, where ? is one of ABCD.\n"
                );
 }
 
