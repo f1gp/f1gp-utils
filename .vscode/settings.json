@@ -1,0 +1,9 @@
+{
+    "C_Cpp.default.defines": [
+        "far=",
+        "near="
+    ],
+    "files.associations": {
+        "*.C": "cpp"
+    }
+}

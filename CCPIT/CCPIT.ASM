@@ -69,27 +69,25 @@ pFirstCar       label   dword
 pFirstCarOff    dw      0d1bh
 pFirstCarSeg    dw      ?
 
-SG_REPLAY_STOR  equ     0C9Bh   ; start of 128 unused bytes before car structs (included in replay and save game)
+SG_DRIVER_NAM   equ     0c57ah  ; start of driver names
+SG_REPLAY_STOR  equ     0c9bh   ; start of 128 unused bytes before car structs (included in replay and save game)
 
                 public  pSaveGame1
 pSaveGame1      label   dword
-pSaveGame1Off   dw      SG_REPLAY_STOR + (2 * 24)
+pSaveGame1Off   dw      SG_DRIVER_NAM + (38 * 24)
 pSaveGame1Seg   dw      ?
 
                 public  pSaveGame2
 pSaveGame2      label   dword
-pSaveGame2Off   dw      SG_REPLAY_STOR + (3 * 24)
+pSaveGame2Off   dw      SG_DRIVER_NAM + (39 * 24)
 pSaveGame2Seg   dw      ?
 
-                public  pSaveGame3
-pSaveGame3      label   dword
-pSaveGame3Off   dw      SG_REPLAY_STOR + (0 * 24)
-pSaveGame3Seg   dw      ?
+                public  pReplayState
+pReplayState    label   dword
+pReplayStateOff dw      SG_REPLAY_STOR
+pReplayStateSeg dw      ?
 
-                public  pSaveGame4
-pSaveGame4      label   dword
-pSaveGame4Off   dw      SG_REPLAY_STOR + (1 * 24)
-pSaveGame4Seg   dw      ?
+
 
 ;*****************************************************************************
 ;**
@@ -202,6 +200,15 @@ TSR_CODE        segment
 
         public  hook_gp_exe
 hook_gp_exe proc near
+
+        mov     cx, HOOK_EUR_RL_MSW
+        mov     ax, HOOK_EUR_RL_LSW
+        mov     dx, HOOK_US_RL_MSW
+        mov     bx, HOOK_US_RL_LSW
+        call    get_hook_offset
+        mov     si, OFFSET cs:hook_rl_code_start
+        mov     cx, HOOK_RL_LENGTH
+        call    copy_patch_block
 
         mov     cx, HOOK_EUR_SG_MSW
         mov     ax, HOOK_EUR_SG_LSW
@@ -375,6 +382,12 @@ TSR_CODE        ends
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
 ;** (DOS VER hook point = 06d295H in GPU.EXE)
 
+HOOK_EUR_RL_MSW equ     6000h
+HOOK_EUR_RL_LSW equ     (0d2eah - 6293h)
+
+HOOK_US_RL_MSW  equ     6000h
+HOOK_US_RL_LSW  equ     (0d295h - 6293h)
+
 HOOK_EUR_SG_MSW equ     6000h
 HOOK_EUR_SG_LSW equ     (0d2eah - 62A5h)
 
@@ -382,6 +395,11 @@ HOOK_US_SG_MSW  equ     6000h
 HOOK_US_SG_LSW  equ     (0d295h - 62A5h)
 
 TSR_DATA                segment
+
+hook_rl_code_start:
+                        dw      5       ; minimum 5% race length (instead of 75%)
+hook_rl_code_end:
+HOOK_RL_LENGTH          equ     (hook_rl_code_end - hook_rl_code_start)
 
 hook_sg_code_start:
                         nop
@@ -409,9 +427,12 @@ hook_seed_grid:
 
         call    save_games_ds
 
+        push    ds          ; current car
+        push    si
         push    cs
         pop     ds
         call    SeedGrid
+        add     sp, 4
 
         pop     es
         pop     ds
@@ -460,7 +481,7 @@ TSR_CODE        ends
 ;** 003267  80A49700FB     and    byte ptr [si+97],0FB
 ;** 00326C  808CB30004     or     byte ptr [si+0B3],4
 ;** 003271  9ACB1BED19     call   19ED:1BCB
-;** 003276 �61             popa
+;** 003276  61             popa
 ;** 003277  C3             ret
 ;**
 ;** (DOS VER hook point = 06d2eaH in GPU.EXE)
@@ -509,14 +530,12 @@ hook_sf_line:
         mov     cl, es:[298Bh]
         add     cx, 1
 
-        push    es
+        push    [bp+123Ch]  ; total_laps
+        push    cx          ; leaders_lap
+        push    es          ; current car
         push    si
-        sub     si, 0d1bh
-        push    si
-        push    [bp+123Ch]
-        push    cx
         call    StartFinishLineHook
-        add     sp, 10
+        add     sp, 8
 
         pop     es
         pop     ds
@@ -623,11 +642,9 @@ hook_on_jacks:
         push    cs
         pop     ds
         push    si
-        sub     si, 0d1bh
-        push    si
         push    [bp+123Ch]
         call    OntoJacks
-        add     sp, 8
+        add     sp, 6
 
         pop     es
         pop     ds
@@ -814,8 +831,7 @@ save_games_ds proc near
         mov     cs:pFirstCarSeg, ds
         mov     cs:pSaveGame1Seg, ds
         mov     cs:pSaveGame2Seg, ds
-        mov     cs:pSaveGame3Seg, ds
-        mov     cs:pSaveGame4Seg, ds
+        mov     cs:pReplayStateSeg, ds
         ret
 
 save_games_ds endp

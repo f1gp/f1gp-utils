@@ -19,26 +19,37 @@
 ** Defines and Macros
 */
 
-#define MAX_CARS                   26
+#define TRUE                       1
+#define FALSE                      0
 
-#define MAX_GROUPS                 2
-#define MAX_PITS_PER_GROUP         3
+#define MAX_CARS                   26
+#define DRIVER_NAME_SIZE           24
+
+#define MAX_GROUPS                 10
+#define MAX_PITS_PER_GROUP         12
 
 #define DEFAULT_MAX_CARS_IN_PIT    10
+
+#define MAX_CFG_SIZE               2048
 
 /*
 ** Magic numbers, note these are used as the driver's names.
 */
 #define MAGIC1SG1                  0x00393323L    /* "#39" */
 #define MAGIC1SG2                  0x00303423L    /* "#40" */
-#define MAGIC1SG3                  0x00373323L    /* "#37" */
-#define MAGIC1SG4                  0x00383323L    /* "#38" */
-#define MAGIC2                     0x55ab
+#define MAGIC2                     0x55ac
+#define MAGICRS                    0xcc77
 
 /*
 ** Car Data structure SI indexes.
 */
 #define CAR_DATA_SI_LAP_NUMBER     0x22
+#define CAR_DATA_SI_ID             0xac
+#define CAR_DATA_SI_PITFLAGS       0x97
+#define CAR_DATA_SI_TYRE_COMPOUND  0xb2
+
+#define CAR_IS_CC(pCar)            (((pCar)->si[CAR_DATA_SI_ID] & 0x80) == 0x00)
+#define CAR_NUMBER(pCar)           ((pCar)->si[CAR_DATA_SI_ID] & 0x3f)
 
 /*
 ** Tyre compounds
@@ -58,73 +69,69 @@ typedef unsigned char    bool;
 typedef unsigned char    byte;
 typedef unsigned short   word;
 
+
 /*
-** Must keep this structure size * MAX_GROUPS <= 20 bytes.
-** Currently: (1 + 1 + 1 + 3 + 3) * 2 = 18 bytes.
+** Must keep this structure size <= 18 bytes.
 */
 typedef struct {
-     byte      current_index;
-     byte      max_index;
-     byte      num_cars;
-     byte      percent[MAX_PITS_PER_GROUP];
-     byte      laps[MAX_PITS_PER_GROUP];
-} PIT_GROUP;
+    byte      num_stops;                          /*  1 byte  */
+    byte      num_cars;                           /*  1 byte  */
+    byte      tyres;                              /*  1 byte  */
+    byte      percent[MAX_PITS_PER_GROUP];        /* 12 bytes */
+    byte      pit_tyres[MAX_PITS_PER_GROUP / 4];  /*  3 bytes */
+} PIT_GROUP;                                      /* 18 bytes */
+
 
 /*
 ** Keep this structure size <= 24 bytes.
 */
 typedef struct {
-     long      magic1;                            /*  4 bytes */
-     PIT_GROUP pit_groups[MAX_GROUPS];            /* 18 bytes */
-     word      magic2;                            /*  2 bytes */
+    long      magic1;                             /*  4 bytes */
+    PIT_GROUP pit_group;                          /* 18 bytes */
+    word      magic2;                             /*  2 bytes */
 } SAVE_GAME1;                                     /* 24 bytes */
 
 /*
 ** Keep this structure size <= 24 bytes.
 */
 typedef struct {
-     long      magic1;                            /*  4 bytes */
-     byte      seed_group[MAX_CARS / 2];          /* 13 bytes */
-     byte      max_cars_in_pit;                   /*  1 bytes */
-     byte      randomise;                         /*  1 byte  */
-     byte      tyres;                             /*  1 byte  */
-     byte      multiplayer;                       /*  1 byte  */
-     word      magic2;                            /*  2 bytes */
-} SAVE_GAME2;                                     /* 23 bytes */
+    long      magic1;                             /*  4 bytes */
+    byte      num_groups;                         /*  1 byte  */
+    byte      seed_group[MAX_CARS / 2];           /* 13 bytes */
+    byte      max_cars_in_pit;                    /*  1 bytes */
+    byte      randomise;                          /*  1 byte  */
+    byte      tyres;                              /*  1 byte  */
+    byte      multiplayer;                        /*  1 byte  */
+    word      magic2;                             /*  2 bytes */
+} SAVE_GAME2;                                     /* 24 bytes */
 
 /*
-** Keep this structure size <= 24 bytes.
+** Keep this structure size <= 128 bytes.
 */
 typedef struct {
-     long      magic1;                            /*  4 bytes */
-     byte      last_pitstop1[MAX_CARS / 2];       /* 13 bytes */
-     word      magic2;                            /*  2 bytes */
-} SAVE_GAME3;                                     /* 19 bytes */
+    word            magic;                        /*  2 bytes */
+    byte            current_stop[MAX_CARS];       /* 26 bytes */
+} REPLAY_STATE;                                   /* 28 bytes */
+
 
 typedef struct {
-     long      magic1;                            /*  4 bytes */
-     byte      last_pitstop2[MAX_CARS / 2];       /* 13 bytes */
-     word      magic2;                            /*  2 bytes */
-} SAVE_GAME4;                                     /* 19 bytes */
-
-typedef struct {
-     unsigned char si[0xc0];
+    unsigned char si[0xc0];
 } CAR;
 
 /*
 ** Per car setup.
 */
 typedef struct {
-     byte      front_wing;
-     byte      rear_wing;
-     byte      gear1;
-     byte      gear2;
-     byte      gear3;
-     byte      gear4;
-     byte      gear5;
-     byte      gear6;
-     byte      race_tyres;
-     byte      brake_bias;
+    byte      front_wing;
+    byte      rear_wing;
+    byte      gear1;
+    byte      gear2;
+    byte      gear3;
+    byte      gear4;
+    byte      gear5;
+    byte      gear6;
+    byte      race_tyres;
+    byte      brake_bias;
 } CAR_SETUP;
 
 /*---------------------------------------------------------------------------
@@ -134,26 +141,35 @@ typedef struct {
 extern CAR          far *pFirstCar;
 extern SAVE_GAME1   far *pSaveGame1;
 extern SAVE_GAME2   far *pSaveGame2;
-extern SAVE_GAME3   far *pSaveGame3;
-extern SAVE_GAME4   far *pSaveGame4;
+extern REPLAY_STATE far *pReplayState;
 extern byte         far *hook_nc_value;
 
 extern PIT_GROUP    tmp_pit_groups[MAX_GROUPS];
+extern byte         tmp_num_groups;
+extern byte         tmp_reserved_pit_groups[40];  /* id -> group */
 extern byte         tmp_max_cars_in_pit;
 extern bool         tmp_randomise;
 extern byte         tmp_tyres;
 extern bool         tmp_multiplayer;
 
 extern char         unload_flag;
-extern char         far *cmd_line;
-extern char         cmd_line_len;
 extern char         near *msg_text;
+
+extern char         cfg_filename[80];
+extern char         cfg_data[MAX_CFG_SIZE];
 
 /*---------------------------------------------------------------------------
 ** Functions
 */
 
-byte rnd(void);
+extern byte rnd(void);
+extern void wrt_msg(void);  /* write DOS string pointed to by msg_text */
+extern word read_cfg_file(void);  /* read cfg_filename to cfg_data */
+
+extern void init_group_tyre(PIT_GROUP far *pg, byte tyre);
+extern byte get_group_pit_tyre(PIT_GROUP far *pg, byte index);
+extern void set_group_pit_tyre(PIT_GROUP far *pg, byte index, byte tyre);
+extern byte get_group_tyre(PIT_GROUP far *pg, byte stop, byte default_tyre);
 
 #endif    /* ccpit_h */
 /*---------------------------------------------------------------------------
