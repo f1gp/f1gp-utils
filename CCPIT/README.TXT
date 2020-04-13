@@ -1,5 +1,5 @@
 CCPIT V3.0 29th Oct 1994                     Trevor Kellaway (CIS:100331,2330)
-CCPIT V4.0 12th Apr 2020                          Rene Smit (sdidit@gmail.com)
+CCPIT V4.0 14th Apr 2020                          Rene Smit (sdidit@gmail.com)
 
             Grand Prix/World Circuit Computer Car Pit Strategy TSR
             ======================================================
@@ -321,7 +321,7 @@ V1.0             First non-beta release. Added proper handling for cars making
 V2.0             Bug fix for double-pitting at some tracks if the first pit
                  stop percentage is below 30% (this varies between tracks).
 V3.0 29/10/1994  Added tyre handling and multi-player support.
-V4.0 12/04/2020  Added support for replays (incompatible with old save games).
+V4.0 14/04/2020  Added support for replays (incompatible with old save games).
                  Added support for specific tyre compound per pit group.
                  Increased maximum number of pit groups and pit stops.
                  Added option to assign a specific car number to a pit group.
@@ -343,9 +343,10 @@ Trevor Kellaway at:
 CompuServe:    100331,2330
 Internet:      100331.2330@compuserve.com
 
-For the 4.x version:
+For the 4.x version, to Rene Smit:
 
 Email:         sdidit@gmail.com
+GitHub:        https://github.com/sdidit
 WWW:           https://sites.google.com/view/f1gpwc
 Forum:         https://groups.google.com/forum/#!forum/f1gpwc
 
