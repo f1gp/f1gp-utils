@@ -322,7 +322,7 @@ TSR_CODE                ends
 TSR_CODE                segment
 
 disable_default_driver  proc    near
-                        mov     al, no_drivers
+                        mov     al, cs:no_drivers
                         cmp     al, 0
                         jz      __end
                         push    2
@@ -404,7 +404,7 @@ TSR_DATA                ends
 TSR_CODE                segment
 
 init_rng                proc    near
-                        mov     al, rng_mode
+                        mov     al, cs:rng_mode
                         or      al, al
                         jz      __end
                         cmp     al, 1
@@ -442,8 +442,8 @@ init_rng                proc    near
 __seed:
                         ; seed from user supplied value instead of timer
                         xor     ax, ax
-                        mov     al, rng_seed
-                        mov     hook_random_seed_value, ax
+                        mov     al, cs:rng_seed
+                        mov     cs:hook_random_seed_value, ax
                         mov     si, OFFSET TSR:hook_random_seed_start
                         push    2
                         push    0C3Ch
@@ -669,7 +669,7 @@ TSR_CODE                segment
 
 init_race_car_limit     proc    near
                         xor     dx, dx
-                        mov     dl, limit_cars_race
+                        mov     dl, cs:limit_cars_race
                         cmp     dl, 0
                         jz      __end
                         cmp     dl, 25
@@ -725,7 +725,7 @@ TSR_CODE                segment
 
 init_ccsetup            proc    near
                         xor     dx, dx
-                        mov     dl, keep_fw
+                        mov     dl, cs:keep_fw
                         cmp     dl, 0
                         jz      __end
                         push    0
