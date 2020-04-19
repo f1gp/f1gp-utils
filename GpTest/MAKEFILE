@@ -10,7 +10,7 @@ LINK           =    tlink /l /m /s /c /Tde
 
 ##                                    Code class/segment  Data class/group/segment    BSS class/group/segment
 CC_RESIDENT    =    $(CC) $(CC_FLAGS) -zACODE -zCTSR_CODE -zTDATA -zSTSR -zRTSR_DATA  -zBDATA -zGTSR -zDTSR_DATA
-CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR  -zRTSR_TMP  -zBTMP  -zGTSR  -zDTSR_TMP
+CC_TRANSIENT   =    $(CC) $(CC_FLAGS) -zATMP  -zCTSR_TMP  -zTTMP  -zSTSR -zRTSR_TMP   -zBTMP  -zGTSR -zDTSR_TMP
 
 ##
 ## Note: endres.obj *must* be last!
@@ -33,7 +33,7 @@ gptest.ash:    gptest.h
 
 gptest.obj:    gptest.asm segments.inc render.inc gptest.inc gptest.ash
 
-render.obj:    render.asm render.inc
+render.obj:    render.asm segments.inc render.inc
 
 install.obj:   install.asm segments.inc gptest.inc
 

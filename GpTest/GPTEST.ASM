@@ -32,12 +32,6 @@ DELAY_TIME              equ     (500 / TICK_TIME_MS)    ; Time to display hook m
 ;** Externals
 ;**
 
-TSR_CODE                segment
-
-                        extrn   install:far
-
-TSR_CODE                ends
-
 
 ;*****************************************************************************
 ;**
@@ -295,7 +289,7 @@ TSR_CODE                ends
 TSR_CODE                segment
 
 hook_gp_exe             proc    near
-                        mov     cs:err_notify, 0
+                        mov     err_notify, 0
 
                         call    disable_default_driver
                         call    lower_race_dist_limit
@@ -322,7 +316,7 @@ TSR_CODE                ends
 TSR_CODE                segment
 
 disable_default_driver  proc    near
-                        mov     al, cs:no_drivers
+                        mov     al, no_drivers
                         cmp     al, 0
                         jz      __end
                         push    2
@@ -404,7 +398,7 @@ TSR_DATA                ends
 TSR_CODE                segment
 
 init_rng                proc    near
-                        mov     al, cs:rng_mode
+                        mov     al, rng_mode
                         or      al, al
                         jz      __end
                         cmp     al, 1
@@ -442,8 +436,8 @@ init_rng                proc    near
 __seed:
                         ; seed from user supplied value instead of timer
                         xor     ax, ax
-                        mov     al, cs:rng_seed
-                        mov     cs:hook_random_seed_value, ax
+                        mov     al, rng_seed
+                        mov     hook_random_seed_value, ax
                         mov     si, OFFSET TSR:hook_random_seed_start
                         push    2
                         push    0C3Ch
@@ -497,7 +491,7 @@ init_hook_load_track    proc    near
                         mov     bx, OFFSET TSR:hook_load_track_orig
 __loop:
                         mov     al, es:[di]
-                        mov     cs:[bx], al
+                        mov     [bx], al
                         add     bx, 1
                         movsb
                         loop    __loop
@@ -520,7 +514,7 @@ init_hook_new_session   proc    near
                         mov     bx, OFFSET TSR:hook_new_session_orig
 __loop:
                         mov     al, es:[di]
-                        mov     cs:[bx], al
+                        mov     [bx], al
                         add     bx, 1
                         movsb
                         loop    __loop
@@ -568,7 +562,7 @@ init_hook_pausing       proc    near
                         mov     bx, OFFSET TSR:hook_pausing_orig
 __loop:
                         mov     al, es:[di]
-                        mov     cs:[bx], al
+                        mov     [bx], al
                         add     bx, 1
                         movsb
                         loop    __loop
@@ -669,7 +663,7 @@ TSR_CODE                segment
 
 init_race_car_limit     proc    near
                         xor     dx, dx
-                        mov     dl, cs:limit_cars_race
+                        mov     dl, limit_cars_race
                         cmp     dl, 0
                         jz      __end
                         cmp     dl, 25
@@ -725,7 +719,7 @@ TSR_CODE                segment
 
 init_ccsetup            proc    near
                         xor     dx, dx
-                        mov     dl, cs:keep_fw
+                        mov     dl, keep_fw
                         cmp     dl, 0
                         jz      __end
                         push    0
